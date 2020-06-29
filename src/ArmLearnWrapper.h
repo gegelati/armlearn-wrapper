@@ -32,8 +32,9 @@ class ArmLearnWrapper : public Learn::LearningEnvironment, armlearn::learning::D
 protected:
     void computeInput();
 
-    template<class R, class T>
-    double computeReward(const std::vector<R> &target, const std::vector<T> &pos) const;
+    template<class R, class T, class U>
+    double computeReward(const std::vector<R> &target, const std::vector<T> &motorPos,
+                         const std::vector<U> &cartesianPos) const;
 
 
     /// Randomness control
@@ -42,8 +43,14 @@ protected:
     /// Inputs of learning, positions to ask to the robot
     std::vector<armlearn::Input<uint16_t> *> targets;
 
-    /// Values to feed learner, e.g. current position
+    /// Current arm position
     Data::PrimitiveTypeArray<double> motorPos;
+
+    /// Current arm position
+    Data::PrimitiveTypeArray<double> cartesianPos;
+
+    /// Current arm and goal distance vector
+    Data::PrimitiveTypeArray<double> cartesianDif;
 
     armlearn::kinematics::Converter *converter;
 
@@ -74,14 +81,15 @@ public:
     * Constructor.
     */
     ArmLearnWrapper() // 1 motorPos/ motor = 6, 2 output directions / motor = 6
-            : LearningEnvironment(13), targets(), motorPos(9), DeviceLearner(iniController()) {
+            : LearningEnvironment(13), targets(), motorPos(6), cartesianPos(3), cartesianDif(3),
+              DeviceLearner(iniController()) {
 
 
         auto goal = new armlearn::Input<uint16_t>({5, 50, 300});
         targets.push_back(goal);
 
         this->reset(0);
-        computerInput();
+        computeInput();
     }
 
     armlearn::communication::AbstractController *generateControllerAndSetConverter() {
@@ -92,7 +100,9 @@ public:
 * \brief Copy constructor for the armLearnWrapper.
 *
 */
-    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions), motorPos(other.motorPos), DeviceLearner(iniController()){
+    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions),
+                                                    motorPos(other.motorPos), cartesianPos(other.cartesianPos),
+                                                    cartesianDif(other.cartesianDif), DeviceLearner(iniController()) {
         /*device->setPosition({(uint16_t)*(this->motorPos.getDataAt(typeid(double), 0).getSharedPointer<const double>()),
                              (uint16_t)*(this->motorPos.getDataAt(typeid(double), 1).getSharedPointer<const double>()),
                              (uint16_t)*(this->motorPos.getDataAt(typeid(double), 2).getSharedPointer<const double>()),
@@ -104,7 +114,7 @@ public:
         targets.push_back(goal);
 
         this->reset(0);
-        computerInput();
+        computeInput();
     }
 
 /// Destructor

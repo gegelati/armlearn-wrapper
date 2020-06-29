@@ -72,35 +72,31 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
     scaledOutput[5] = (scaledOutput[5] - 256) + inputI;
 
     auto validOutput = device->toValidPosition(scaledOutput);
-
     std::vector<uint16_t> positionOutput;
-    for (auto ptr = validOutput.cbegin(); ptr < validOutput.cend(); ptr++) positionOutput.push_back(*ptr);
-
+    for (auto ptr = validOutput.cbegin(); ptr < validOutput.cend(); ptr++) { positionOutput.push_back(*ptr); }
     auto newCartesianCoords = converter->computeServoToCoord(positionOutput)->getCoord();
-
-    auto reward = computeReward(targets[0]->getInput(), newCartesianCoords); // Computation of reward
+    auto reward = computeReward(targets[0]->getInput(), positionOutput, newCartesianCoords); // Computation of reward
 
     device->setPosition(validOutput); // Update position
     device->waitFeedback();
-    //pyLearn((*ptr)->getInput(), (*ptr)->getOutput(), (*ptr)->getReward(), nextInput, std::pow(DECREASING_REWARD, i)); // Decrease value of reward as the state is closer to initial state
     score += reward;
 
-    for(int i=0; i<newCartesianCoords.size();i++){}
-    computeInput();
+    for (int i = 0; i < newCartesianCoords.size(); i++) {
+        cartesianPos.setDataAt(typeid(double), i, newCartesianCoords[i]);
+        cartesianDif.setDataAt(typeid(double), i, newCartesianCoords[i]-targets[0]->getInput()[i]);
+    }
+    computeInput(); // to update motor pos
 }
 
-template<class R, class T>
-double ArmLearnWrapper::computeReward(const std::vector<R> &target, const std::vector<T> &pos) const {
-    std::vector<T> positionOutput;
-    for (auto ptr = pos.cbegin(); ptr < pos.cend(); ptr++) positionOutput.push_back(*ptr);
+template<class R, class T, class U>
+double ArmLearnWrapper::computeReward(const std::vector<R> &target, const std::vector<T> &motorPos,
+                                      const std::vector<U> &cartesianPos) const {
+    if (!device->validPosition(motorPos)) return VALID_COEFF;
 
-    if (!device->validPosition(positionOutput)) return VALID_COEFF;
 
-    auto newCoords = converter->computeServoToCoord(positionOutput)->getCoord();
-
-    auto err = computeSquaredError(target, newCoords);
+    auto err = computeSquaredError(target, cartesianPos);
     // if(abs(err) < LEARN_ERROR_MARGIN) return -VALID_COEFF;
-    return -TARGET_COEFF * err - MOVEMENT_COEFF * computeSquaredError(device->getPosition(), pos);
+    return -TARGET_COEFF * err - MOVEMENT_COEFF * computeSquaredError(device->getPosition(), motorPos);
 }
 
 
@@ -113,7 +109,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
 
 std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::getDataSources() {
     auto result = std::vector<std::reference_wrapper<const Data::DataHandler>>();
-    result.emplace_back(motorPos);
+    result.emplace_back(cartesianDif);
     return result;
 }
 
@@ -149,7 +145,7 @@ std::string ArmLearnWrapper::toString() const {
     res << "    -->    ";
     auto newCoords = converter->computeServoToCoord(in)->getCoord();
     for (auto i : newCoords) {
-        res << (int)i << " ; ";
+        res << (int) i << " ; ";
     }
 
     return res.str();
