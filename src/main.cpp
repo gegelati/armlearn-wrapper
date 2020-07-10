@@ -13,6 +13,13 @@
 
 
 int main() {
+
+    // if we want to test the best agent
+    if (true) {
+        agentTest();
+        return 0;
+    }
+
     // Create the instruction set for programs
     Instructions::Set set;
     auto minus = [](double a, double b) -> double { return a - b; };
@@ -21,8 +28,7 @@ int main() {
     auto divide = [](double a, double b) -> double { return a / b; };
     auto cond = [](double a, double b) -> double { return a < b ? -a : a; };
     auto cos = [](double a) -> double { return std::cos(a); };
-    auto ln = [](double a) -> double { return std::log(a); };
-    auto exp = [](double a) -> double { return std::exp(a); };
+    auto sin = [](double a) -> double { return std::sin(a); };
 
     set.add(*(new Instructions::LambdaInstruction<double, double>(minus)));
     set.add(*(new Instructions::LambdaInstruction<double, double>(add)));
@@ -30,8 +36,7 @@ int main() {
     set.add(*(new Instructions::LambdaInstruction<double, double>(divide)));
     set.add(*(new Instructions::LambdaInstruction<double, double>(cond)));
     set.add(*(new Instructions::LambdaInstruction<double>(cos)));
-    set.add(*(new Instructions::LambdaInstruction<double>(ln)));
-    set.add(*(new Instructions::LambdaInstruction<double>(exp)));
+    set.add(*(new Instructions::LambdaInstruction<double>(sin)));
 
 
 
@@ -40,7 +45,7 @@ int main() {
     // among other things)
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson("../../params.json",params);
+    File::ParametersParser::loadParametersFromJson("../../params.json", params);
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
@@ -50,8 +55,8 @@ int main() {
     la.init();
 
     // Adds a logger to the LA (to get statistics on learning) on std::cout
-    auto logCout = *new Log::LABasicLogger();
-    la.addLogger(logCout);
+    /*auto logCout = *new Log::LABasicLogger();
+    la.addLogger(logCout);*/
 
     // Adds another logger that will log in a file
     std::ofstream o("log");
@@ -62,17 +67,62 @@ int main() {
     File::TPGGraphDotExporter dotExporter("out_000.dot", la.getTPGGraph());
 
 
+    printf("\nGen\tNbVert\tMin\tAvg\tMax\tTvalid\n");
+
+    armlearn::Input<uint16_t> * randomGoal;
+    auto validationGoal = armlearn::Input<uint16_t>({300, 50, 50});
+    auto startEval = std::chrono::high_resolution_clock::now();
 
     // Train for NB_GENERATIONS generations
     for (int i = 0; i < NB_GENERATIONS; i++) {
+
+        if (i % 10 == 0) {
+            randomGoal = le.randomGoal(); // le.randomGoal()
+            le.customGoal(randomGoal);
+            logFile << le.newGoalToString();
+
+            // resets registered scores (a new goal means a new score)
+            std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex*> resettingMap;
+            for(auto root : la.getTPGGraph().getRootVertices()){
+                resettingMap.emplace(std::make_shared<Learn::EvaluationResult>(Learn::EvaluationResult(0,0)),root);
+            }
+            la.updateEvaluationRecords(resettingMap);
+        }
+
         char buff[16];
         sprintf(buff, "out_%03d.dot", i);
         dotExporter.setNewFilePath(buff);
         dotExporter.print();
-        std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> result;
-        result = la.evaluateAllRoots(i, Learn::LearningMode::VALIDATION);
+
 
         la.trainOneGeneration(i);
+
+        // loads the validation goal to get learning stats, but don't worry randomGoal will be re-loaded later
+        le.customGoal(&validationGoal);
+
+
+        std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> result;
+
+        result = la.evaluateAllRoots(i, Learn::LearningMode::VALIDATION);
+
+        auto stopEval = std::chrono::high_resolution_clock::now();
+        auto iter = result.begin();
+        double min = iter->first->getResult();
+        std::advance(iter, result.size() - 1);
+        double max = iter->first->getResult();
+        double avg = std::accumulate(result.begin(), result.end(), 0.0,
+                                     [](double acc,
+                                        std::pair<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> pair) -> double {
+                                         return acc + pair.first->getResult();
+                                     });
+        avg /= result.size();
+        printf("%3d\t%4" PRIu64 "\t%1.2lf\t%1.2lf\t%1.2lf", i, la.getTPGGraph().getNbVertices(), min, avg, max);
+        std::cout << "\t" << std::chrono::duration_cast<std::chrono::milliseconds>(stopEval - startEval).count()/1000
+                  << std::endl;
+
+        // loads the random goal again to continue training
+        le.customGoal(randomGoal);
+
     }
 
     // Keep best policy
@@ -87,11 +137,6 @@ int main() {
         delete (&set.getInstruction(i));
     }
 
-    // if we want to test the best agent
-    if (true) {
-        agentTest();
-        return 0;
-    }
 
     return 0;
 }

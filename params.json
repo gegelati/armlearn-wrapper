@@ -3,16 +3,17 @@
     "archivingProbability" : 0.05,
     "nbIterationsPerPolicyEvaluation" : 1,
     "maxNbActionsPerEval" : 1000,
-    "ratioDeletedRoots" : 0.99,
-    "maxNbEvaluationPerPolicy" : 1,
+    "ratioDeletedRoots" : 0.95,
+    "maxNbEvaluationPerPolicy" : 20000,
+	"doValidation": false,
 
     "mutation":
     {
 	    "tpg" :
 	    {
-	    	"nbRoots" : 2000,
+	    	"nbRoots" : 1000,
 	    	"maxInitOutgoingEdges" : 3,
-	    	"maxOutgoingEdges" : 60,
+	    	"maxOutgoingEdges" : 25,
 	    	"pEdgeDeletion" : 0.8,
 	    	"pEdgeAddition" : 0.8,
 	    	"pProgramMutation" : 0.8,
@@ -22,7 +23,7 @@
 
 	    "prog" :
 	    {
-	        "maxProgramSize" : 40,
+	        "maxProgramSize" : 10,
 	        "pDelete" : 0.7,
 	        "pAdd" : 0.7,
 	        "pMutate" : 1.0,

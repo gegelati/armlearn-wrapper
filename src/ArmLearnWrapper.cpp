@@ -2,18 +2,27 @@
 
 void ArmLearnWrapper::computeInput() {
     auto deviceStates = DeviceLearner::getDeviceState();
+    std::vector<uint16_t> newMotorPos;
     int indInput = 0;
     for (auto &deviceState : deviceStates) {
         for (unsigned short &value : deviceState) {
             motorPos.setDataAt(typeid(double), indInput, value);
+            newMotorPos.emplace_back(value);
             indInput++;
         }
+    }
+
+    auto newCartesianCoords = converter->computeServoToCoord(newMotorPos)->getCoord();
+
+    for (int i = 0; i < newCartesianCoords.size(); i++) {
+        cartesianPos.setDataAt(typeid(double), i, newCartesianCoords[i]);
+        cartesianDif.setDataAt(typeid(double), i, targets[0]->getInput()[i] - newCartesianCoords[i]);
     }
 }
 
 void ArmLearnWrapper::doAction(uint64_t actionID) {
     std::vector<double> out;
-    double step = M_PI / 60; // discrete rotations of some °
+    double step = M_PI / 180; // discrete rotations of some °
 
     switch (actionID) {
         case 0:
@@ -70,83 +79,119 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
     scaledOutput[4] = (scaledOutput[4] - 511) + inputI;
     inputI = (double) *(motorPos.getDataAt(typeid(double), 5).getSharedPointer<const double>());
     scaledOutput[5] = (scaledOutput[5] - 256) + inputI;
+    // TODO 8-2 et 3-9 ne donne pas la même chose alors que ça devrait
+
 
     auto validOutput = device->toValidPosition(scaledOutput);
-    std::vector<uint16_t> positionOutput;
-    for (auto ptr = validOutput.cbegin(); ptr < validOutput.cend(); ptr++) { positionOutput.push_back(*ptr); }
-    auto newCartesianCoords = converter->computeServoToCoord(positionOutput)->getCoord();
-    auto reward = computeReward(targets[0]->getInput(), positionOutput, newCartesianCoords); // Computation of reward
-
     device->setPosition(validOutput); // Update position
     device->waitFeedback();
-    score += reward;
 
-    for (int i = 0; i < newCartesianCoords.size(); i++) {
-        cartesianPos.setDataAt(typeid(double), i, newCartesianCoords[i]);
-        cartesianDif.setDataAt(typeid(double), i, newCartesianCoords[i]-targets[0]->getInput()[i]);
-    }
-    computeInput(); // to update motor pos
+    computeInput(); // to update  positions
+
+    nbActions++;
+
+    auto reward = computeReward(); // Computation of reward
+
+
+
+    score = reward;
 }
 
-template<class R, class T, class U>
-double ArmLearnWrapper::computeReward(const std::vector<R> &target, const std::vector<T> &motorPos,
-                                      const std::vector<U> &cartesianPos) const {
-    if (!device->validPosition(motorPos)) return VALID_COEFF;
+double ArmLearnWrapper::computeReward() {
+    std::vector<uint16_t> motorCoords;
+    for (int i = 0; i < motorPos.getLargestAddressSpace(); i++) {
+        motorCoords.emplace_back((uint16_t) *motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+    }
+    std::vector<double> cartesianCoords;
+    for (int i = 0; i < cartesianPos.getLargestAddressSpace(); i++) {
+        cartesianCoords.emplace_back(
+                (double) *cartesianPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+    }
+    auto target = targets[0]->getInput();
 
+    if (!device->validPosition(motorCoords)) return VALID_COEFF;
 
-    auto err = computeSquaredError(target, cartesianPos);
-    // if(abs(err) < LEARN_ERROR_MARGIN) return -VALID_COEFF;
-    return -TARGET_COEFF * err - MOVEMENT_COEFF * computeSquaredError(device->getPosition(), motorPos);
+    auto err = computeSquaredError(target, cartesianCoords);
+    if (abs(err) < LEARN_ERROR_MARGIN * 200) {
+        terminal = true;
+    }
+    return -1 * err - 0.002 * nbActions;
 }
 
 
 void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
     device->goToBackhoe(); // Reset position
     device->waitFeedback();
+
+
     computeInput();
+
     score = 0;
+    nbActions = 0;
+    terminal = false;
 }
 
 std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::getDataSources() {
     auto result = std::vector<std::reference_wrapper<const Data::DataHandler>>();
     result.emplace_back(cartesianDif);
+    result.emplace_back(motorPos);
     return result;
 }
 
 double ArmLearnWrapper::getScore() const {
-    /* if(score>-167.56){
-         std::cout<<"coords : "<<std::endl;
-         for(int i=0; i<6; i++){
-             std::cout<<(double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>())<<" ; ";
-         }
-         std::cout<<std::endl;
-     }*/
     return score;
 }
 
 
 bool ArmLearnWrapper::isTerminal() const {
-    return false;
+    return terminal;
 }
 
 bool ArmLearnWrapper::isCopyable() const {
     return true;
 }
 
+void ArmLearnWrapper::swapGoal(int i) {
+    std::rotate(targets.begin(), targets.begin() + i, targets.end());
+}
+
+armlearn::Input<uint16_t>* ArmLearnWrapper::randomGoal() {
+    return new armlearn::Input<uint16_t>(
+            {(uint16_t) (rng.getUnsignedInt64(0,300)), (uint16_t) (rng.getUnsignedInt64(0,300)), (uint16_t) (rng.getUnsignedInt64(0,300))});
+}
+
+void ArmLearnWrapper::customGoal(armlearn::Input<uint16_t>* newGoal) {
+    targets.erase(targets.begin());
+    targets.emplace(targets.begin(),newGoal);
+}
+
+std::string ArmLearnWrapper::newGoalToString() const {
+    std::stringstream toLog;
+    toLog << " - (new goal : ";
+    toLog << targets[0]->getInput()[0] << " ; ";
+    toLog << targets[0]->getInput()[1] << " ; ";
+    toLog << targets[0]->getInput()[2] << " ; ";
+    toLog << ")" << std::endl;
+    return toLog.str();
+}
+
 std::string ArmLearnWrapper::toString() const {
     std::stringstream res;
-    std::vector<uint16_t> in(6);
     for (int i = 0; i < 6; i++) {
         double input = (double) *(this->motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
         res << input << " ; ";
-        in[i] = input;
     }
 
     res << "    -->    ";
-    auto newCoords = converter->computeServoToCoord(in)->getCoord();
-    for (auto i : newCoords) {
-        res << (int) i << " ; ";
+    for (int i = 0; i < 3; i++) {
+        double input = (double) *(this->cartesianPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+        res << input << " ; ";
     }
+    res << " - (goal : ";
+    res << targets[0]->getInput()[0] << " ; ";
+    res << targets[0]->getInput()[1] << " ; ";
+    res << targets[0]->getInput()[2] << " ; ";
+    res << ")";
 
     return res.str();
 }

@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 if(NOT ${CMAKE_GENERATOR} MATCHES "Visual Studio.*")
     # Set to 1 to activate debug compilation (0 for release)
-    set(DEBUG 1)
+    set(DEBUG 0)
 
     # Link with pthread
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")

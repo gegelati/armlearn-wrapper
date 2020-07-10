@@ -19,8 +19,7 @@ int agentTest() {
     auto divide = [](double a, double b) -> double { return a / b; };
     auto cond = [](double a, double b) -> double { return a < b ? -a : a; };
     auto cos = [](double a) -> double { return std::cos(a); };
-    auto ln = [](double a) -> double { return std::log(a); };
-    auto exp = [](double a) -> double { return std::exp(a); };
+    auto sin = [](double a) -> double { return std::sin(a); };
 
     set.add(*(new Instructions::LambdaInstruction<double, double>(minus)));
     set.add(*(new Instructions::LambdaInstruction<double, double>(add)));
@@ -28,11 +27,9 @@ int agentTest() {
     set.add(*(new Instructions::LambdaInstruction<double, double>(divide)));
     set.add(*(new Instructions::LambdaInstruction<double, double>(cond)));
     set.add(*(new Instructions::LambdaInstruction<double>(cos)));
-    set.add(*(new Instructions::LambdaInstruction<double>(ln)));
-    set.add(*(new Instructions::LambdaInstruction<double>(exp)));
+    set.add(*(new Instructions::LambdaInstruction<double>(sin)));
 
 
-    // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
 
 
@@ -46,15 +43,22 @@ int agentTest() {
     TPG::TPGExecutionEngine tee(env);
 
     // Create an importer for the best graph and imports it
-    File::TPGGraphDotImporter dotImporter("out_170.dot", env, tpg);
+    File::TPGGraphDotImporter dotImporter("../Release/out_436.dot", env, tpg);
     dotImporter.importGraph();
 
     // takes the first root of the graph, anyway out_best has only 1 root (the best)
     auto root = tpg.getRootVertices().front();
 
+    // make a try on a random position
+   // le.randomGoal();
+    auto validationGoal = armlearn::Input<uint16_t>({300, 50, 50});
 
-    double x;
-    std::cout<<"Arm :\n"<<le.toString()<<std::endl;
+    le.customGoal(&validationGoal);
+
+    le.reset();
+
+    double x=1;
+    std::cout<<x<<"-Arm :\n"<<le.toString()<<std::endl;
     // let's play, the only way to leave this loop is to enter -1
     while(x!=-1){
         // gets the action the TPG would decide in this situation (the result can only be between 0 and 8 included)
@@ -63,8 +67,8 @@ int agentTest() {
         le.doAction(action);
 
         // prints the game board
-        std::cout<<"Arm :\n"<<le.toString()<<std::endl;
-
+        std::cout<<x<<"-Arm :\n"<<le.toString()<<std::endl;
+        x++;
         std::cin.ignore();
     }
 
