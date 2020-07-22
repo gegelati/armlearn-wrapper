@@ -112,10 +112,13 @@ double ArmLearnWrapper::computeReward() {
     if (!device->validPosition(motorCoords)) return VALID_COEFF;
 
     auto err = computeSquaredError(target, cartesianCoords);
-    if (abs(err) < LEARN_ERROR_MARGIN * 200) {
-        terminal = true;
-    }
-    return -1 * err - 0.002 * nbActions;
+    //if (abs(err) < 1) {
+    //    terminal = true;
+    //}
+/*
+    if(err<5 && nbActions==999)
+    std::cout<<toString()<<std::endl;*/
+    return -1 * err;
 }
 
 
@@ -123,7 +126,8 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
     device->goToBackhoe(); // Reset position
     device->waitFeedback();
 
-
+    if(*generation!=-1)
+        customGoal(randomGoal());
     computeInput();
 
     score = 0;
@@ -157,7 +161,7 @@ void ArmLearnWrapper::swapGoal(int i) {
 
 armlearn::Input<uint16_t>* ArmLearnWrapper::randomGoal() {
     return new armlearn::Input<uint16_t>(
-            {(uint16_t) (rng.getUnsignedInt64(0,300)), (uint16_t) (rng.getUnsignedInt64(0,300)), (uint16_t) (rng.getUnsignedInt64(0,300))});
+            {(uint16_t) (rng.getUnsignedInt64(50,400)), (uint16_t) (rng.getUnsignedInt64(50,400)), (uint16_t) (rng.getUnsignedInt64(20,350))});
 }
 
 void ArmLearnWrapper::customGoal(armlearn::Input<uint16_t>* newGoal) {

@@ -57,6 +57,9 @@ protected:
 
     size_t nbActions = 0;
 
+    /// to know at which generation we are
+    int* generation;
+
 public:
 
     armlearn::communication::AbstractController *iniController() {
@@ -81,9 +84,11 @@ public:
     /**
     * Constructor.
     */
-    ArmLearnWrapper() // 1 motorPos/ motor = 6, 2 output directions / motor = 6
-            : LearningEnvironment(13), targets(1), motorPos(6), cartesianPos(3), cartesianDif(3),
+    ArmLearnWrapper(int* gen)
+            : LearningEnvironment(13), targets(1), motorPos(6), cartesianPos(3), cartesianDif(3), generation(gen),
               DeviceLearner(iniController()) {
+
+        rng.setSeed(*generation);
 
 /*
         auto goal1 = new armlearn::Input<uint16_t>({0, 247, 267});
@@ -106,9 +111,9 @@ public:
 */
     ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions), targets(other.targets),
                                                     motorPos(other.motorPos), cartesianPos(other.cartesianPos),
-                                                    cartesianDif(other.cartesianDif), DeviceLearner(iniController()) {
+                                                    cartesianDif(other.cartesianDif), generation(other.generation), DeviceLearner(iniController()) {
 
-
+        rng.setSeed(*generation);
         this->reset(0);
         computeInput();
     }

@@ -15,7 +15,7 @@
 int main() {
 
     // if we want to test the best agent
-    if (true) {
+    if (false) {
         agentTest();
         return 0;
     }
@@ -47,8 +47,10 @@ int main() {
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson("../../params.json", params);
 
+    int i=0;
+
     // Instantiate the LearningEnvironment
-    ArmLearnWrapper le;
+    ArmLearnWrapper le(&i);
 
     // Instantiate and init the learning agent
     Learn::ParallelLearningAgent la(le, set, params);
@@ -70,23 +72,19 @@ int main() {
     printf("\nGen\tNbVert\tMin\tAvg\tMax\tTvalid\n");
 
     armlearn::Input<uint16_t> * randomGoal;
-    auto validationGoal = armlearn::Input<uint16_t>({300, 50, 50});
+    auto validationGoal = armlearn::Input<uint16_t>({550, 100, 100});
     auto startEval = std::chrono::high_resolution_clock::now();
 
     // Train for NB_GENERATIONS generations
-    for (int i = 0; i < NB_GENERATIONS; i++) {
+    for (i = 0; i < NB_GENERATIONS; i++) {
 
         if (i % 10 == 0) {
             randomGoal = le.randomGoal(); // le.randomGoal()
-            le.customGoal(randomGoal);
+            le.customGoal(&validationGoal);
             logFile << le.newGoalToString();
 
             // resets registered scores (a new goal means a new score)
-            std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex*> resettingMap;
-            for(auto root : la.getTPGGraph().getRootVertices()){
-                resettingMap.emplace(std::make_shared<Learn::EvaluationResult>(Learn::EvaluationResult(0,0)),root);
-            }
-            la.updateEvaluationRecords(resettingMap);
+            la.forgetPreviousResults();
         }
 
         char buff[16];
@@ -97,6 +95,9 @@ int main() {
 
         la.trainOneGeneration(i);
 
+
+        int saveI=i;
+        i=-1; // to avoid generating random goal in le.reset()
         // loads the validation goal to get learning stats, but don't worry randomGoal will be re-loaded later
         le.customGoal(&validationGoal);
 
@@ -120,8 +121,10 @@ int main() {
         std::cout << "\t" << std::chrono::duration_cast<std::chrono::milliseconds>(stopEval - startEval).count()/1000
                   << std::endl;
 
+        i=saveI;
+
         // loads the random goal again to continue training
-        le.customGoal(randomGoal);
+        le.customGoal(&validationGoal);
 
     }
 
