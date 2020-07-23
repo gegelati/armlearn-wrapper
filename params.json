@@ -1,8 +1,8 @@
 {
     "archiveSize" : 50,
     "archivingProbability" : 0.05,
-    "nbIterationsPerPolicyEvaluation" : 10,
-    "maxNbActionsPerEval" : 2500,
+    "nbIterationsPerPolicyEvaluation" : 100,
+    "maxNbActionsPerEval" : 5000,
     "ratioDeletedRoots" : 0.95,
     "maxNbEvaluationPerPolicy" : 20000,
 	"doValidation": false,

@@ -126,8 +126,8 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
     device->goToBackhoe(); // Reset position
     device->waitFeedback();
 
-    if(*generation!=-1)
-        customGoal(randomGoal());
+    swapGoal(1);
+
     computeInput();
 
     score = 0;
@@ -156,12 +156,14 @@ bool ArmLearnWrapper::isCopyable() const {
 }
 
 void ArmLearnWrapper::swapGoal(int i) {
+    if(targets.size()<2) return;
+    else
     std::rotate(targets.begin(), targets.begin() + i, targets.end());
 }
 
 armlearn::Input<uint16_t>* ArmLearnWrapper::randomGoal() {
     return new armlearn::Input<uint16_t>(
-            {(uint16_t) (rng.getUnsignedInt64(50,400)), (uint16_t) (rng.getUnsignedInt64(50,400)), (uint16_t) (rng.getUnsignedInt64(20,350))});
+            {(uint16_t) (rng.getUnsignedInt64(50,350)), (uint16_t) (rng.getUnsignedInt64(50,350)), (uint16_t) (rng.getUnsignedInt64(20,300))});
 }
 
 void ArmLearnWrapper::customGoal(armlearn::Input<uint16_t>* newGoal) {

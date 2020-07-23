@@ -72,19 +72,17 @@ int main() {
     printf("\nGen\tNbVert\tMin\tAvg\tMax\tTvalid\n");
 
     armlearn::Input<uint16_t> * randomGoal;
-    auto validationGoal = armlearn::Input<uint16_t>({550, 100, 100});
+    auto validationGoal = armlearn::Input<uint16_t>({300, 100, 100});
     auto startEval = std::chrono::high_resolution_clock::now();
 
     // Train for NB_GENERATIONS generations
     for (i = 0; i < NB_GENERATIONS; i++) {
 
-        if (i % 10 == 0) {
-            randomGoal = le.randomGoal(); // le.randomGoal()
-            le.customGoal(&validationGoal);
-            logFile << le.newGoalToString();
+        le.targets.clear();
 
-            // resets registered scores (a new goal means a new score)
-            la.forgetPreviousResults();
+        for(int j=0; j<1000; j++){
+            auto target = le.randomGoal();
+            le.targets.emplace_back(target);
         }
 
         char buff[16];
@@ -96,10 +94,9 @@ int main() {
         la.trainOneGeneration(i);
 
 
-        int saveI=i;
-        i=-1; // to avoid generating random goal in le.reset()
         // loads the validation goal to get learning stats, but don't worry randomGoal will be re-loaded later
-        le.customGoal(&validationGoal);
+        le.targets.clear();
+        le.targets.emplace_back(&validationGoal);
 
 
         std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> result;
@@ -120,12 +117,6 @@ int main() {
         printf("%3d\t%4" PRIu64 "\t%1.2lf\t%1.2lf\t%1.2lf", i, la.getTPGGraph().getNbVertices(), min, avg, max);
         std::cout << "\t" << std::chrono::duration_cast<std::chrono::milliseconds>(stopEval - startEval).count()/1000
                   << std::endl;
-
-        i=saveI;
-
-        // loads the random goal again to continue training
-        le.customGoal(&validationGoal);
-
     }
 
     // Keep best policy

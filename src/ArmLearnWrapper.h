@@ -39,9 +39,6 @@ protected:
     /// Randomness control
     Mutator::RNG rng;
 
-    /// Inputs of learning, positions to ask to the robot
-    std::vector<armlearn::Input<uint16_t> *> targets;
-
     /// Current arm position
     Data::PrimitiveTypeArray<double> motorPos;
 
@@ -57,10 +54,10 @@ protected:
 
     size_t nbActions = 0;
 
-    /// to know at which generation we are
-    int* generation;
-
 public:
+
+    /// Inputs of learning, positions to ask to the robot
+    std::vector<armlearn::Input<uint16_t> *> targets;
 
     armlearn::communication::AbstractController *iniController() {
         auto conv = new armlearn::kinematics::OptimCartesianConverter(); // Create kinematics calculator
@@ -85,10 +82,8 @@ public:
     * Constructor.
     */
     ArmLearnWrapper(int* gen)
-            : LearningEnvironment(13), targets(1), motorPos(6), cartesianPos(3), cartesianDif(3), generation(gen),
+            : LearningEnvironment(13), targets(1), motorPos(6), cartesianPos(3), cartesianDif(3),
               DeviceLearner(iniController()) {
-
-        rng.setSeed(*generation);
 
 /*
         auto goal1 = new armlearn::Input<uint16_t>({0, 247, 267});
@@ -111,9 +106,8 @@ public:
 */
     ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions), targets(other.targets),
                                                     motorPos(other.motorPos), cartesianPos(other.cartesianPos),
-                                                    cartesianDif(other.cartesianDif), generation(other.generation), DeviceLearner(iniController()) {
+                                                    cartesianDif(other.cartesianDif), DeviceLearner(iniController()) {
 
-        rng.setSeed(*generation);
         this->reset(0);
         computeInput();
     }
