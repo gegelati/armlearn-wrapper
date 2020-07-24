@@ -63,7 +63,6 @@ int main() {
     // Adds another logger that will log in a file
     std::ofstream o("log");
     auto logFile = *new Log::LABasicLogger(la,o);
-    la.addLogger(logFile);
 
     // Create an exporter for all graphs
     File::TPGGraphDotExporter dotExporter("out_000.dot", la.getTPGGraph());
@@ -80,7 +79,7 @@ int main() {
 
         le.targets.clear();
 
-        for(int j=0; j<1000; j++){
+        for(int j=0; j<10; j++){
             auto target = le.randomGoal();
             le.targets.emplace_back(target);
         }
