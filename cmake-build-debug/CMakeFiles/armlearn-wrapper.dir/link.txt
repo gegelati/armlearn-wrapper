@@ -1,0 +1,1 @@
+/usr/bin/c++   -pthread -O3 -DNDEBUG   CMakeFiles/armlearn-wrapper.dir/src/ArmLearnWrapper.cpp.o CMakeFiles/armlearn-wrapper.dir/src/main.cpp.o CMakeFiles/armlearn-wrapper.dir/src/mainGrabStandalone.cpp.o CMakeFiles/armlearn-wrapper.dir/src/resultTester.cpp.o  -o Release/armlearn-wrapper  -Wl,-rpath,/usr/local/lib /usr/local/lib/libarmlearn.so /usr/local/lib/libGEGELATI.so.0.3.0 

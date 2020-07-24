@@ -62,7 +62,7 @@ int main() {
 
     // Adds another logger that will log in a file
     std::ofstream o("log");
-    auto logFile = *new Log::LABasicLogger(o);
+    auto logFile = *new Log::LABasicLogger(la,o);
     la.addLogger(logFile);
 
     // Create an exporter for all graphs
