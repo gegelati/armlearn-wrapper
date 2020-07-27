@@ -126,8 +126,6 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
     device->goToBackhoe(); // Reset position
     device->waitFeedback();
 
-    swapGoal(1);
-
     computeInput();
 
     score = 0;

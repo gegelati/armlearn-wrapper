@@ -62,8 +62,8 @@ int main() {
 
     // Adds another logger that will log in a file
     std::ofstream o("log");
-    auto logFile = *new Log::LABasicLogger(o);
-    la.addLogger(logFile);
+    auto targetsLogFile = *new Log::LABasicLogger(o);
+    la.addLogger(targetsLogFile);
 
     // Create an exporter for all graphs
     File::TPGGraphDotExporter dotExporter("out_000.dot", la.getTPGGraph());
@@ -78,11 +78,13 @@ int main() {
     // Train for NB_GENERATIONS generations
     for (i = 0; i < NB_GENERATIONS; i++) {
 
-        le.targets.clear();
+        if (i % 5 == 0) {
+            randomGoal = le.randomGoal(); // le.randomGoal()
+            le.customGoal(randomGoal);
+            targetsLogFile << le.newGoalToString();
 
-        for(int j=0; j<1000; j++){
-            auto target = le.randomGoal();
-            le.targets.emplace_back(target);
+            // resets registered scores (a new goal means a new score)
+            la.forgetPreviousResults();
         }
 
         char buff[16];
@@ -90,13 +92,10 @@ int main() {
         dotExporter.setNewFilePath(buff);
         dotExporter.print();
 
-
         la.trainOneGeneration(i);
 
-
         // loads the validation goal to get learning stats, but don't worry randomGoal will be re-loaded later
-        le.targets.clear();
-        le.targets.emplace_back(&validationGoal);
+        le.customGoal(&validationGoal);
 
 
         std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> result;
@@ -117,6 +116,9 @@ int main() {
         printf("%3d\t%4" PRIu64 "\t%1.2lf\t%1.2lf\t%1.2lf", i, la.getTPGGraph().getNbVertices(), min, avg, max);
         std::cout << "\t" << std::chrono::duration_cast<std::chrono::milliseconds>(stopEval - startEval).count()/1000
                   << std::endl;
+
+        // loads the random goal again to continue training
+        le.customGoal(randomGoal);
     }
 
     // Keep best policy
