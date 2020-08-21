@@ -79,7 +79,7 @@ int main() {
 
         le.targets.clear();
 
-        for(int j=0; j<10; j++){
+        for(int j=0; j<100; j++){
             auto target = le.randomGoal();
             le.targets.emplace_back(target);
         }
