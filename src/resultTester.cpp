@@ -32,7 +32,7 @@ int agentTest() {
 
     int i=-1;
     ArmLearnWrapper le(&i);
-    auto validationGoal = armlearn::Input<uint16_t>({300, 50, 50});
+    auto validationGoal = armlearn::Input<int16_t>({300, 50, 50});
     le.customGoal(&validationGoal);
     le.reset();
 
@@ -70,7 +70,7 @@ int agentTest() {
 }
 
 
-int runByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le, armlearn::Input<uint16_t>& goal){
+int runByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le, armlearn::Input<int16_t>& goal){
     double x=1;
     std::cout<<x<<"-Arm :\n"<<le.toString()<<std::endl;
     // let's play, the only way to leave this loop is to enter -1

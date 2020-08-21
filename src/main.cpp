@@ -71,7 +71,7 @@ int main() {
     printf("\nGen\tNbVert\tMin\tAvg\tMax\tTvalid\n");
 
     armlearn::Input<uint16_t> * randomGoal;
-    auto validationGoal = armlearn::Input<uint16_t>({300, 100, 100});
+    auto validationGoal = armlearn::Input<int16_t>({300, 100, 100});
     auto startEval = std::chrono::high_resolution_clock::now();
 
     // Train for NB_GENERATIONS generations

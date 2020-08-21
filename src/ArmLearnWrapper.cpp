@@ -79,7 +79,6 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
     scaledOutput[4] = (scaledOutput[4] - 511) + inputI;
     inputI = (double) *(motorPos.getDataAt(typeid(double), 5).getSharedPointer<const double>());
     scaledOutput[5] = (scaledOutput[5] - 256) + inputI;
-    // TODO 8-2 et 3-9 ne donne pas la même chose alors que ça devrait
 
 
     auto validOutput = device->toValidPosition(scaledOutput);
@@ -161,12 +160,12 @@ void ArmLearnWrapper::swapGoal(int i) {
     std::rotate(targets.begin(), targets.begin() + i, targets.end());
 }
 
-armlearn::Input<uint16_t>* ArmLearnWrapper::randomGoal() {
-    return new armlearn::Input<uint16_t>(
-            {(uint16_t) (rng.getUnsignedInt64(50,350)), (uint16_t) (rng.getUnsignedInt64(50,350)), (uint16_t) (rng.getUnsignedInt64(20,300))});
+armlearn::Input<int16_t>* ArmLearnWrapper::randomGoal() {
+    return new armlearn::Input<int16_t>(
+            {(int16_t) (rng.getUnsignedInt64(-200,200)), (int16_t) (rng.getUnsignedInt64(-200,200)), (int16_t) (rng.getUnsignedInt64(-150,400))});
 }
 
-void ArmLearnWrapper::customGoal(armlearn::Input<uint16_t>* newGoal) {
+void ArmLearnWrapper::customGoal(armlearn::Input<int16_t>* newGoal) {
     targets.erase(targets.begin());
     targets.emplace(targets.begin(),newGoal);
 }

@@ -57,7 +57,7 @@ protected:
 public:
 
     /// Inputs of learning, positions to ask to the robot
-    std::vector<armlearn::Input<uint16_t> *> targets;
+    std::vector<armlearn::Input<int16_t> *> targets;
 
     armlearn::communication::AbstractController *iniController() {
         auto conv = new armlearn::kinematics::OptimCartesianConverter(); // Create kinematics calculator
@@ -84,16 +84,6 @@ public:
     ArmLearnWrapper(int* gen)
             : LearningEnvironment(13), targets(1), motorPos(6), cartesianPos(3), cartesianDif(3),
               DeviceLearner(iniController()) {
-
-/*
-        auto goal1 = new armlearn::Input<uint16_t>({0, 247, 267});
-        auto goal2 = new armlearn::Input<uint16_t>({100, 347, 267});
-        auto goal3 = new armlearn::Input<uint16_t>({0, 347, 167});
-        //auto goal4 = new armlearn::Input<uint16_t>({8, 50, 150});
-        targets.push_back(goal1);
-        targets.push_back(goal2);
-        targets.push_back(goal3);
-        //targets.push_back(goal4);*/
     }
 
     armlearn::communication::AbstractController *generateControllerAndSetConverter() {
@@ -151,10 +141,10 @@ public:
     void swapGoal(int i);
 
 /// Generation a new  random
-    armlearn::Input<uint16_t> *randomGoal();
+    armlearn::Input<int16_t> *randomGoal();
 
 /// Gives a custom goal to the environment
-    void customGoal(armlearn::Input<uint16_t> *newGoal);
+    void customGoal(armlearn::Input<int16_t> *newGoal);
 
 /// Returns a string logging the goal (to use e.g. when there is a goal change)
     std::string newGoalToString() const;
