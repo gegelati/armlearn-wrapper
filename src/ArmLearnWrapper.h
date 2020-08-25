@@ -54,6 +54,8 @@ protected:
 
     size_t nbActions = 0;
 
+    std::vector<uint16_t> startingPos = BACKHOE_POSITION;
+
 public:
 
     /// Inputs of learning, positions to ask to the robot
@@ -165,6 +167,12 @@ public:
     virtual armlearn::Output<std::vector<uint16_t>> *produce(const armlearn::Input<uint16_t> &input) override {
         return new armlearn::Output<std::vector<uint16_t>>(std::vector<std::vector<uint16_t>>());
     }
+
+    /// returns current motors position in a vector
+    std::vector<uint16_t> getMotorsPos();
+
+    /// sets a new position to begin simulation from
+    int changeStartingPos(std::vector<uint16_t> newStartingPos);
 
 };
 

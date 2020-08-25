@@ -122,7 +122,7 @@ double ArmLearnWrapper::computeReward() {
 
 
 void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
-    device->goToBackhoe(); // Reset position
+    device->setPosition(startingPos); // Reset position
     device->waitFeedback();
 
     swapGoal(1);
@@ -203,4 +203,19 @@ std::string ArmLearnWrapper::toString() const {
 
 Learn::LearningEnvironment *ArmLearnWrapper::clone() const {
     return new ArmLearnWrapper(*this);
+}
+
+std::vector<uint16_t> ArmLearnWrapper::getMotorsPos(){
+    auto deviceStates = DeviceLearner::getDeviceState();
+    std::vector<uint16_t> motorPos;
+    for (auto &deviceState : deviceStates) {
+        for (unsigned short &value : deviceState) {
+            motorPos.emplace_back(value);
+        }
+    }
+    return motorPos;
+}
+
+int ArmLearnWrapper::changeStartingPos(std::vector<uint16_t> newStartingPos){
+    startingPos = newStartingPos;
 }
