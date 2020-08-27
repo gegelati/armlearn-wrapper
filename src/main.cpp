@@ -11,11 +11,10 @@
 #define NB_GENERATIONS 20000
 #endif
 
-
 int main() {
 
     // if we want to test the best agent
-    if (false) {
+    if (true) {
         agentTest();
         return 0;
     }
@@ -79,6 +78,8 @@ int main() {
 
         le.targets.clear();
 
+        // we generate random targets so that at each generation, 100 different targets are used.
+        // as target changes on reset, make sure nbIterationsPerPolicyEvaluation > 100
         for(int j=0; j<100; j++){
             auto target = le.randomGoal();
             le.targets.emplace_back(target);
@@ -93,7 +94,7 @@ int main() {
         la.trainOneGeneration(i);
 
 
-        // loads the validation goal to get learning stats, but don't worry randomGoal will be re-loaded later
+        // loads the validation goal to get learning stats on a given target
         le.targets.clear();
         le.targets.emplace_back(&validationGoal);
 

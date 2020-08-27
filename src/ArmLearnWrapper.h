@@ -27,6 +27,19 @@
 
 /**
 * LearningEnvironment to use armLean in order to learn how to move a robotic arm.
+* It inherits from LearningEnvironment to be used by Gegelati as an environment,
+* and from DeviceLearner to access motors of the arm
+* This double inheritance results in useless methods but it isn't a real problem.
+*
+* At the beginning, the arm is placed at startingPos. The goal will be to reach a target :
+* targets[0]. targets is a list of targets that can rotate at each new simulation
+* (see method reset)
+* At each frame, the TPG is asked to take a decision based on the input
+* (currently pos of motors and distances between arm and target on x, y and z).
+* It decides to move a motor in one direction from a fix
+* angle, or to do nothing. Then, its inputs are updated and it goes on.
+* The simulation is stopped after something like 1000 frames, and we
+* take the negative distance arm-target as score.
 */
 class ArmLearnWrapper : public Learn::LearningEnvironment, armlearn::learning::DeviceLearner {
 protected:
@@ -77,6 +90,7 @@ public:
         arbotix_sim->updateInfos();
 
         converter = conv;
+
         return arbotix_sim; // defines the parent DeviceLearner "device" attribute
     }
 
