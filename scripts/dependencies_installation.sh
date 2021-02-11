@@ -6,7 +6,7 @@ set -e
 
 echo "Beginning of dependencies installation..."
 # get basic elements
-sudo apt install git make cmake g++ python3 python3-pip python3-catkin-pkg python3-empy python3-nose libgtest-dev libboost-all-dev
+sudo apt install git make cmake g++ python3 python3-pip python3-catkin python3-catkin-pkg python3-empy python3-nose libgtest-dev libboost-all-dev
 
 # dependencies will be put in lib and installed
 mkdir -p lib && cd lib
@@ -41,8 +41,6 @@ git clone --depth 1 --branch 4.4.0 https://github.com/boostorg/build.git
 cd build
 ./bootstrap.sh
 cd ..
-
-exit
 
 # get serial
 git clone https://github.com/wjwwood/serial.git
