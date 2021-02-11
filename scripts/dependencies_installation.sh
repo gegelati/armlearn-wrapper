@@ -35,23 +35,26 @@ sudo cmake --build . --target install
 cd ../..
 
 
-# get boost
+# get boost (v4.4.0)
 echo "# Install boost"
 git clone --depth 1 --branch 4.4.0 https://github.com/boostorg/build.git
 cd build
 ./bootstrap.sh
 cd ..
 
-# get serial
+# get serial (commit cbcca7)
+echo "# Install serial"
 git clone https://github.com/wjwwood/serial.git
 cd serial
+git checkout cbcca7c
 mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
 sudo cmake --build . --target install
 cd ../..
 
-# get json from nlohann
-git clone https://github.com/nlohmann/json.git
+# get json from nlohann 
+echo "# Install json"
+git clone --depth 1 --branch v3.9.1 https://github.com/nlohmann/json.git
 cd json
 mkdir build && cd build
 cmake ..
@@ -59,34 +62,35 @@ sudo cmake --build . --target install
 cd ../..
 
 # get SDL2 components for armlearn
+echo "# Install SDL2"
 sudo apt-get install libsdl2-image-dev libsdl2-ttf-dev
 
-# get armlearn
+# get armlearn (commit 2c46336)
+echo "# Install armlearn"
 git clone https://github.com/ggendro/armlearn.git
 cd armlearn
+git checkout 2c46336
 rm -R examples/computations # there is a bad include in it and we don't need it
 rm -R examples/device_communication # there is a bad include in it and we don't need it
 rm -R examples/learning # there is a bad include in it and we don't need it
 rm -R examples/trajectories # there is a bad include in it and we don't need it
-mkdir preesm && cd preesm
-git clone https://github.com/preesm/preesm-apps.git
-cd preesm-apps
-git checkout ddpg_rl_app
-cp -R org.ietr.preesm.deep_deterministic_policy_gradient ..
-cp -R org.ietr.preesm.reinforcement_learning ..
-cd ../..
+mkdir preesm
+mkdir preesm/org.ietr.preesm.reinforcement_learning
+mkdir preesm/org.ietr.preesm.reinforcement_learning/Spider.
 mkdir build && cd build
 echo "" > ../tests/gtests/CMakeLists.txt # just to avoid building tests as they sometimes don't work and are not compulsory
+echo "" > ../preesm/org.ietr.preesm.reinforcement_learning/Spider/CMakeLists.txt #same
 cmake ..
 sudo cmake --build . --target install
 cd ../..
 
 
-# get Gegelati
+# get Gegelati (latest version installed, tested with 0.5.1)
+echo "# Install Gegelati"
 git clone https://github.com/gegelati/gegelati.git
 cd gegelati/bin
 cmake ..
-cmake --build . --target install # On Linux
+sudo cmake --build . --target install # On Linux
 cd ../..
 
 # update libs
