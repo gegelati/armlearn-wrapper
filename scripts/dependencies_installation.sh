@@ -1,8 +1,12 @@
 # installation instructions : run the script and go take a coffee.
 # If after a some time it fails, the log could provide informations about a missing package. Look for the package in the blocks below to understand what was wrong.
+
+# exit when any command fails
+set -e
+
 echo "Beginning of dependencies installation..."
 # get basic elements
-sudo apt install git make cmake g++ python python-pip python-catkin-pkg python-empy python-nose libgtest-dev libboost-all-dev
+sudo apt install git make cmake g++ python3 python3-pip python3-catkin-pkg python3-empy python3-nose libgtest-dev libboost-all-dev
 
 # dependencies will be put in lib and installed
 mkdir lib && cd lib
