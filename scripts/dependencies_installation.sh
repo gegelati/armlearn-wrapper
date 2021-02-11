@@ -11,16 +11,6 @@ sudo apt install git make cmake g++ python3 python3-pip python3-catkin-pkg pytho
 # dependencies will be put in lib and installed
 mkdir lib && cd lib
 
-# get spider
-git clone https://github.com/preesm/spider.git
-cd spider/master
-./CMakeGCC.sh
-PREFIX=/usr/local/
-sudo cp libSpider.so ${PREFIX}/lib/libSpider.so
-sudo cp libspider/spider/spider.h ${PREFIX}/include/spider.h
-sudo cp -R libspider/spider-api ${PREFIX}/include/
-cd ../..
-
 # get Eigen3
 git clone https://gitlab.com/libeigen/eigen.git
 sudo cp -R eigen/Eigen /usr/local/include/
