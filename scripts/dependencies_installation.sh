@@ -6,7 +6,7 @@ set -e
 
 echo "Beginning of dependencies installation..."
 # get basic elements
-sudo apt install git make cmake g++ python3 python3-pip python3-catkin python3-catkin-pkg python3-empy python3-nose libgtest-dev libboost-all-dev
+sudo apt install git make cmake g++ python3 python3-pip python3-catkin python3-catkin-pkg python3-empy python3-nose libgtest-dev libboost-all-dev doxygen
 
 # dependencies will be put in lib and installed
 mkdir -p lib && cd lib
