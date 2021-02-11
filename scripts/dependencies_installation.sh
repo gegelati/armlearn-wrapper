@@ -11,24 +11,30 @@ sudo apt install git make cmake g++ python3 python3-pip python3-catkin-pkg pytho
 # dependencies will be put in lib and installed
 mkdir lib && cd lib
 
-# get Eigen3
-git clone https://gitlab.com/libeigen/eigen.git
+# get Eigen3 (v3.3.9)
+echo "Install Eigen3"
+git clone --depth 1 --branch 3.3.9 https://gitlab.com/libeigen/eigen.git
 sudo cp -R eigen/Eigen /usr/local/include/
 
-# get kdl
+# get kdl (commit 0b1b52e)
+echo "Install orocos_kdl"
 git clone https://github.com/orocos/orocos_kinematics_dynamics.git
 cd orocos_kinematics_dynamics/orocos_kdl/
+git checkout 0b1b52e
 mkdir build && cd build
 cmake .. -DEIGEN3_INCLUDE_DIR=../../eigen
 sudo cmake --build . --target install
 cd ../../..
 
-# get catkin
-git clone https://github.com/ros/catkin.git
+# get catkin (v0.8.9)
+echo "Install catkin"
+git clone --depth 1 --branch 0.8.9 https://github.com/ros/catkin.git
 cd catkin/bin
 cmake ..
 sudo cmake --build . --target install
 cd ../..
+
+exit
 
 # get boost
 git clone https://github.com/boostorg/build.git
