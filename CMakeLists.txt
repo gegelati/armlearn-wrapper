@@ -73,3 +73,4 @@ add_executable(armGegelati ${armgegelati_files} src/resultTester.h)
 
 target_link_libraries(armGegelati /usr/local/lib/libarmlearn.so)
 target_link_libraries(armGegelati ${GEGELATI_LIBRARIES})
+target_compile_definitions(armGegelati PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")

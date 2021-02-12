@@ -14,7 +14,7 @@
 int main() {
 
     // if we want to test the best agent
-    if (true) {
+    if (false) {
         agentTest();
         return 0;
     }
@@ -44,7 +44,7 @@ int main() {
     // among other things)
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson("../../params.json", params);
+    File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
     int i=0;
 
