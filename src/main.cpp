@@ -54,22 +54,13 @@ int main() {
     la.init();
 
     // Adds a logger to the LA (to get statistics on learning) on std::cout
-    /*auto logCout = *new Log::LABasicLogger();
-    la.addLogger(logCout);*/
-
-    // Adds another logger that will log in a file
-    std::ofstream o("log");
-    auto logFile = *new Log::LABasicLogger(la,o);
+    auto logCout = *new Log::LABasicLogger(la);
 
     // Create an exporter for all graphs
     File::TPGGraphDotExporter dotExporter("out_000.dot", la.getTPGGraph());
 
-
-    printf("\nGen\tNbVert\tMin\tAvg\tMax\tTvalid\n");
-
     armlearn::Input<uint16_t> * randomGoal;
     auto validationGoal = armlearn::Input<int16_t>({300, 100, 100});
-    auto startEval = std::chrono::high_resolution_clock::now();
 
     // Train for NB_GENERATIONS generations
     for (int i = 0; i < NB_GENERATIONS; i++) {
@@ -83,11 +74,11 @@ int main() {
             le.targets.emplace_back(target);
         }
 
+	// Export graphs
         char buff[16];
         sprintf(buff, "out_%03d.dot", i);
         dotExporter.setNewFilePath(buff);
         dotExporter.print();
-
 
         la.trainOneGeneration(i);
 
@@ -99,29 +90,12 @@ int main() {
 
         std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> result;
 
-        result = la.evaluateAllRoots(i, Learn::LearningMode::VALIDATION);
-
-        auto stopEval = std::chrono::high_resolution_clock::now();
-        auto iter = result.begin();
-        double min = iter->first->getResult();
-        std::advance(iter, result.size() - 1);
-        double max = iter->first->getResult();
-        double avg = std::accumulate(result.begin(), result.end(), 0.0,
-                                     [](double acc,
-                                        std::pair<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> pair) -> double {
-                                         return acc + pair.first->getResult();
-                                     });
-        avg /= result.size();
-        printf("%3d\t%4" PRIu64 "\t%1.2lf\t%1.2lf\t%1.2lf", i, la.getTPGGraph().getNbVertices(), min, avg, max);
-        std::cout << "\t" << std::chrono::duration_cast<std::chrono::milliseconds>(stopEval - startEval).count()/1000
-                  << std::endl;
     }
 
     // Keep best policy
     la.keepBestPolicy();
     dotExporter.setNewFilePath("out_best.dot");
     dotExporter.print();
-
 
 
     // cleanup
