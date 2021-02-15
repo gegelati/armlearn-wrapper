@@ -97,7 +97,7 @@ public:
     /**
     * Constructor.
     */
-    ArmLearnWrapper(int* gen)
+    ArmLearnWrapper()
             : LearningEnvironment(13), targets(1), motorPos(6), cartesianPos(3), cartesianDif(3),
               DeviceLearner(iniController()) {
     }

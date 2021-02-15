@@ -46,10 +46,8 @@ int main() {
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
-    int i=0;
-
     // Instantiate the LearningEnvironment
-    ArmLearnWrapper le(&i);
+    ArmLearnWrapper le;
 
     // Instantiate and init the learning agent
     Learn::ParallelLearningAgent la(le, set, params);
@@ -74,7 +72,7 @@ int main() {
     auto startEval = std::chrono::high_resolution_clock::now();
 
     // Train for NB_GENERATIONS generations
-    for (i = 0; i < NB_GENERATIONS; i++) {
+    for (int i = 0; i < NB_GENERATIONS; i++) {
 
         le.targets.clear();
 

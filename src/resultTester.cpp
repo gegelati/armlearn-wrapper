@@ -29,9 +29,7 @@ int agentTest() {
     set.add(*(new Instructions::LambdaInstruction<double>(cos)));
     set.add(*(new Instructions::LambdaInstruction<double>(sin)));
 
-
-    int i=-1;
-    ArmLearnWrapper le(&i);
+    ArmLearnWrapper le;
     auto validationGoal = armlearn::Input<int16_t>({300, 50, 50});
     le.customGoal(&validationGoal);
     le.reset();
@@ -48,7 +46,7 @@ int agentTest() {
 
 
     // Create an importer for the best graph and imports it
-    File::TPGGraphDotImporter dotImporter("../../best.dot", env, tpg);
+    File::TPGGraphDotImporter dotImporter("ROOT_DIR /best.dot", env, tpg);
     dotImporter.importGraph();
 
     // takes the first root of the graph, anyway out_best has only 1 root (the best)
