@@ -57,4 +57,6 @@ int maine() {
 
     path.init();
     path.executeTrajectory();
+    
+    return 0;
 }

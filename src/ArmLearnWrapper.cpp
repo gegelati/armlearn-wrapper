@@ -216,6 +216,6 @@ std::vector<uint16_t> ArmLearnWrapper::getMotorsPos(){
     return motorPos;
 }
 
-int ArmLearnWrapper::changeStartingPos(std::vector<uint16_t> newStartingPos){
+void ArmLearnWrapper::changeStartingPos(std::vector<uint16_t> newStartingPos){
     startingPos = newStartingPos;
 }

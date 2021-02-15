@@ -71,7 +71,7 @@ int agentTest() {
     return 0;
 }
 
-int printPolicyStats(const TPG::TPGVertex* root, Environment& env){
+void printPolicyStats(const TPG::TPGVertex* root, Environment& env){
     TPG::PolicyStats ps;
     ps.setEnvironment(env);
     ps.analyzePolicy(root);
@@ -82,7 +82,7 @@ int printPolicyStats(const TPG::TPGVertex* root, Environment& env){
 }
 
 
-int runByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le, armlearn::Input<int16_t>& goal){
+void runByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le, armlearn::Input<int16_t>& goal){
     double x=1;
     std::cout<<x<<"-Arm :\n"<<le.toString()<<std::endl;
     // let's play, the only way to leave this loop is to enter -1
@@ -99,7 +99,7 @@ int runByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearn
     }
 }
 
-int runEvals(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le){
+void runEvals(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le){
     std::cout<<"begining of runEvals"<<std::endl;
     std::ofstream o("log");
     double x=1;
@@ -121,7 +121,7 @@ int runEvals(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnW
     o.close();
 }
 
-int runRealArmAuto(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le){
+void runRealArmAuto(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le){
 
     armlearn::communication::SerialController arbotix("/dev/ttyUSB0");
 
@@ -193,7 +193,7 @@ int runRealArmAuto(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, Arm
     path.executeTrajectory();
 }
 
-int runRealArmByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le){
+void runRealArmByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le){
 
     armlearn::communication::SerialController arbotix("/dev/ttyUSB0");
 
@@ -248,7 +248,7 @@ int runRealArmByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, A
     path.executeTrajectory();
 }
 
-int goToPos(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le,
+void goToPos(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le,
             armlearn::Trajectory& path, armlearn::Input<int16_t> *target){
 
     le.customGoal(target);

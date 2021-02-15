@@ -102,10 +102,6 @@ public:
               DeviceLearner(iniController()) {
     }
 
-    armlearn::communication::AbstractController *generateControllerAndSetConverter() {
-
-    }
-
 /**
 * \brief Copy constructor for the armLearnWrapper.
 *
@@ -186,7 +182,7 @@ public:
     std::vector<uint16_t> getMotorsPos();
 
     /// sets a new position to begin simulation from
-    int changeStartingPos(std::vector<uint16_t> newStartingPos);
+    void changeStartingPos(std::vector<uint16_t> newStartingPos);
 
 };
 
