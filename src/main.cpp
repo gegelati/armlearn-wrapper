@@ -1,5 +1,6 @@
 #include <unordered_set>
 #include <string>
+#include <atomic>
 #include <cfloat>
 
 #include <gegelati.h>
@@ -10,6 +11,31 @@
 #ifndef NB_GENERATIONS
 #define NB_GENERATIONS 20000
 #endif
+
+void getKey(std::atomic<bool>& exit) {
+    std::cout << std::endl;
+    std::cout << "Press `q` then [Enter] to exit." << std::endl;
+    std::cout.flush();
+
+    exit = false;
+
+    while (!exit) {
+        char c;
+        std::cin >> c;
+        switch (c) {
+        case 'q':
+        case 'Q':
+            exit = true;
+            break;
+        default:
+            printf("Invalid key '%c' pressed.", c);
+            std::cout.flush();
+        }
+    }
+
+    printf("Program will terminate at the end of next generation.\n");
+    std::cout.flush();
+}
 
 int main() {
 
@@ -53,8 +79,23 @@ int main() {
     Learn::ParallelLearningAgent la(le, set, params);
     la.init();
 
+#ifndef NO_CONSOLE_CONTROL
+    std::atomic<bool> exitProgram = true; // (set to false by other thread)
+
+    std::thread threadKeyboard(getKey, std::ref(exitProgram));
+
+    while (exitProgram); // Wait for other thread to print key info.
+#else
+    std::atomic<bool> exitProgram = false; // (set to false by other thread) 
+#endif
+
     // Adds a logger to the LA (to get statistics on learning) on std::cout
     auto logCout = *new Log::LABasicLogger(la);
+
+    // File for printing best policy stat.
+    std::ofstream stats;
+    stats.open("bestPolicyStats.md");
+    Log::LAPolicyStatsLogger logStats(la, stats);
 
     // Create an exporter for all graphs
     File::TPGGraphDotExporter dotExporter("out_000.dot", la.getTPGGraph());
@@ -63,7 +104,7 @@ int main() {
     auto validationGoal = armlearn::Input<int16_t>({300, 100, 100});
 
     // Train for NB_GENERATIONS generations
-    for (int i = 0; i < NB_GENERATIONS; i++) {
+    for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
 
         le.targets.clear();
 
@@ -97,12 +138,28 @@ int main() {
     dotExporter.setNewFilePath("out_best.dot");
     dotExporter.print();
 
+    // Export best policy statistics.
+    TPG::PolicyStats ps;
+    ps.setEnvironment(la.getTPGGraph().getEnvironment());
+    ps.analyzePolicy(la.getBestRoot().first);
+    std::ofstream bestStats;
+    bestStats.open("out_best_stats.md");
+    bestStats << ps;
+    bestStats.close();
+
+    // close log file also
+    stats.close();
 
     // cleanup
     for (unsigned int i = 0; i < set.getNbInstructions(); i++) {
         delete (&set.getInstruction(i));
     }
 
+#ifndef NO_CONSOLE_CONTROL
+    // Exit the thread
+    std::cout << "Exiting program, press a key then [enter] to exit if nothing happens.";
+    threadKeyboard.join();
+#endif
 
     return 0;
 }
