@@ -68,6 +68,9 @@ protected:
     size_t nbActions = 0;
 
     std::vector<uint16_t> startingPos = BACKHOE_POSITION;
+    
+    /// Target currently used to move the arm.
+    armlearn::Input<int16_t> * currentTarget;
 
 public:
 
@@ -153,13 +156,21 @@ public:
 /// Inherited via LearningEnvironment
     virtual LearningEnvironment *clone() const;
 
-/// Changes the goal, putting the first of the vector to the end
-    void swapGoal(int i);
+    /**
+    * \brief Set the currentTarget to the next target.
+    *
+    * The next currentTarget is chosen within the trainingTargets or
+    * the validationTargets lists, depending on the given modes.
+    * A left rotation of the selected list is done, to iterate on the list
+    * of targets automatically when calling the swapGoal method.
+    *
+    */
+    void swapGoal(Learn::LearningMode mode);
 
 /// Generation a new  random
     armlearn::Input<int16_t> *randomGoal();
 
-/// Gives a custom goal to the environment
+    /// Puts a custom goal in the first slot of the trainingTargets list.
     void customGoal(armlearn::Input<int16_t> *newGoal);
 
 /// Returns a string logging the goal (to use e.g. when there is a goal change)

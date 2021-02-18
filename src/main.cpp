@@ -74,6 +74,13 @@ int main() {
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
+    
+    // Generate validation targets.
+    le.validationTargets.clear();
+    for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
+        auto target = le.randomGoal();
+        le.validationTargets.emplace_back(target);
+    }
 
     // Instantiate and init the learning agent
     Learn::ParallelLearningAgent la(le, set, params);
@@ -106,9 +113,7 @@ int main() {
     // Train for NB_GENERATIONS generations
     for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
 
-       
-
-        // we generate random targets so that at each generation, different targets are used.
+        // we generate new random training targets so that at each generation, different targets are used.
         le.trainingTargets.clear();
         for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
             auto target = le.randomGoal();

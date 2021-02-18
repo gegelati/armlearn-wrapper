@@ -16,7 +16,7 @@ void ArmLearnWrapper::computeInput() {
 
     for (int i = 0; i < newCartesianCoords.size(); i++) {
         cartesianPos.setDataAt(typeid(double), i, newCartesianCoords[i]);
-        cartesianDif.setDataAt(typeid(double), i, trainingTargets[0]->getInput()[i] - newCartesianCoords[i]);
+        cartesianDif.setDataAt(typeid(double), i, this->currentTarget->getInput()[i] - newCartesianCoords[i]);
     }
 }
 
@@ -106,7 +106,7 @@ double ArmLearnWrapper::computeReward() {
         cartesianCoords.emplace_back(
                 (double) *cartesianPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
     }
-    auto target = this->trainingTargets[0]->getInput();
+    auto target = this->currentTarget->getInput();
 
     if (!device->validPosition(motorCoords)) return VALID_COEFF;
 
@@ -125,8 +125,8 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
     device->setPosition(startingPos); // Reset position
     device->waitFeedback();
 
-    swapGoal(1);
-
+    swapGoal(mode);
+    
     computeInput();
 
     score = 0;
@@ -154,10 +154,12 @@ bool ArmLearnWrapper::isCopyable() const {
     return true;
 }
 
-void ArmLearnWrapper::swapGoal(int i) {
-    if(trainingTargets.size()<2) return;
-    else
-    std::rotate(trainingTargets.begin(), trainingTargets.begin() + i, trainingTargets.end());
+void ArmLearnWrapper::swapGoal(Learn::LearningMode mode) {
+    auto& targets = (mode == Learn::LearningMode::TRAINING)? trainingTargets : validationTargets;
+    if(targets.size()>1) {
+        std::rotate(targets.begin(), targets.begin() + 1, targets.end());
+    }
+    this->currentTarget = targets.at(0);
 }
 
 armlearn::Input<int16_t>* ArmLearnWrapper::randomGoal() {
