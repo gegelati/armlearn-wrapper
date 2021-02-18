@@ -167,7 +167,7 @@ public:
     */
     void swapGoal(Learn::LearningMode mode);
 
-/// Generation a new  random
+    /// Generation a new  random
     armlearn::Input<int16_t> *randomGoal();
 
     /// Puts a custom goal in the first slot of the trainingTargets list.

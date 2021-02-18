@@ -2,6 +2,7 @@
 #include <string>
 #include <atomic>
 #include <cfloat>
+#include <algorithm>
 
 #include <gegelati.h>
 
@@ -107,13 +108,11 @@ int main() {
     // Create an exporter for all graphs
     File::TPGGraphDotExporter dotExporter("out_000.dot", la.getTPGGraph());
 
-    armlearn::Input<uint16_t> * randomGoal;
-    auto validationGoal = armlearn::Input<int16_t>({300, 100, 100});
-
     // Train for NB_GENERATIONS generations
     for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
 
         // we generate new random training targets so that at each generation, different targets are used.
+        std::for_each(le.trainingTargets.begin(), le.trainingTargets.end(), [](armlearn::Input<int16_t> * t){ delete t;});
         le.trainingTargets.clear();
         for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
             auto target = le.randomGoal();

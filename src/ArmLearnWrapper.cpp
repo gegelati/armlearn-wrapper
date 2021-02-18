@@ -168,6 +168,7 @@ armlearn::Input<int16_t>* ArmLearnWrapper::randomGoal() {
 }
 
 void ArmLearnWrapper::customGoal(armlearn::Input<int16_t>* newGoal) {
+    delete trainingTargets.at(0);
     trainingTargets.erase(trainingTargets.begin());
     trainingTargets.emplace(trainingTargets.begin(),newGoal);
 }
