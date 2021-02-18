@@ -71,8 +71,10 @@ protected:
 
 public:
 
-    /// Inputs of learning, positions to ask to the robot
-    std::vector<armlearn::Input<int16_t> *> targets;
+    /// Inputs of learning, positions to ask to the robot in TRAINING mode
+    std::vector<armlearn::Input<int16_t> *> trainingTargets;
+    /// Inputs of learning, positions to ask to the robot in VALIDATION mode
+    std::vector<armlearn::Input<int16_t> *> validationTargets;
 
     armlearn::communication::AbstractController *iniController() {
         auto conv = new armlearn::kinematics::OptimCartesianConverter(); // Create kinematics calculator
@@ -98,15 +100,17 @@ public:
     * Constructor.
     */
     ArmLearnWrapper()
-            : LearningEnvironment(13), targets(1), motorPos(6), cartesianPos(3), cartesianDif(3),
+            : LearningEnvironment(13), trainingTargets(1), validationTargets(1),
+              motorPos(6), cartesianPos(3), cartesianDif(3),
               DeviceLearner(iniController()) {
     }
 
-/**
-* \brief Copy constructor for the armLearnWrapper.
-*
-*/
-    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions), targets(other.targets),
+    /**
+    * \brief Copy constructor for the armLearnWrapper.
+    *
+    */
+    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions), trainingTargets(other.trainingTargets),
+                                                    validationTargets(other.validationTargets),
                                                     motorPos(other.motorPos), cartesianPos(other.cartesianPos),
                                                     cartesianDif(other.cartesianDif), DeviceLearner(iniController()) {
 
@@ -114,21 +118,21 @@ public:
         computeInput();
     }
 
-/// Destructor
+    /// Destructor
     ~ArmLearnWrapper() {
         delete this->device;
         delete this->converter;
     };
 
 
-/// Inherited via LearningEnvironment
+    /// Inherited via LearningEnvironment
     void doAction(uint64_t actionID) override;
 
 
-/// Inherited via LearningEnvironment
+    /// Inherited via LearningEnvironment
     void reset(size_t seed = 0, Learn::LearningMode mode = Learn::LearningMode::TRAINING) override;
 
-/// Inherited via LearningEnvironment
+    /// Inherited via LearningEnvironment
     std::vector<std::reference_wrapper<const Data::DataHandler>> getDataSources() override;
 
 /**
@@ -165,9 +169,9 @@ public:
     std::string toString() const override;
 
     /**
- * @brief Executes a learning algorithm on the learning set
- *
- */
+    * @brief Executes a learning algorithm on the learning set
+    *
+    */
     virtual void learn() override {}
 
     /// Inherited via DeviceLearner

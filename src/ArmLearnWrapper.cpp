@@ -16,7 +16,7 @@ void ArmLearnWrapper::computeInput() {
 
     for (int i = 0; i < newCartesianCoords.size(); i++) {
         cartesianPos.setDataAt(typeid(double), i, newCartesianCoords[i]);
-        cartesianDif.setDataAt(typeid(double), i, targets[0]->getInput()[i] - newCartesianCoords[i]);
+        cartesianDif.setDataAt(typeid(double), i, trainingTargets[0]->getInput()[i] - newCartesianCoords[i]);
     }
 }
 
@@ -106,7 +106,7 @@ double ArmLearnWrapper::computeReward() {
         cartesianCoords.emplace_back(
                 (double) *cartesianPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
     }
-    auto target = targets[0]->getInput();
+    auto target = this->trainingTargets[0]->getInput();
 
     if (!device->validPosition(motorCoords)) return VALID_COEFF;
 
@@ -155,9 +155,9 @@ bool ArmLearnWrapper::isCopyable() const {
 }
 
 void ArmLearnWrapper::swapGoal(int i) {
-    if(targets.size()<2) return;
+    if(trainingTargets.size()<2) return;
     else
-    std::rotate(targets.begin(), targets.begin() + i, targets.end());
+    std::rotate(trainingTargets.begin(), trainingTargets.begin() + i, trainingTargets.end());
 }
 
 armlearn::Input<int16_t>* ArmLearnWrapper::randomGoal() {
@@ -166,16 +166,16 @@ armlearn::Input<int16_t>* ArmLearnWrapper::randomGoal() {
 }
 
 void ArmLearnWrapper::customGoal(armlearn::Input<int16_t>* newGoal) {
-    targets.erase(targets.begin());
-    targets.emplace(targets.begin(),newGoal);
+    trainingTargets.erase(trainingTargets.begin());
+    trainingTargets.emplace(trainingTargets.begin(),newGoal);
 }
 
 std::string ArmLearnWrapper::newGoalToString() const {
     std::stringstream toLog;
     toLog << " - (new goal : ";
-    toLog << targets[0]->getInput()[0] << " ; ";
-    toLog << targets[0]->getInput()[1] << " ; ";
-    toLog << targets[0]->getInput()[2] << " ; ";
+    toLog << trainingTargets[0]->getInput()[0] << " ; ";
+    toLog << trainingTargets[0]->getInput()[1] << " ; ";
+    toLog << trainingTargets[0]->getInput()[2] << " ; ";
     toLog << ")" << std::endl;
     return toLog.str();
 }
@@ -193,9 +193,9 @@ std::string ArmLearnWrapper::toString() const {
         res << input << " ; ";
     }
     res << " - (goal : ";
-    res << targets[0]->getInput()[0] << " ; ";
-    res << targets[0]->getInput()[1] << " ; ";
-    res << targets[0]->getInput()[2] << " ; ";
+    res << trainingTargets[0]->getInput()[0] << " ; ";
+    res << trainingTargets[0]->getInput()[1] << " ; ";
+    res << trainingTargets[0]->getInput()[2] << " ; ";
     res << ")";
 
     return res.str();

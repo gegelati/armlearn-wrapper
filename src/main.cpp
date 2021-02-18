@@ -106,13 +106,13 @@ int main() {
     // Train for NB_GENERATIONS generations
     for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
 
-        le.targets.clear();
+       
 
-        // we generate random targets so that at each generation, 100 different targets are used.
-        // as target changes on reset, make sure nbIterationsPerPolicyEvaluation > 100
-        for(int j=0; j<100; j++){
+        // we generate random targets so that at each generation, different targets are used.
+        le.trainingTargets.clear();
+        for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
             auto target = le.randomGoal();
-            le.targets.emplace_back(target);
+            le.trainingTargets.emplace_back(target);
         }
 
 	// Export graphs
@@ -122,15 +122,6 @@ int main() {
         dotExporter.print();
 
         la.trainOneGeneration(i);
-
-
-        // loads the validation goal to get learning stats on a given target
-        le.targets.clear();
-        le.targets.emplace_back(&validationGoal);
-
-
-        std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> result;
-
     }
 
     // Keep best policy
