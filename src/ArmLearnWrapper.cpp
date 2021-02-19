@@ -63,6 +63,9 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
             break;
         case 12:
             out = {0, 0, 0, 0, 0, 0};
+            // Since the arm is not moving, its position will remain identical, and
+            // the action will keep being selected. So, terminate the eval.
+            this->terminal = true;
             break;
     }
 
