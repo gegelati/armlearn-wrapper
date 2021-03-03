@@ -38,34 +38,36 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
             out = {0, 0, 0, step, 0, 0};
             break;
         case 4:
-            out = {0, 0, 0, 0, step, 0};
-            break;
-        case 5:
-            out = {0, 0, 0, 0, 0, step};
-            break;
-        case 6:
             out = {-step, 0, 0, 0, 0, 0};
             break;
-        case 7:
+        case 5:
             out = {0, -step, 0, 0, 0, 0};
             break;
-        case 8:
+        case 6:
             out = {0, 0, -step, 0, 0, 0};
             break;
-        case 9:
+        case 7:
             out = {0, 0, 0, -step, 0, 0};
             break;
-        case 10:
-            out = {0, 0, 0, 0, -step, 0};
-            break;
-        case 11:
-            out = {0, 0, 0, 0, 0, -step};
-            break;
-        case 12:
-            out = {0, 0, 0, 0, 0, 0};
+        case 8:
+            out = {0, 0, 0, 0};
             // Since the arm is not moving, its position will remain identical, and
             // the action will keep being selected. So, terminate the eval.
             this->terminal = true;
+            break;
+
+            // Following cases only when the hand is trained
+        case 9:
+            out = {0, 0, 0, 0, step, 0};
+            break;
+        case 10:
+            out = {0, 0, 0, 0, 0, step};
+            break;
+        case 11:
+            out = {0, 0, 0, 0, -step, 0};
+            break;
+        case 12:
+            out = {0, 0, 0, 0, 0, -step};
             break;
     }
 
@@ -77,12 +79,12 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
         double inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
         scaledOutput[i] = (scaledOutput[i] - 2048) + inputI;
     }
-    scaledOutput[0] += 1;
+    scaledOutput[0] += 1; // kdesnos: I don't know what the purpose of this line is
+
     double inputI = (double) *(motorPos.getDataAt(typeid(double), 4).getSharedPointer<const double>());
     scaledOutput[4] = (scaledOutput[4] - 511) + inputI;
     inputI = (double) *(motorPos.getDataAt(typeid(double), 5).getSharedPointer<const double>());
     scaledOutput[5] = (scaledOutput[5] - 256) + inputI;
-
 
     auto validOutput = device->toValidPosition(scaledOutput);
     device->setPosition(validOutput); // Update position
@@ -129,7 +131,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
     device->waitFeedback();
 
     swapGoal(mode);
-    
+
     computeInput();
 
     score = 0;
@@ -158,22 +160,23 @@ bool ArmLearnWrapper::isCopyable() const {
 }
 
 void ArmLearnWrapper::swapGoal(Learn::LearningMode mode) {
-    auto& targets = (mode == Learn::LearningMode::TRAINING)? trainingTargets : validationTargets;
-    if(targets.size()>1) {
+    auto &targets = (mode == Learn::LearningMode::TRAINING) ? trainingTargets : validationTargets;
+    if (targets.size() > 1) {
         std::rotate(targets.begin(), targets.begin() + 1, targets.end());
     }
     this->currentTarget = targets.at(0);
 }
 
-armlearn::Input<int16_t>* ArmLearnWrapper::randomGoal() {
+armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal() {
     return new armlearn::Input<int16_t>(
-            {(int16_t) (rng.getUnsignedInt64(-200,200)), (int16_t) (rng.getUnsignedInt64(-200,200)), (int16_t) (rng.getUnsignedInt64(-150,400))});
+            {(int16_t) (rng.getUnsignedInt64(-200, 200)), (int16_t) (rng.getUnsignedInt64(-200, 200)),
+             (int16_t) (rng.getUnsignedInt64(-150, 400))});
 }
 
-void ArmLearnWrapper::customGoal(armlearn::Input<int16_t>* newGoal) {
+void ArmLearnWrapper::customGoal(armlearn::Input<int16_t> *newGoal) {
     delete trainingTargets.at(0);
     trainingTargets.erase(trainingTargets.begin());
-    trainingTargets.emplace(trainingTargets.begin(),newGoal);
+    trainingTargets.emplace(trainingTargets.begin(), newGoal);
 }
 
 std::string ArmLearnWrapper::newGoalToString() const {
@@ -211,7 +214,7 @@ Learn::LearningEnvironment *ArmLearnWrapper::clone() const {
     return new ArmLearnWrapper(*this);
 }
 
-std::vector<uint16_t> ArmLearnWrapper::getMotorsPos(){
+std::vector<uint16_t> ArmLearnWrapper::getMotorsPos() {
     auto deviceStates = DeviceLearner::getDeviceState();
     std::vector<uint16_t> motorPos;
     for (auto &deviceState : deviceStates) {
@@ -222,6 +225,6 @@ std::vector<uint16_t> ArmLearnWrapper::getMotorsPos(){
     return motorPos;
 }
 
-void ArmLearnWrapper::changeStartingPos(std::vector<uint16_t> newStartingPos){
+void ArmLearnWrapper::changeStartingPos(std::vector<uint16_t> newStartingPos) {
     startingPos = newStartingPos;
 }

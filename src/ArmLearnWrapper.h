@@ -49,6 +49,10 @@ protected:
 
     bool terminal = false;
 
+    /// Boolean used to control whether the LE includes the 2 servos
+    /// controlling the rotation of the hand and the fingers.
+    bool handServosTrained;
+
     /// Randomness control
     Mutator::RNG rng;
 
@@ -68,9 +72,9 @@ protected:
     size_t nbActions = 0;
 
     std::vector<uint16_t> startingPos = BACKHOE_POSITION;
-    
+
     /// Target currently used to move the arm.
-    armlearn::Input<int16_t> * currentTarget;
+    armlearn::Input<int16_t> *currentTarget;
 
 public:
 
@@ -100,10 +104,14 @@ public:
     }
 
     /**
-    * Constructor.
-    */
-    ArmLearnWrapper()
-            : LearningEnvironment(13), trainingTargets(1), validationTargets(1),
+     * Constructor.
+     *
+     * \param[in] handServosTrained boolean controlling whether the 2 servos
+     * controlling the hand of the robotic arm are trained.
+     */
+    ArmLearnWrapper(bool handServosTrained = false)
+            : LearningEnvironment((handServosTrained) ? 13 : 9), handServosTrained(handServosTrained),
+              trainingTargets(1), validationTargets(1),
               motorPos(6), cartesianPos(3), cartesianDif(3),
               DeviceLearner(iniController()) {
     }
@@ -112,7 +120,8 @@ public:
     * \brief Copy constructor for the armLearnWrapper.
     *
     */
-    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions), trainingTargets(other.trainingTargets),
+    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions),
+                                                    trainingTargets(other.trainingTargets),
                                                     validationTargets(other.validationTargets),
                                                     motorPos(other.motorPos), cartesianPos(other.cartesianPos),
                                                     cartesianDif(other.cartesianDif), DeviceLearner(iniController()) {
