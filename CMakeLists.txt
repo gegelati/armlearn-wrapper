@@ -4,23 +4,9 @@ project(armGegelati)
 set(CMAKE_CXX_STANDARD 17)
 
 if(NOT ${CMAKE_GENERATOR} MATCHES "Visual Studio.*")
-    # Set to 1 to activate debug compilation (0 for release)
-    set(DEBUG 0)
-
     # Link with pthread
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
-    if(${DEBUG})
-        MESSAGE("Generate Debug project")
-        set(CMAKE_BUILD_TYPE Debug)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Debug)
-        set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -pg -Wall")
-    else()
-        MESSAGE("Generate Release project")
-        set(CMAKE_BUILD_TYPE Release)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Release)
-        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall")
-    endif()
     #add libmath during non visual studio builds
     set(CMAKE_EXTRA_LIB m)
 else()

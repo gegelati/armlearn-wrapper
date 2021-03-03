@@ -37,7 +37,7 @@ int agentTest() {
     // Instantiate the environment that will embed the LearningEnvironment
     Environment env(set, le.getDataSources(), 8);
 
-    // Instantiate the TPGGraph that we will loead
+    // Instantiate the TPGGraph that we will load
     auto tpg = TPG::TPGGraph(env);
 
     // Instantiate the tee that will handle the decisions taken by the TPG
@@ -46,7 +46,8 @@ int agentTest() {
 
 
     // Create an importer for the best graph and imports it
-    File::TPGGraphDotImporter dotImporter("ROOT_DIR /best.dot", env, tpg);
+    std::cout << "Import graph"<< std::endl;
+    File::TPGGraphDotImporter dotImporter(ROOT_DIR "/dat/best.dot", env, tpg);
     dotImporter.importGraph();
 
     // takes the first root of the graph, anyway out_best has only 1 root (the best)
@@ -54,7 +55,7 @@ int agentTest() {
 
     // make a try on a random position
 
-
+    std::cout << "Start arm"<< std::endl;
     //runByHand(root, tee, le, validationGoal);
 
     //runEvals(root,tee,le);
