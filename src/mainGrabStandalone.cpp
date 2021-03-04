@@ -1,11 +1,19 @@
 #include <iostream>
+#include <unistd.h>
+
 #include <armlearn/serialcontroller.h>
 #include <armlearn/widowxbuilder.h>
 #include <armlearn/trajectory.h>
 #include <armlearn/nowaitarmsimulator.h>
 #include <armlearn/optimcartesianconverter.h>
 
-int maine() {
+int main() {
+    // Check sudo rights to connect to the arm
+    if (getuid() != 0) {
+        std::cerr << "Error: You need to be root to connect to the arm." << std::endl;
+        exit(1);
+    }
+
     /******************************************/
     /****     Common base for examples     ****/
     /******************************************/
@@ -40,7 +48,7 @@ int maine() {
      */
 
     armlearn::Trajectory path(&arbotix);
-/*
+
     path.addPoint(BACKHOE_POSITION);
     path.addPoint({1024, 2200, 2200, 1025, 512, 511});
     path.addPoint({1024, 2400, 2200, 1200, 512, 511});
@@ -49,7 +57,7 @@ int maine() {
     path.addPoint({2048, 2200, 2200, 1025, 512, 135});
     path.addPoint({2048, 2400, 2200, 1200, 512, 135});
     path.addPoint({2048, 2400, 2200, 1200, 512, 511});
-    path.addPoint({2048, 2200, 2200, 1025, 512, 511});*/
+    path.addPoint({2048, 2200, 2200, 1025, 512, 511});
     path.addPoint(SLEEP_POSITION);
 
     path.printTrajectory();
@@ -57,6 +65,6 @@ int maine() {
 
     path.init();
     path.executeTrajectory();
-    
+
     return 0;
 }

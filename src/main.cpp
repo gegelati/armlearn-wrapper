@@ -7,7 +7,6 @@
 #include <gegelati.h>
 
 #include "ArmLearnWrapper.h"
-#include "resultTester.h"
 
 #ifndef NB_GENERATIONS
 #define NB_GENERATIONS 20000
@@ -39,13 +38,6 @@ void getKey(std::atomic<bool>& exit) {
 }
 
 int main() {
-
-    // if we want to test the best agent
-    if (false) {
-        agentTest();
-        return 0;
-    }
-
     // Create the instruction set for programs
     Instructions::Set set;
     auto minus = [](double a, double b) -> double { return a - b; };
@@ -75,7 +67,7 @@ int main() {
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
-    
+
     // Generate validation targets.
     le.validationTargets.clear();
     for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
@@ -94,7 +86,7 @@ int main() {
 
     while (exitProgram); // Wait for other thread to print key info.
 #else
-    std::atomic<bool> exitProgram = false; // (set to false by other thread) 
+    std::atomic<bool> exitProgram = false; // (set to false by other thread)
 #endif
 
     // Adds a logger to the LA (to get statistics on learning) on std::cout

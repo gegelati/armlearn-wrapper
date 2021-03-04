@@ -1,4 +1,17 @@
 cmake_minimum_required(VERSION 3.16)
+
+# **********************
+# ArmGegelati project.
+#
+# Control of the WidowX robotic arm  using the Gegelati library.
+#
+# This CMake project creates 3 executables:
+# - armGegelati: Training Gegelati on the ArmLearnWrapper learning environment
+# - armGrabGegelati: Control the robotic arm with gegelati.
+# - armGrabStandalone: Control the robotic arm without gegelati.
+#
+# **********************
+
 project(armGegelati)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -48,15 +61,44 @@ if (WIN32)
     endif()
 endif()
 
+# *******************************************
+# ************** Executables ****************
+# *******************************************
+
 file(GLOB_RECURSE
         armgegelati_files
         ./src/*.cpp
         ./src/*.h
         )
+list(REMOVE_ITEM
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp)
+
 include_directories (/usr/local/include/eigen3)
 
-add_executable(armGegelati ${armgegelati_files} src/resultTester.h)
+# armGegelati: Training Gegelati on the ArmLearnWrapper learning environment
+add_executable(armGegelati ${armgegelati_files})
 
-target_link_libraries(armGegelati /usr/local/lib/libarmlearn.so)
-target_link_libraries(armGegelati ${GEGELATI_LIBRARIES})
+target_link_libraries(armGegelati ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
+target_link_libraries(armGegelati)
 target_compile_definitions(armGegelati PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+
+
+# armGrabGegelati: Control the robotic arm with gegelati.
+list(REMOVE_ITEM
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/main.cpp)
+list(APPEND
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.h)
+
+add_executable(armGrabGegelati ${armgegelati_files})
+target_link_libraries(armGrabGegelati ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
+target_compile_definitions(armGrabGegelati PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+
+# armGrabStandalone: Control the robotic arm without gegelati
+add_executable(armGrabStandalone ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp)
+target_link_libraries(armGrabStandalone /usr/local/lib/libarmlearn.so)

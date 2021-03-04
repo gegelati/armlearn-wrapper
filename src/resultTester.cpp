@@ -4,13 +4,21 @@
 #include <string>
 #include <cfloat>
 #include <inttypes.h>
+#include <unistd.h>
 
 #include <gegelati.h>
+
 #include "resultTester.h"
 
 #include "ArmLearnWrapper.h"
 
-int agentTest() {
+int main() {
+    // Check sudo rights to connect to the arm
+    if (getuid() != 0) {
+        std::cerr << "Error: You need to be root to connect to the arm." << std::endl;
+        exit(1);
+    }
+
     // Create the instruction set for programs
     Instructions::Set set;
     auto minus = [](double a, double b) -> double { return a - b; };
@@ -61,6 +69,8 @@ int agentTest() {
     //runEvals(root,tee,le);
 
     runRealArmByHand(root,tee,le);
+
+    // runRealArmAuto(root, tee, le);
 
     //printPolicyStats(root,env);
 
