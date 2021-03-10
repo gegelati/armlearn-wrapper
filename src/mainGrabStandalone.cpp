@@ -5,7 +5,7 @@
 #include <armlearn/widowxbuilder.h>
 #include <armlearn/trajectory.h>
 #include <armlearn/nowaitarmsimulator.h>
-#include <armlearn/optimcartesianconverter.h>
+#include <armlearn/basiccartesianconverter.h>
 
 int main() {
     // Check sudo rights to connect to the arm

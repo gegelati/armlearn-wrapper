@@ -9,7 +9,7 @@
 #include <armlearn/trajectory.h>
 
 #include <armlearn/widowxbuilder.h>
-#include <armlearn/optimcartesianconverter.h>
+#include <armlearn/basiccartesianconverter.h>
 #include <armlearn/devicelearner.h>
 
 // Proportion of target error in the reward
@@ -84,7 +84,7 @@ public:
     std::vector<armlearn::Input<int16_t> *> validationTargets;
 
     armlearn::communication::AbstractController *iniController() {
-        auto conv = new armlearn::kinematics::OptimCartesianConverter(); // Create kinematics calculator
+        auto conv = new armlearn::kinematics::BasicCartesianConverter(); // Create kinematics calculator
         auto arbotix_sim = new armlearn::communication::NoWaitArmSimulator(
                 armlearn::communication::none); // Create robot simulator
 
