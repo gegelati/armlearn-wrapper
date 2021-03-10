@@ -61,11 +61,11 @@ cmake ..
 sudo cmake --build . --parallel --target install
 cd ../..
 
-# get armlearn (commit 2c46336)
+# get armlearn (commit 3987527b)
 echo "# Install armlearn"
 git clone https://github.com/ggendro/armlearn.git
 cd armlearn
-git checkout 2c46336
+git checkout 3987527b
 rm -R examples/computations # there is a bad include in it and we don't need it
 rm -R examples/device_communication # there is a bad include in it and we don't need it
 rm -R examples/learning # there is a bad include in it and we don't need it
