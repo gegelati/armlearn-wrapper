@@ -238,10 +238,38 @@ void runRealArmByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, 
     int16_t y=0;
     int16_t z=0;
     while (x!=-1){
+        // Get current servo position
+        arbotix.updateInfos();
+        auto reachedPosition = arbotix.getPosition();
+        std::cout << "Servo positions: ";
+        for(auto& pos : reachedPosition){
+            std::cout << pos << " ";
+        }
+        std::cout << std::endl;
+
+        // Get current hand position
+        armlearn::kinematics::BasicCartesianConverter converter;
+        builder.buildConverter(converter);
+        auto cartesiandCoords = converter.computeServoToCoord(reachedPosition)->getCoord();
+        std::cout << "Hand positions: ";
+        for(auto& pos : cartesiandCoords){
+            std::cout << pos << " ";
+        }
+        std::cout << std::endl;
+
         std::cout<<"x"<<std::endl;
         std::cin>>x;
         if(x==-1){
             break;
+        }
+        if(x==-2){
+            // Put in backhoe
+            path.addPoint(BACKHOE_POSITION);
+            path.printTrajectory();
+            path.init();
+            path.executeTrajectory();
+            path.removePoint();
+            continue;
         }
         std::cout<<"y"<<std::endl;
         std::cin>>y;
@@ -255,8 +283,9 @@ void runRealArmByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, 
         path.printTrajectory();
         path.executeTrajectory();
 
-        for(int i=0; i<10;i++)
-        path.removePoint();
+        for(int i=0; i<11;i++) {
+            path.removePoint();
+        }
     }
 
     path.addPoint(SLEEP_POSITION);
@@ -265,6 +294,8 @@ void runRealArmByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, 
 
     path.init();
     path.executeTrajectory();
+
+
 }
 
 void goToPos(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le,
@@ -272,7 +303,7 @@ void goToPos(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnW
 
     le.customGoal(target);
     le.reset();
-    for(int i=0; i<500; i++) {
+    for(int i=0; i<=500; i++) {
         uint64_t action = ((const TPG::TPGAction *) tee.executeFromRoot(*root).back())->getActionID();
         le.doAction(action);
         if (i % 50 == 0) {
