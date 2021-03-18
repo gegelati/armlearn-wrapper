@@ -169,8 +169,10 @@ void ArmLearnWrapper::swapGoal(Learn::LearningMode mode) {
 
 armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal() {
     return new armlearn::Input<int16_t>(
-            {(int16_t) (rng.getUnsignedInt64(-200, 200)), (int16_t) (rng.getUnsignedInt64(-200, 200)),
-             (int16_t) (rng.getUnsignedInt64(-150, 400))});
+            {(int16_t) (rng.getUnsignedInt64(-50, 50)), (int16_t) (rng.getUnsignedInt64(276, 366)),
+             (int16_t) (rng.getUnsignedInt64(197, 197))});
+    //{(int16_t) (rng.getUnsignedInt64(-200, 200)), (int16_t) (rng.getUnsignedInt64(-200, 200)),
+    //(int16_t) (rng.getUnsignedInt64(-150, 400))});
 }
 
 void ArmLearnWrapper::customGoal(armlearn::Input<int16_t> *newGoal) {
