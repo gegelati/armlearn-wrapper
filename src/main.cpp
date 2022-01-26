@@ -65,13 +65,14 @@ int main() {
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
+    std::vector<std::string> tparameters = {"2D"}; //Parameters for training
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
 
     // Generate validation targets.
     le.validationTargets.clear();
     for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
-        auto target = le.randomGoal();
+        auto target = le.randomGoal(tparameters);
         le.validationTargets.emplace_back(target);
     }
 
@@ -104,20 +105,25 @@ int main() {
     for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
 
         // we generate new random training targets so that at each generation, different targets are used.
+        // we delete the old targets
         std::for_each(le.trainingTargets.begin(), le.trainingTargets.end(), [](armlearn::Input<int16_t> * t){ delete t;});
         le.trainingTargets.clear();
+        // we create new targets
         for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
-            auto target = le.randomGoal();
+            auto target = le.randomGoal(tparameters);
             le.trainingTargets.emplace_back(target);
         }
 
-	// Export graphs
+	    //print the previous graphs
         char buff[16];
         sprintf(buff, "out_%03d.dot", i);
         dotExporter.setNewFilePath(buff);
         dotExporter.print();
 
+        // we train the TPG, see doaction for the reward fonction
+
         la.trainOneGeneration(i);
+
     }
 
     // Keep best policy

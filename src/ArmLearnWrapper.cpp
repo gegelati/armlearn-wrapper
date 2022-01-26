@@ -114,7 +114,6 @@ double ArmLearnWrapper::computeReward() {
     auto target = this->currentTarget->getInput();
 
     if (!device->validPosition(motorCoords)) return VALID_COEFF;
-
     auto err = computeSquaredError(target, cartesianCoords);
     //if (abs(err) < 1) {
     //    terminal = true;
@@ -167,12 +166,33 @@ void ArmLearnWrapper::swapGoal(Learn::LearningMode mode) {
     this->currentTarget = targets.at(0);
 }
 
-armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal() {
-    return new armlearn::Input<int16_t>(
-            {(int16_t) (rng.getUnsignedInt64(-50, 50)), (int16_t) (rng.getUnsignedInt64(276, 366)),
-             (int16_t) (rng.getUnsignedInt64(197, 197))});
+armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> tpara) {
+    if(tpara[0]=="2D"){
+        return new armlearn::Input<int16_t>(
+                {
+                        (int16_t) (rng.getUnsignedInt64(-50, 50)), //X
+                        (int16_t) (rng.getUnsignedInt64(296, 396)), //Y
+                        (int16_t) (rng.getUnsignedInt64(267, 267))}); //Z
+    }
+    if(tpara[0]=="3D"){
+        return new armlearn::Input<int16_t>(
+                {
+                        (int16_t) (rng.getUnsignedInt64(-50, 50)), //X
+                        (int16_t) (rng.getUnsignedInt64(296, 396)), //Y
+                        (int16_t) (rng.getUnsignedInt64(217, 317))}); //Z
+    }
+
+//            (int16_t) (rng.getUnsignedInt64(-50, 50)), //X
+//            (int16_t) (rng.getUnsignedInt64(276, 366)), //Y
+//            (int16_t) (rng.getUnsignedInt64(197, 197))}); //Z
+
     //{(int16_t) (rng.getUnsignedInt64(-200, 200)), (int16_t) (rng.getUnsignedInt64(-200, 200)),
     //(int16_t) (rng.getUnsignedInt64(-150, 400))});
+    return new armlearn::Input<int16_t>(
+            {
+                    (int16_t) (rng.getUnsignedInt64(0, 0)), //X
+                    (int16_t) (rng.getUnsignedInt64(346, 346)), //Y
+                    (int16_t) (rng.getUnsignedInt64(267, 267))}); //Z //Default position if no parameters
 }
 
 void ArmLearnWrapper::customGoal(armlearn::Input<int16_t> *newGoal) {

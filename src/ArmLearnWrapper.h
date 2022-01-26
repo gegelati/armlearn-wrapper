@@ -177,7 +177,7 @@ public:
     void swapGoal(Learn::LearningMode mode);
 
     /// Generation a new  random
-    armlearn::Input<int16_t> *randomGoal();
+    armlearn::Input<int16_t> *randomGoal(std::vector<std::string> tpara);
 
     /// Puts a custom goal in the first slot of the trainingTargets list.
     void customGoal(armlearn::Input<int16_t> *newGoal);
