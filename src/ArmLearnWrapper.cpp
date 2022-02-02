@@ -167,19 +167,43 @@ void ArmLearnWrapper::swapGoal(Learn::LearningMode mode) {
 }
 
 armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> tpara) {
-    if(tpara[0]=="2D"){
-        return new armlearn::Input<int16_t>(
-                {
-                        (int16_t) (rng.getUnsignedInt64(-50, 50)), //X
-                        (int16_t) (rng.getUnsignedInt64(296, 396)), //Y
-                        (int16_t) (rng.getUnsignedInt64(267, 267))}); //Z
+    int Xa = 0,Xb = 0,Ya = 346,Yb = 346,Za = 267,Zb = 267;
+
+    if(tpara[1]=="close"){
+        Xa = Xa-50;
+        Xb = Xb+50;
+
+        Ya = Ya-50;
+        Yb = Yb+50;
+
+        Za = Za-50;
+        Zb = Zb+50;
     }
-    if(tpara[0]=="3D"){
-        return new armlearn::Input<int16_t>(
-                {
-                        (int16_t) (rng.getUnsignedInt64(-50, 50)), //X
-                        (int16_t) (rng.getUnsignedInt64(296, 396)), //Y
-                        (int16_t) (rng.getUnsignedInt64(217, 317))}); //Z
+    if(tpara[1]=="large"){
+        Xa = Xa-150;
+        Xb = Xb+150;
+
+        Ya = Ya-150;
+        Yb = Yb+150;
+
+        Za = Za-150;
+        Zb = Zb+150;
+    }
+    /**
+    if(tpara[1]=="full"){
+        Xa = -400;
+        Xb = 400;
+
+        Ya = -400;
+        Yb = 400;
+
+        Za = -400;
+        Zb = 400;
+    }**/
+
+    if(tpara[0]=="2D"){
+        Za = 267;
+        Zb = 267;
     }
 
 //            (int16_t) (rng.getUnsignedInt64(-50, 50)), //X
@@ -190,9 +214,9 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> t
     //(int16_t) (rng.getUnsignedInt64(-150, 400))});
     return new armlearn::Input<int16_t>(
             {
-                    (int16_t) (rng.getUnsignedInt64(0, 0)), //X
-                    (int16_t) (rng.getUnsignedInt64(346, 346)), //Y
-                    (int16_t) (rng.getUnsignedInt64(267, 267))}); //Z //Default position if no parameters
+                    (int16_t) (rng.getUnsignedInt64(Xa, Xb)), //X
+                    (int16_t) (rng.getUnsignedInt64(Ya, Yb)), //Y
+                    (int16_t) (rng.getUnsignedInt64(Za, Zb))}); //Z
 }
 
 void ArmLearnWrapper::customGoal(armlearn::Input<int16_t> *newGoal) {

@@ -65,7 +65,8 @@ int main() {
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
-    std::vector<std::string> tparameters = {"2D"}; //Parameters for training
+    std::vector<std::string> tparameters = {"2D","large","all"}; //Parameters for training
+    /// [0] 2D/3D [1] close/large/(full not working currently) [2] Renew half/all targets
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
 
@@ -90,7 +91,17 @@ int main() {
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
 #endif
 
-    // Adds a logger to the LA (to get statistics on learning) on std::cout
+    // Adds a logger to the LA (to get statistics on learning) on std::cout et on a file
+        //Creation of the name of the file
+    std::string name="";
+    for(auto & names : tparameters)
+        name = name + names +"_";
+    name.erase(name.end()-1,name.end());
+    name = name + ".ods";
+
+        //Creation of the Output stream on cout and on the file
+    std::ofstream fichier(name, std::ios::out);
+    auto logFile = *new Log::LABasicLogger(la,fichier);
     auto logCout = *new Log::LABasicLogger(la);
 
     // File for printing best policy stat.
@@ -106,13 +117,19 @@ int main() {
 
         // we generate new random training targets so that at each generation, different targets are used.
         // we delete the old targets
-        std::for_each(le.trainingTargets.begin(), le.trainingTargets.end(), [](armlearn::Input<int16_t> * t){ delete t;});
-        le.trainingTargets.clear();
-        // we create new targets
-        for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
-            auto target = le.randomGoal(tparameters);
-            le.trainingTargets.emplace_back(target);
+        if(tparameters[2] == "all"){
+            std::for_each(le.trainingTargets.end(), le.trainingTargets.end(), [](armlearn::Input<int16_t> * t){ delete t;});
+            le.trainingTargets.clear();
         }
+
+        // we create new targets
+        if(tparameters[2] == "all"){
+            for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
+                auto target = le.randomGoal(tparameters);
+                le.trainingTargets.emplace_back(target);
+            }
+        }
+
 
 	    //print the previous graphs
         char buff[16];
