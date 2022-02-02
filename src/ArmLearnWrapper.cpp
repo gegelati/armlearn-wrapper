@@ -121,6 +121,13 @@ double ArmLearnWrapper::computeReward() {
 /*
     if(err<5 && nbActions==999)
     std::cout<<toString()<<std::endl;*/
+    /*
+    std::ofstream PointCloud;
+    PointCloud.open("PointCloud.txt",std::ios::app);
+
+    PointCloud << cartesianCoords[0] << "\t" << cartesianCoords[1] << "\t" << cartesianCoords[2] << "\t";
+    PointCloud << target[0] << "\t" << target[1] << "\t" << target[2] << "\t" << -1*err << "\t" << std::endl;
+    */
     return -1 * err;
 }
 

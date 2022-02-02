@@ -57,7 +57,6 @@ int main() {
     set.add(*(new Instructions::LambdaInstruction<double>(sin)));
 
 
-
     // Set the parameters for the learning process.
     // (Controls mutations probability, program lengths, and graph size
     // among other things)
@@ -66,7 +65,7 @@ int main() {
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
     std::vector<std::string> tparameters = {"2D","large","all"}; //Parameters for training
-    /// [0] 2D/3D [1] close/large/(full not working currently) [2] Renew half/all targets
+    /// [0] 2D/3D [1] close/large/(full not working currently) [2] Renew half/all targets (half not working)
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
 
@@ -111,6 +110,14 @@ int main() {
 
     // Create an exporter for all graphs
     File::TPGGraphDotExporter dotExporter("out_000.dot", la.getTPGGraph());
+    /*auto &tpg = la.getTPGGraph();
+    Environment env(set, le.getDataSources(), 8);
+    File::TPGGraphDotImporter dotImporter(ROOT_DIR"/cmake-build-release/out_187.dot", env, tpg);
+
+    dotImporter.importGraph();*/
+/*
+    // takes the first root of the graph, anyway out_best has only 1 root (the best)
+    auto root = tpg.getRootVertices().front();*/
 
     // Train for NB_GENERATIONS generations
     for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
