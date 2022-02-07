@@ -64,8 +64,8 @@ int main() {
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
-    std::vector<std::string> tparameters = {"2D","large","all"}; //Parameters for training
-    /// [0] 2D/3D [1] close/large/(full not working currently) [2] Renew half/all targets (half not working)
+    std::vector<std::string> tparameters = {"2D","large","all","StartingFile"}; //Parameters for training
+    /// [0] 2D/3D [1] close/large/(full not working currently) [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
 
@@ -110,14 +110,14 @@ int main() {
 
     // Create an exporter for all graphs
     File::TPGGraphDotExporter dotExporter("out_000.dot", la.getTPGGraph());
-    /*auto &tpg = la.getTPGGraph();
-    Environment env(set, le.getDataSources(), 8);
-    File::TPGGraphDotImporter dotImporter(ROOT_DIR"/cmake-build-release/out_187.dot", env, tpg);
 
-    dotImporter.importGraph();*/
-/*
-    // takes the first root of the graph, anyway out_best has only 1 root (the best)
-    auto root = tpg.getRootVertices().front();*/
+    if(tparameters[3] == "StartingFile"){
+        auto &tpg = la.getTPGGraph();
+        Environment env(set, le.getDataSources(), 8);
+        File::TPGGraphDotImporter dotImporter(ROOT_DIR"/cmake-build-release/out_best.dot", env, tpg);
+    }
+
+
 
     // Train for NB_GENERATIONS generations
     for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
