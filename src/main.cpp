@@ -114,6 +114,7 @@ int main() {
     if(tparameters[3] == "StartingFile"){
         auto &tpg = la.getTPGGraph();
         Environment env(set, le.getDataSources(), 8);
+//        std::string startingfilename = ROOT_DIR"/cmake-build-release/" + tparameters[3];
         File::TPGGraphDotImporter dotImporter(ROOT_DIR"/cmake-build-release/out_best.dot", env, tpg);
     }
 

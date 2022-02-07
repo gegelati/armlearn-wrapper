@@ -76,6 +76,9 @@ protected:
     /// Target currently used to move the arm.
     armlearn::Input<int16_t> *currentTarget;
 
+    /// Are the target for the Training or Validation mode
+    Learn::LearningMode learningtarget = Learn::LearningMode::TRAINING;
+
 public:
 
     /// Inputs of learning, positions to ask to the robot in TRAINING mode
