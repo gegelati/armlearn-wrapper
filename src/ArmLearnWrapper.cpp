@@ -122,14 +122,37 @@ double ArmLearnWrapper::computeReward() {
     if(err<5 && nbActions==999)
     std::cout<<toString()<<std::endl;*/
 
-    if(learningtarget == Learn::LearningMode::VALIDATION){
-        std::ofstream PointCloud;
-        PointCloud.open("PointCloud.ods",std::ios::app);
+//    if(learningtarget == Learn::LearningMode::VALIDATION){
+//        std::ofstream PointCloud;
+//        PointCloud.open("PointCloud.ods",std::ios::app);
+//
+//        PointCloud << cartesianCoords[0] << "\t" << cartesianCoords[1] << "\t" << cartesianCoords[2] << "\t";
+//        PointCloud << target[0] << "\t" << target[1] << "\t" << target[2] << "\t" << -1*err << "\t" << std::endl;
+//    }
 
-        PointCloud << cartesianCoords[0] << "\t" << cartesianCoords[1] << "\t" << cartesianCoords[2] << "\t";
-        PointCloud << target[0] << "\t" << target[1] << "\t" << target[2] << "\t" << -1*err << "\t" << std::endl;
-    }
-
+//    if(learningtarget == Learn::LearningMode::VALIDATION){
+//        std::ofstream PointCloudXt;
+//        PointCloudXt.open("PointCloudXt.m",std::ios::app);
+//        PointCloudXt << target[0] << "  " ;
+//
+//        std::ofstream PointCloudYt;
+//        PointCloudYt.open("PointCloudYt.m",std::ios::app);
+//        PointCloudYt << target[1] << "  " ;
+//
+//        std::ofstream PointCloudXa;
+//        PointCloudXa.open("PointCloudXa.m",std::ios::app);
+//        PointCloudXa << cartesianCoords[0] << "  " ;
+//
+//        std::ofstream PointCloudYa;
+//        PointCloudYa.open("PointCloudYa.m",std::ios::app);
+//        PointCloudYa << cartesianCoords[1] << "  " ;
+//
+//        std::ofstream PointCloudE;
+//        PointCloudE.open("PointCloudE.m",std::ios::app);
+//        PointCloudE << -1*err << "  " ;
+//
+//
+//    }
 
     return -1 * err;
 }
@@ -157,6 +180,26 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
 }
 
 double ArmLearnWrapper::getScore() const {
+    if(learningtarget == Learn::LearningMode::VALIDATION){
+    std::vector<uint16_t> motorCoords;
+    for (int i = 0; i < motorPos.getLargestAddressSpace(); i++) {
+        motorCoords.emplace_back((uint16_t) *motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+    }
+    std::vector<double> cartesianCoords;
+    for (int i = 0; i < cartesianPos.getLargestAddressSpace(); i++) {
+        cartesianCoords.emplace_back(
+                (double) *cartesianPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+    }
+    auto target = this->currentTarget->getInput();
+
+
+        std::ofstream PointCloud;
+        PointCloud.open("PointCloud.ods",std::ios::app);
+
+        PointCloud << cartesianCoords[0] << "\t" << cartesianCoords[1] << "\t" << cartesianCoords[2] << "\t";
+        PointCloud << target[0] << "\t" << target[1] << "\t" << target[2] << "\t" << score << "\t" << std::endl;
+    }
+
     return score;
 }
 
