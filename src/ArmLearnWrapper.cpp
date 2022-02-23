@@ -236,26 +236,26 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> t
         Zb = Zb+50;
     }
     if(tpara[1]=="large"){
-        Xa = Xa-150;
-        Xb = Xb+150;
+        Xa = -100;
+        Xb = 100;
 
-        Ya = Ya-150;
-        Yb = Yb+150;
+        Ya = 100;
+        Yb = 350;
 
         Za = Za-150;
         Zb = Zb+150;
     }
-    /**
+
     if(tpara[1]=="full"){
-        Xa = -400;
-        Xb = 400;
+        Xa = -500;
+        Xb = 500;
 
-        Ya = -400;
-        Yb = 400;
+        Ya = -500;
+        Yb = 500;
 
-        Za = -400;
-        Zb = 400;
-    }**/
+        Za = -500;
+        Zb = 500;
+    }
 
     if(tpara[0]=="2D"){
         Za = 267;

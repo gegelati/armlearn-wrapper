@@ -4,14 +4,14 @@
     "nbIterationsPerPolicyEvaluation" : 1000,
     "maxNbActionsPerEval" : 1000,
     "ratioDeletedRoots" : 0.95,
-    "maxNbEvaluationPerPolicy" : 50,
+    "maxNbEvaluationPerPolicy" : 1,
     "doValidation": true,
 
     "mutation":
     {
 	    "tpg" :
 	    {
-	    	"nbRoots" : 1000,
+	    	"nbRoots" : 250,
 	    	"maxInitOutgoingEdges" : 3,
 	    	"maxOutgoingEdges" : 25,
 	    	"pEdgeDeletion" : 0.8,

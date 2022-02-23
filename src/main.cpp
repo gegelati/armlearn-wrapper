@@ -9,7 +9,7 @@
 #include "ArmLearnWrapper.h"
 
 #ifndef NB_GENERATIONS
-#define NB_GENERATIONS 20000
+#define NB_GENERATIONS 20
 #endif
 
 void getKey(std::atomic<bool>& exit) {
@@ -65,7 +65,7 @@ int main() {
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
     std::vector<std::string> tparameters = {"2D","large","all","StartingFile"}; //Parameters for training
-    /// [0] 2D/3D [1] close/large/(full not working currently) [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
+    /// [0] 2D/3D [1] close/large/full (Full is a space that the robot cannot target) [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
 
@@ -102,6 +102,13 @@ int main() {
     std::ofstream fichier(name, std::ios::out);
     auto logFile = *new Log::LABasicLogger(la,fichier);
     auto logCout = *new Log::LABasicLogger(la);
+
+        //Creation of CloudPoint.ods
+    std::ofstream PointCloud;
+    PointCloud.open("PointCloud.ods",std::ios::out);
+
+    PointCloud << "Xp" << "\t" << "Yp" << "\t" << "Zp" << "\t";
+    PointCloud << "Xt" << "\t" << "Yt" << "\t" << "Zt" << "\t" << "score" << "\t" << std::endl;
 
     // File for printing best policy stat.
     std::ofstream stats;
