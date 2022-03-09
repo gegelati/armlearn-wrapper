@@ -23,6 +23,7 @@ void ArmLearnWrapper::computeInput() {
 void ArmLearnWrapper::doAction(uint64_t actionID) {
     std::vector<double> out;
     double step = M_PI / 180; // discrete rotations of some °
+//    double step = M_PI / 360;
 
     switch (actionID) {
         case 0:
@@ -194,10 +195,10 @@ double ArmLearnWrapper::getScore() const {
 
 
         std::ofstream PointCloud;
-        PointCloud.open("PointCloud.ods",std::ios::app);
+        PointCloud.open("PointCloud.csv",std::ios::app);
 
-        PointCloud << cartesianCoords[0] << "\t" << cartesianCoords[1] << "\t" << cartesianCoords[2] << "\t";
-        PointCloud << target[0] << "\t" << target[1] << "\t" << target[2] << "\t" << score << "\t" << std::endl;
+        PointCloud << cartesianCoords[0] << ";" << cartesianCoords[1] << ";" << cartesianCoords[2] << ";";
+        PointCloud << target[0] << ";" << target[1] << ";" << target[2] << ";" << score << std::endl;
     }
 
     return score;

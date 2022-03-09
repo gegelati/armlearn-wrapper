@@ -9,7 +9,7 @@
 #include "ArmLearnWrapper.h"
 
 #ifndef NB_GENERATIONS
-#define NB_GENERATIONS 20
+#define NB_GENERATIONS 200
 #endif
 
 void getKey(std::atomic<bool>& exit) {
@@ -64,8 +64,8 @@ int main() {
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
-    std::vector<std::string> tparameters = {"2D","large","all","StartingFile"}; //Parameters for training
-    /// [0] 2D/3D [1] close/large/full (Full is a space that the robot cannot target) [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
+    std::vector<std::string> tparameters = {"3D","large","all","NoStartingFile"}; //Parameters for training
+    /// [0] 2D/3D [1] close/large/full (Full is a space that the robot cannot fully reach) [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
 
@@ -105,10 +105,10 @@ int main() {
 
         //Creation of CloudPoint.ods
     std::ofstream PointCloud;
-    PointCloud.open("PointCloud.ods",std::ios::out);
+    PointCloud.open("PointCloud.csv",std::ios::out);
 
-    PointCloud << "Xp" << "\t" << "Yp" << "\t" << "Zp" << "\t";
-    PointCloud << "Xt" << "\t" << "Yt" << "\t" << "Zt" << "\t" << "score" << "\t" << std::endl;
+    PointCloud << "Xp" << ";" << "Yp" << ";" << "Zp" << ";";
+    PointCloud << "Xt" << ";" << "Yt" << ";" << "Zt" << ";" << "score" << std::endl;
 
     // File for printing best policy stat.
     std::ofstream stats;
@@ -133,7 +133,7 @@ int main() {
         // we generate new random training targets so that at each generation, different targets are used.
         // we delete the old targets
         if(tparameters[2] == "all"){
-            std::for_each(le.trainingTargets.end(), le.trainingTargets.end(), [](armlearn::Input<int16_t> * t){ delete t;});
+            std::for_each(le.trainingTargets.begin(), le.trainingTargets.end(), [](armlearn::Input<int16_t> * t){ delete t;});
             le.trainingTargets.clear();
         }
 
