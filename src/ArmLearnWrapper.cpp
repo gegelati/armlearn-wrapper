@@ -22,8 +22,9 @@ void ArmLearnWrapper::computeInput() {
 
 void ArmLearnWrapper::doAction(uint64_t actionID) {
     std::vector<double> out;
-    double step = M_PI / 180; // discrete rotations of some °
+//    double step = M_PI / 180; // discrete rotations of some °
 //    double step = M_PI / 360;
+    double step = M_PI / 720;
 
     switch (actionID) {
         case 0:

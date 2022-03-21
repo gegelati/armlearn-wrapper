@@ -9,7 +9,7 @@
 #include "ArmLearnWrapper.h"
 
 #ifndef NB_GENERATIONS
-#define NB_GENERATIONS 200
+#define NB_GENERATIONS 300
 #endif
 
 void getKey(std::atomic<bool>& exit) {
@@ -90,12 +90,14 @@ int main() {
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
 #endif
 
+
     // Adds a logger to the LA (to get statistics on learning) on std::cout et on a file
         //Creation of the name of the file
     std::string name="";
     for(auto & names : tparameters)
         name = name + names +"_";
     name.erase(name.end()-1,name.end());
+    std::cout << name << std::endl;
     name = name + ".ods";
 
         //Creation of the Output stream on cout and on the file
