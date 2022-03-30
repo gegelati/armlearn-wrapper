@@ -1,0 +1,4 @@
+/snap/clion/184/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Release -G "CodeBlocks - Unix Makefiles" /home/hjaafar/InnovR/Programme/ArmProj/armlearn-wrapper
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/hjaafar/InnovR/Programme/ArmProj/armlearn-wrapper/cmake-build-release

@@ -1,0 +1,78 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Release-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "armGegelati",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "armGegelati::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-armGegelati-Release-941861dadff48f8ba3b9.json",
+					"name" : "armGegelati",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "armGrabGegelati::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-armGrabGegelati-Release-13b9d157130595019024.json",
+					"name" : "armGrabGegelati",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "armGrabStandalone::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-armGrabStandalone-Release-b70cc6190dc9f284e5c8.json",
+					"name" : "armGrabStandalone",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/hjaafar/InnovR/Programme/ArmProj/armlearn-wrapper/cmake-build-release",
+		"source" : "/home/hjaafar/InnovR/Programme/ArmProj/armlearn-wrapper"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

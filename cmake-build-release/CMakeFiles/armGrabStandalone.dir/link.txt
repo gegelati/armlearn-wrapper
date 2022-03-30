@@ -1,0 +1,1 @@
+/usr/bin/c++  -pthread -O3 -DNDEBUG CMakeFiles/armGrabStandalone.dir/src/mainGrabStandalone.cpp.o -o armGrabStandalone  -Wl,-rpath,/usr/local/lib /usr/local/lib/libarmlearn.so 
