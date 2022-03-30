@@ -64,7 +64,7 @@ int main() {
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
-    std::vector<std::string> tparameters = {"3D","large","all","NoStartingFile"}; //Parameters for training
+    std::vector<std::string> tparameters = {"3D","full","all","NoStartingFile"}; //Parameters for training
     /// [0] 2D/3D [1] close/large/full (Full is a space that the robot cannot fully reach) [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
@@ -91,8 +91,8 @@ int main() {
 #endif
 
 
-    // Adds a logger to the LA (to get statistics on learning) on std::cout et on a file
-        //Creation of the name of the file
+    //Adds a logger to the LA (to get statistics on learning) on std::cout et on a file
+    //Creation of the name of the file
     std::string name="";
     for(auto & names : tparameters)
         name = name + names +"_";
@@ -100,12 +100,12 @@ int main() {
     std::cout << name << std::endl;
     name = name + ".ods";
 
-        //Creation of the Output stream on cout and on the file
+    //Creation of the Output stream on cout and on the file
     std::ofstream fichier(name, std::ios::out);
     auto logFile = *new Log::LABasicLogger(la,fichier);
     auto logCout = *new Log::LABasicLogger(la);
 
-        //Creation of CloudPoint.ods
+    //Creation of CloudPoint.csv, point that the robotic arm ended to touch
     std::ofstream PointCloud;
     PointCloud.open("PointCloud.csv",std::ios::out);
 
@@ -123,7 +123,6 @@ int main() {
     if(tparameters[3] == "StartingFile"){
         auto &tpg = la.getTPGGraph();
         Environment env(set, le.getDataSources(), 8);
-//        std::string startingfilename = ROOT_DIR"/cmake-build-release/" + tparameters[3];
         File::TPGGraphDotImporter dotImporter(ROOT_DIR"/cmake-build-release/out_best.dot", env, tpg);
     }
 
@@ -132,15 +131,15 @@ int main() {
     // Train for NB_GENERATIONS generations
     for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
 
-        // we generate new random training targets so that at each generation, different targets are used.
-        // we delete the old targets
+        //If we want to renew all target
         if(tparameters[2] == "all"){
+            // we generate new random training targets so that at each generation, different targets are used.
+            // we delete the old targets
             std::for_each(le.trainingTargets.begin(), le.trainingTargets.end(), [](armlearn::Input<int16_t> * t){ delete t;});
             le.trainingTargets.clear();
-        }
 
-        // we create new targets
-        if(tparameters[2] == "all"){
+
+            // we create new targets
             for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
                 auto target = le.randomGoal(tparameters);
                 le.trainingTargets.emplace_back(target);
@@ -154,17 +153,21 @@ int main() {
         dotExporter.setNewFilePath(buff);
         dotExporter.print();
 
-        // we train the TPG, see doaction for the reward fonction
-
+        // we train the TPG, see doaction for the reward function
         la.trainOneGeneration(i);
 
-
+        // Keep best policy
+        la.keepBestPolicy();
+        dotExporter.setNewFilePath("out_best.dot");
+        dotExporter.print();
     }
 
+    /*
     // Keep best policy
     la.keepBestPolicy();
     dotExporter.setNewFilePath("out_best.dot");
     dotExporter.print();
+    */
 
     // Export best policy statistics.
     TPG::PolicyStats ps;

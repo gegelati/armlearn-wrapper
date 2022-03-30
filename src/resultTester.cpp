@@ -13,11 +13,13 @@
 #include "ArmLearnWrapper.h"
 
 int main() {
+    /*
     // Check sudo rights to connect to the arm
     if (getuid() != 0) {
         std::cerr << "Error: You need to be root to connect to the arm." << std::endl;
         exit(1);
     }
+    */
 
     // Create the instruction set for programs
     Instructions::Set set;
@@ -38,10 +40,14 @@ int main() {
     set.add(*(new Instructions::LambdaInstruction<double>(sin)));
 
     ArmLearnWrapper le;
+
+
     auto * validationGoal = new armlearn::Input<int16_t>({300, 50, 50});
     le.customGoal(validationGoal);
     le.reset();
 
+    le.testexp();
+/*
     // Instantiate the environment that will embed the LearningEnvironment
     Environment env(set, le.getDataSources(), 8);
 
@@ -73,7 +79,7 @@ int main() {
     // runRealArmAuto(root, tee, le);
 
     //printPolicyStats(root,env);
-
+    */
     // cleanup
     for (unsigned int i = 0; i < set.getNbInstructions(); i++) {
         delete (&set.getInstruction(i));

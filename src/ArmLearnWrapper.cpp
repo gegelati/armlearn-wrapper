@@ -237,6 +237,7 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> t
         Za = Za-50;
         Zb = Zb+50;
     }
+
     if(tpara[1]=="large"){
         Xa = -100;
         Xb = 100;
@@ -248,7 +249,13 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> t
         Zb = Zb+150;
     }
 
+    if(tpara[0]=="2D"){
+        Za = 267;
+        Zb = 267;
+    }
+
     if(tpara[1]=="full"){
+        /* Ancienne methode du gestion du full
         Xa = -500;
         Xb = 500;
 
@@ -257,19 +264,30 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> t
 
         Za = -500;
         Zb = 500;
+         */
+
+        //Pour tirer des point au hasard, on genere des positions de moteur au hasard, qu'on convertit enssuite en point
+        uint16_t i = (int16_t) (rng.getUnsignedInt64(1, 4094));
+        uint16_t j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+        uint16_t k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+        uint16_t l = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+
+        std::vector<uint16_t> newMotorPos = {i,j,k,l,512,256};
+        auto validMotorPos = device->toValidPosition(newMotorPos); //C'est une securité, pour etre sur que la position creer existe et est valide
+        auto newCartesianCoords = converter->computeServoToCoord(validMotorPos)->getCoord();
+
+        if(tpara[0]=="2D"){
+            newCartesianCoords[2] = 267;
+            newCartesianCoords[2] = 267;
+        }
+
+        return new armlearn::Input<int16_t>(
+                {
+                        (int16_t) (newCartesianCoords[0]), //X
+                        (int16_t) (newCartesianCoords[1]), //Y
+                        (int16_t) (newCartesianCoords[2])}); //Z
     }
 
-    if(tpara[0]=="2D"){
-        Za = 267;
-        Zb = 267;
-    }
-
-//            (int16_t) (rng.getUnsignedInt64(-50, 50)), //X
-//            (int16_t) (rng.getUnsignedInt64(276, 366)), //Y
-//            (int16_t) (rng.getUnsignedInt64(197, 197))}); //Z
-
-    //{(int16_t) (rng.getUnsignedInt64(-200, 200)), (int16_t) (rng.getUnsignedInt64(-200, 200)),
-    //(int16_t) (rng.getUnsignedInt64(-150, 400))});
     return new armlearn::Input<int16_t>(
             {
                     (int16_t) (rng.getUnsignedInt64(Xa, Xb)), //X
@@ -332,3 +350,78 @@ std::vector<uint16_t> ArmLearnWrapper::getMotorsPos() {
 void ArmLearnWrapper::changeStartingPos(std::vector<uint16_t> newStartingPos) {
     startingPos = newStartingPos;
 }
+
+void ArmLearnWrapper::getallposexp(){
+    // BACKHOE_POSITION : {2048, 2048, 2048, 2048, 512, 256} Motor Cords
+    uint16_t i=0,j=0,k=0,l=0; // Use to loop on all the position
+//    device->setPosition( {1042, 1042, 1024, 2048, 512, 256});
+//    device->waitFeedback();
+//    computeInput();
+
+    std::ofstream ToAllThePoint;
+    ToAllThePoint.open("ToAllThePoint.csv",std::ios::out);
+    ToAllThePoint << "Xp" << ";" << "Yp" << ";" << "Zp" << ";" << std::endl;
+
+//    std::vector<uint16_t> motorCoords;
+//    for (int i = 0; i < motorPos.getLargestAddressSpace(); i++) {
+//        motorCoords.emplace_back((uint16_t) *motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+//    }
+//    std::vector<double> cartesianCoords;
+//    for (int i = 0; i < cartesianPos.getLargestAddressSpace(); i++) {
+//        cartesianCoords.emplace_back(
+//                (double) *cartesianPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+//    }
+
+//    ToAllThePoint << cartesianCoords[0] << ";" << cartesianCoords[1] << ";" << cartesianCoords[2] << ";" <<std::endl;
+
+
+    //Tentative pour print tout les points qui existe, mais clairement impossible a gerer, fichier trop grand, trop de point, trop long a calculé
+    for (i = 1; i < 4094; ++i) {
+        i+=200;
+        for (j = 1024; j < 3072; ++j) {
+            j+=200;
+            for (k = 1024; k < 3072; ++k) {
+                k+=200;
+                for (l = 1024; l < 3072; ++l) {
+                    l+=200;
+                    device->setPosition({i,j,k,l,512,256});
+                    device->waitFeedback();
+                    computeInput();
+
+                    std::vector<uint16_t> motorCoords;
+                    for (int i = 0; i < motorPos.getLargestAddressSpace(); i++) {
+                        motorCoords.emplace_back((uint16_t) *motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+                    }
+                    std::vector<double> cartesianCoords;
+                    for (int i = 0; i < cartesianPos.getLargestAddressSpace(); i++) {
+                        cartesianCoords.emplace_back(
+                                (double) *cartesianPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+                    }
+
+                    ToAllThePoint << cartesianCoords[0] << ";" << cartesianCoords[1] << ";" << cartesianCoords[2] << ";" <<std::endl;
+
+                }
+            }
+
+        }
+
+    }
+    return;
+}
+
+
+
+void ArmLearnWrapper::testexp(){
+    int j;
+    std::vector<uint16_t> newMotorPos = {0,0,0,0,512,256};
+    auto validOutput = device->toValidPosition(newMotorPos);
+    auto newCartesianCoords = converter->computeServoToCoord(validOutput)->getCoord();
+    j++;
+}
+
+
+
+
+
+
+

@@ -180,7 +180,7 @@ public:
     void swapGoal(Learn::LearningMode mode);
 
     /// Generation a new  random
-    armlearn::Input<int16_t> *randomGoal(std::vector<std::string> tpara);
+    armlearn::Input<int16_t> *randomGoal(std::vector<std::string> tpara = {"3D","full","all","NoStartingFile"});
 
     /// Puts a custom goal in the first slot of the trainingTargets list.
     void customGoal(armlearn::Input<int16_t> *newGoal);
@@ -211,6 +211,11 @@ public:
     /// sets a new position to begin simulation from
     void changeStartingPos(std::vector<uint16_t> newStartingPos);
 
+    /// Experiment all position (Failed)
+    void getallposexp();
+
+    ///Fonction to test things
+    void testexp();
 };
 
 #endif
