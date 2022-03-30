@@ -66,6 +66,17 @@ int main() {
 
     std::vector<std::string> tparameters = {"3D","full","all","NoStartingFile"}; //Parameters for training
     /// [0] 2D/3D [1] close/large/full (Full is a space that the robot cannot fully reach) [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
+
+    /*
+    //Prototype to renew not all target
+    float ar = std::stof(tparameters[2]);
+    if(ar < 0 || ar > 1){
+        ar = 1;
+    }
+    int NT = round(params.nbIterationsPerPolicyEvaluation*ar);
+    */
+
+
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
 
@@ -145,7 +156,16 @@ int main() {
                 le.trainingTargets.emplace_back(target);
             }
         }
-
+        /*
+        //Prototype to renew not all target
+        std::vector<armlearn::Input<int16_t> *> temptarget;
+        std::for_each(le.trainingTargets.begin(), le.trainingTargets.begin()+NT, [](armlearn::Input<int16_t> * t){ delete t;});
+        for(int j=0;j<NT;j++){
+            auto target = le.randomGoal(tparameters);
+            temptarget.emplace_back(target);
+        }
+        le.trainingTargets.insert(le.trainingTargets.end(),temptarget.begin(),temptarget.end());
+        */
 
 	    //print the previous graphs
         char buff[16];

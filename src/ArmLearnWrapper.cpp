@@ -161,7 +161,19 @@ double ArmLearnWrapper::computeReward() {
 
 
 void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
+    /*
+    //Pour avoir une position de depart au hasard
+    uint16_t i = (int16_t) (rng.getUnsignedInt64(1, 4094));
+    uint16_t j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+    uint16_t k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+    uint16_t l = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+
+    std::vector<uint16_t> newMotorPos = {i,j,k,l,512,256};
+    auto validMotorPos = device->toValidPosition(newMotorPos); //Pour etre sur que la position est possible
+    device->setPosition(validMotorPos);
+    */
     device->setPosition(startingPos); // Reset position
+
     device->waitFeedback();
 
     learningtarget = mode;
