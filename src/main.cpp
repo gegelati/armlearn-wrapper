@@ -64,16 +64,16 @@ int main() {
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
-    std::vector<std::string> tparameters = {"3D","full","all","NoStartingFile"}; //Parameters for training
+    std::vector<std::string> tparameters = {"3D","full","all","StartingFile"}; //Parameters for training
     /// [0] 2D/3D [1] close/large/full (Full is a space that the robot cannot fully reach) [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
 
     /*
     //Prototype to renew not all target
-    float ar = std::stof(tparameters[2]);
-    if(ar < 0 || ar > 1){
-        ar = 1;
+    float ar = std::stof(tparameters[2]); //We take a look a the parameters
+    if(ar < 0 || ar > 1){ //If it is not in a possible value [0,1] (0 Mean no renew, 1 mean all, and if you are <0.5 the same value may pass on multiple generation)
+        ar = 1; //We fixe it at the basic value
     }
-    int NT = round(params.nbIterationsPerPolicyEvaluation*ar);
+    int NT = round(params.nbIterationsPerPolicyEvaluation*ar); //Otherwise, a calculate the true number of element to replace
     */
 
 
@@ -158,8 +158,8 @@ int main() {
         }
         /*
         //Prototype to renew not all target
-        std::vector<armlearn::Input<int16_t> *> temptarget;
-        std::for_each(le.trainingTargets.begin(), le.trainingTargets.begin()+NT, [](armlearn::Input<int16_t> * t){ delete t;});
+        std::vector<armlearn::Input<int16_t> *> temptarget; //Will be the list of new element
+        std::for_each(le.trainingTargets.begin(), le.trainingTargets.begin()+NT, [](armlearn::Input<int16_t> * t){ delete t;}); //We delete the first part of target, to make a shift the value
         for(int j=0;j<NT;j++){
             auto target = le.randomGoal(tparameters);
             temptarget.emplace_back(target);

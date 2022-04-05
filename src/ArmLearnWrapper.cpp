@@ -22,9 +22,9 @@ void ArmLearnWrapper::computeInput() {
 
 void ArmLearnWrapper::doAction(uint64_t actionID) {
     std::vector<double> out;
-//    double step = M_PI / 180; // discrete rotations of some °
+    double step = M_PI / 180; // discrete rotations of some °
 //    double step = M_PI / 360;
-    double step = M_PI / 720;
+//    double step = M_PI / 720;
 
     switch (actionID) {
         case 0:
@@ -124,45 +124,13 @@ double ArmLearnWrapper::computeReward() {
     if(err<5 && nbActions==999)
     std::cout<<toString()<<std::endl;*/
 
-//    if(learningtarget == Learn::LearningMode::VALIDATION){
-//        std::ofstream PointCloud;
-//        PointCloud.open("PointCloud.ods",std::ios::app);
-//
-//        PointCloud << cartesianCoords[0] << "\t" << cartesianCoords[1] << "\t" << cartesianCoords[2] << "\t";
-//        PointCloud << target[0] << "\t" << target[1] << "\t" << target[2] << "\t" << -1*err << "\t" << std::endl;
-//    }
-
-//    if(learningtarget == Learn::LearningMode::VALIDATION){
-//        std::ofstream PointCloudXt;
-//        PointCloudXt.open("PointCloudXt.m",std::ios::app);
-//        PointCloudXt << target[0] << "  " ;
-//
-//        std::ofstream PointCloudYt;
-//        PointCloudYt.open("PointCloudYt.m",std::ios::app);
-//        PointCloudYt << target[1] << "  " ;
-//
-//        std::ofstream PointCloudXa;
-//        PointCloudXa.open("PointCloudXa.m",std::ios::app);
-//        PointCloudXa << cartesianCoords[0] << "  " ;
-//
-//        std::ofstream PointCloudYa;
-//        PointCloudYa.open("PointCloudYa.m",std::ios::app);
-//        PointCloudYa << cartesianCoords[1] << "  " ;
-//
-//        std::ofstream PointCloudE;
-//        PointCloudE.open("PointCloudE.m",std::ios::app);
-//        PointCloudE << -1*err << "  " ;
-//
-//
-//    }
-
     return -1 * err;
 }
 
 
 void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
     /*
-    //Pour avoir une position de depart au hasard
+    //Pour avoir une position de depart au hasard, mais faudrait pas la mettre ici, mais quelque part ou set startingPos
     uint16_t i = (int16_t) (rng.getUnsignedInt64(1, 4094));
     uint16_t j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
     uint16_t k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
@@ -300,6 +268,23 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> t
                         (int16_t) (newCartesianCoords[2])}); //Z
     }
 
+    /*
+    if(tpara[1]=="Progre"){
+        uint16_t i = (int16_t) (rng.getUnsignedInt64(1, 4094));
+        uint16_t j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+        uint16_t k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+        uint16_t l = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+
+        std::vector<uint16_t> newMotorPos = {i,j,k,l,512,256};
+        auto validMotorPos = device->toValidPosition(newMotorPos); //C'est une securité, pour etre sur que la position creer existe et est valide
+        auto newCartesianCoords = converter->computeServoToCoord(validMotorPos)->getCoord();
+    }
+    */
+
+
+
+
+
     return new armlearn::Input<int16_t>(
             {
                     (int16_t) (rng.getUnsignedInt64(Xa, Xb)), //X
@@ -424,11 +409,46 @@ void ArmLearnWrapper::getallposexp(){
 
 
 void ArmLearnWrapper::testexp(){
-    int j;
-    std::vector<uint16_t> newMotorPos = {0,0,0,0,512,256};
-    auto validOutput = device->toValidPosition(newMotorPos);
-    auto newCartesianCoords = converter->computeServoToCoord(validOutput)->getCoord();
-    j++;
+
+    /*
+    uint16_t i = (int16_t) (rng.getUnsignedInt64(1, 4094));
+    uint16_t j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+    uint16_t k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+    uint16_t l = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+
+    std::vector<uint16_t> newMotorPos = {i,j,k,l,512,256};
+    auto validMotorPos = device->toValidPosition(newMotorPos); //C'est une securité, pour etre sur que la position creer existe et est valide
+    auto newCartesianCoords = converter->computeServoToCoord(validMotorPos)->getCoord();
+
+    auto err = computeSquaredError(newCartesianCoords,startingPos);
+
+    while(err>300){
+
+    }
+     */
+
+    int Xa = 0,Xb = 0,Ya = 346,Yb = 346,Za = 267,Zb = 267;
+    Xa = Xa-50;
+    Xb = Xb-50;
+
+    Ya = Ya-50;
+    Yb = Yb-50;
+
+    Za = Za-50;
+    Zb = Zb-50;
+
+
+    for (int t = 0; t < 40; ++t) {
+        std::vector<int16_t> target = {(int16_t) (rng.getUnsignedInt64(Xa, Xb)), //X
+                                       (int16_t) (rng.getUnsignedInt64(Ya, Yb)), //Y
+                                       (int16_t) (rng.getUnsignedInt64(Za, Zb))};
+
+        auto err = computeSquaredError(target,converter->computeServoToCoord(startingPos)->getCoord()); //+/-80 pour le close space
+        t++;
+    }
+
+
+    return;
 }
 
 
