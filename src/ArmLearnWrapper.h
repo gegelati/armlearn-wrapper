@@ -79,6 +79,8 @@ protected:
     /// Are the target for the Training or Validation mode
     Learn::LearningMode learningtarget = Learn::LearningMode::TRAINING;
 
+    int generation = 0;
+
 public:
 
     /// Inputs of learning, positions to ask to the robot in TRAINING mode
@@ -181,14 +183,15 @@ public:
 
     /// Generation a new  random
     armlearn::Input<int16_t> *randomGoal(std::vector<std::string> tpara = {"3D","full","all","NoStartingFile"});
+    armlearn::Input<int16_t> *randomValidationGoal(std::vector<std::string> tpara = {"3D","full","all","NoStartingFile"});
 
     /// Puts a custom goal in the first slot of the trainingTargets list.
     void customGoal(armlearn::Input<int16_t> *newGoal);
 
-/// Returns a string logging the goal (to use e.g. when there is a goal change)
+    /// Returns a string logging the goal (to use e.g. when there is a goal change)
     std::string newGoalToString() const;
 
-/// Used to print the current situation (positions of the motors)
+    /// Used to print the current situation (positions of the motors)
     std::string toString() const override;
 
     /**
@@ -211,11 +214,11 @@ public:
     /// sets a new position to begin simulation from
     void changeStartingPos(std::vector<uint16_t> newStartingPos);
 
-    /// Experiment all position (Failed)
-    void getallposexp();
-
     ///Fonction to test things
     void testexp();
+
+    ///Set generation
+    void setgeneration(int i);
 };
 
 #endif

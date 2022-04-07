@@ -83,7 +83,7 @@ int main() {
     // Generate validation targets.
     le.validationTargets.clear();
     for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
-        auto target = le.randomGoal(tparameters);
+        auto target = le.randomValidationGoal(tparameters);
         le.validationTargets.emplace_back(target);
     }
 
@@ -141,7 +141,7 @@ int main() {
 
     // Train for NB_GENERATIONS generations
     for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
-
+        le.setgeneration(i);
         //If we want to renew all target
         if(tparameters[2] == "all"){
             // we generate new random training targets so that at each generation, different targets are used.
