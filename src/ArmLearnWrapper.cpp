@@ -256,6 +256,7 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> t
         auto validMotorPos = device->toValidPosition(newMotorPos); //C'est une securité, pour etre sur que la position creer existe et est valide
         auto newCartesianCoords = converter->computeServoToCoord(validMotorPos)->getCoord();
 
+        /*
         auto err = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
 
         double limerror = ((((this->generation)/20)+1)*30);
@@ -271,7 +272,7 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> t
 
             err = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
         }
-
+        */
 
         if(tpara[0]=="2D"){
             newCartesianCoords[2] = 267;

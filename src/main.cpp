@@ -65,7 +65,7 @@ int main() {
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
     std::vector<std::string> tparameters = {"3D","full","all","NoStartingFile"}; //Parameters for training
-    /// [0] 2D/3D [1] close/large/full (Full is a space that the robot cannot fully reach) [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
+    /// [0] 2D/3D [1] close/large/full [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
 
     /*
     //Prototype to renew not all target
