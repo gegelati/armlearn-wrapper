@@ -3,6 +3,8 @@
 #include <atomic>
 #include <cfloat>
 #include <algorithm>
+#include <fstream>
+#include <iostream>
 
 #include <gegelati.h>
 
@@ -64,17 +66,34 @@ int main() {
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
-    std::vector<std::string> tparameters = {"3D","full","all","NoStartingFile"}; //Parameters for training
+    std::vector<std::string> tparameters;
+    std::string myparameter;
+    std::ifstream myfile (ROOT_DIR"/TrainParam.txt");
+
+    if ( myfile.is_open() ) {
+        myfile >> myparameter;
+        while(!myfile.eof()){
+            std::for_each(myparameter.begin(), myparameter.end(), [](char & c) {
+                c = ::tolower(c);
+            });
+            tparameters.push_back(myparameter);
+            myfile >> myparameter;
+        }
+    }
+    else{
+        tparameters = {"3d","full","1","nostartingfile","noprogressive"};
+    }
     /// [0] 2D/3D [1] close/large/full [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
 
-    /*
+
+
     //Prototype to renew not all target
     float ar = std::stof(tparameters[2]); //We take a look a the parameters
-    if(ar < 0 || ar > 1){ //If it is not in a possible value [0,1] (0 Mean no renew, 1 mean all, and if you are <0.5 the same value may pass on multiple generation)
+    if(ar < 0 || ar > 1){ //If it is not in a possible value [0,1] (0 Mean no renew, 1 mean all, and if you are <0.5 the same value may pass on more than one generation)
         ar = 1; //We fixe it at the basic value
     }
     int NT = round(params.nbIterationsPerPolicyEvaluation*ar); //Otherwise, a calculate the true number of element to replace
-    */
+
 
 
     // Instantiate the LearningEnvironment
@@ -86,6 +105,18 @@ int main() {
         auto target = le.randomValidationGoal(tparameters);
         le.validationTargets.emplace_back(target);
     }
+
+
+    // Generate first batch of training target, all of them will not be use. We do that in case we don't renew all target
+    std::for_each(le.trainingTargets.begin(), le.trainingTargets.end(), [](armlearn::Input<int16_t> * t){ delete t;});
+    le.trainingTargets.clear();
+
+    // we create new targets
+    for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++) {
+        auto target = le.randomGoal(tparameters);
+        le.trainingTargets.emplace_back(target);
+    }
+
 
     // Instantiate and init the learning agent
     Learn::ParallelLearningAgent la(le, set, params);
@@ -131,7 +162,7 @@ int main() {
     // Create an exporter for all graphs
     File::TPGGraphDotExporter dotExporter("out_000.dot", la.getTPGGraph());
 
-    if(tparameters[3] == "StartingFile"){
+    if(tparameters[3] == "startingfile"){
         auto &tpg = la.getTPGGraph();
         Environment env(set, le.getDataSources(), 8);
         File::TPGGraphDotImporter dotImporter(ROOT_DIR"/cmake-build-release/out_best.dot", env, tpg);
@@ -142,8 +173,9 @@ int main() {
     // Train for NB_GENERATIONS generations
     for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
         le.setgeneration(i);
-        //If we want to renew all target
-        if(tparameters[2] == "all"){
+
+        /*
+        if(tparameters[2] == "1"){
             // we generate new random training targets so that at each generation, different targets are used.
             // we delete the old targets
             std::for_each(le.trainingTargets.begin(), le.trainingTargets.end(), [](armlearn::Input<int16_t> * t){ delete t;});
@@ -156,16 +188,18 @@ int main() {
                 le.trainingTargets.emplace_back(target);
             }
         }
-        /*
-        //Prototype to renew not all target
-        std::vector<armlearn::Input<int16_t> *> temptarget; //Will be the list of new element
-        std::for_each(le.trainingTargets.begin(), le.trainingTargets.begin()+NT, [](armlearn::Input<int16_t> * t){ delete t;}); //We delete the first part of target, to make a shift the value
-        for(int j=0;j<NT;j++){
-            auto target = le.randomGoal(tparameters);
-            temptarget.emplace_back(target);
-        }
-        le.trainingTargets.insert(le.trainingTargets.end(),temptarget.begin(),temptarget.end());
         */
+
+
+        //Prototype to renew not all target
+        std::for_each(le.trainingTargets.begin(), le.trainingTargets.begin()+NT, [](armlearn::Input<int16_t> * t){ delete t;}); //We delete the first part of target, to make a shift the value
+        le.trainingTargets.erase(le.trainingTargets.begin(),le.trainingTargets.begin()+NT);
+
+         for(int j=0;j<NT;j++){
+            auto target = le.randomGoal(tparameters);
+            le.trainingTargets.emplace_back(target);
+        }
+
 
 	    //print the previous graphs
         char buff[16];
@@ -175,19 +209,14 @@ int main() {
 
         // we train the TPG, see doaction for the reward function
         la.trainOneGeneration(i);
-
-        // Keep best policy
-        la.keepBestPolicy();
-        dotExporter.setNewFilePath("out_best.dot");
-        dotExporter.print();
     }
 
-    /*
+
     // Keep best policy
     la.keepBestPolicy();
     dotExporter.setNewFilePath("out_best.dot");
     dotExporter.print();
-    */
+
 
     // Export best policy statistics.
     TPG::PolicyStats ps;

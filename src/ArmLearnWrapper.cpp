@@ -229,7 +229,7 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> t
         Zb = Zb+150;
     }
 
-    if(tpara[0]=="2D"){
+    if(tpara[0]=="2d"){
         Za = 267;
         Zb = 267;
     }
@@ -256,25 +256,26 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> t
         auto validMotorPos = device->toValidPosition(newMotorPos); //C'est une securité, pour etre sur que la position creer existe et est valide
         auto newCartesianCoords = converter->computeServoToCoord(validMotorPos)->getCoord();
 
-        /*
-        auto err = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
 
-        double limerror = ((((this->generation)/20)+1)*30);
-        while(err > limerror ){
-            i = (int16_t) (rng.getUnsignedInt64(1, 4094));
-            j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
-            k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
-            l = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+        if(tpara[4] == "progressive"){
+            auto err = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
 
-            newMotorPos = {i,j,k,l,512,256};
-            validMotorPos = device->toValidPosition(newMotorPos); //C'est une securité, pour etre sur que la position creer existe et est valide
-            newCartesianCoords = converter->computeServoToCoord(validMotorPos)->getCoord();
+            double limerror = ((((this->generation)/20)+1)*30);
+            while(err > limerror ){
+                i = (int16_t) (rng.getUnsignedInt64(1, 4094));
+                j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+                k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+                l = (int16_t) (rng.getUnsignedInt64(1025, 3071));
 
-            err = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
+                newMotorPos = {i,j,k,l,512,256};
+                validMotorPos = device->toValidPosition(newMotorPos); //C'est une securité, pour etre sur que la position creer existe et est valide
+                newCartesianCoords = converter->computeServoToCoord(validMotorPos)->getCoord();
+
+                err = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
+            }
         }
-        */
 
-        if(tpara[0]=="2D"){
+        if(tpara[0]=="2d"){
             newCartesianCoords[2] = 267;
             newCartesianCoords[2] = 267;
         }
@@ -285,23 +286,6 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<std::string> t
                         (int16_t) (newCartesianCoords[1]), //Y
                         (int16_t) (newCartesianCoords[2])}); //Z
     }
-
-    /*
-    if(tpara[1]=="Progre"){
-        uint16_t i = (int16_t) (rng.getUnsignedInt64(1, 4094));
-        uint16_t j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
-        uint16_t k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
-        uint16_t l = (int16_t) (rng.getUnsignedInt64(1025, 3071));
-
-        std::vector<uint16_t> newMotorPos = {i,j,k,l,512,256};
-        auto validMotorPos = device->toValidPosition(newMotorPos); //C'est une securité, pour etre sur que la position creer existe et est valide
-        auto newCartesianCoords = converter->computeServoToCoord(validMotorPos)->getCoord();
-    }
-    */
-
-
-
-
 
     return new armlearn::Input<int16_t>(
             {
@@ -324,7 +308,6 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomValidationGoal(std::vector<std:
         Za = Za-50;
         Zb = Zb+50;
     }
-
     if(tpara[1]=="large"){
         Xa = -100;
         Xb = 100;
@@ -336,7 +319,7 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomValidationGoal(std::vector<std:
         Zb = Zb+150;
     }
 
-    if(tpara[0]=="2D"){
+    if(tpara[0]=="2d"){
         Za = 267;
         Zb = 267;
     }
@@ -351,7 +334,7 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomValidationGoal(std::vector<std:
         auto validMotorPos = device->toValidPosition(newMotorPos); //C'est une securité, pour etre sur que la position creer existe et est valide
         auto newCartesianCoords = converter->computeServoToCoord(validMotorPos)->getCoord();
 
-        if(tpara[0]=="2D"){
+        if(tpara[0]=="2d"){
             newCartesianCoords[2] = 267;
             newCartesianCoords[2] = 267;
         }
