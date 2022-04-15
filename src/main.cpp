@@ -83,9 +83,7 @@ int main() {
     else{
         tparameters = {"3d","full","1","nostartingfile","noprogressive"};
     }
-    /// [0] 2D/3D [1] close/large/full [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile
-
-
+    /// [0] 2D/3D [1] close/large/full [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile [3] Learning in a progressive space
 
     //Prototype to renew not all target
     float ar = std::stof(tparameters[2]); //We take a look a the parameters
@@ -93,8 +91,6 @@ int main() {
         ar = 1; //We fixe it at the basic value
     }
     int NT = round(params.nbIterationsPerPolicyEvaluation*ar); //Otherwise, a calculate the true number of element to replace
-
-
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
