@@ -11,7 +11,7 @@
 #include "ArmLearnWrapper.h"
 
 #ifndef NB_GENERATIONS
-#define NB_GENERATIONS 300
+#define NB_GENERATIONS 50
 #endif
 
 void getKey(std::atomic<bool>& exit) {
@@ -143,12 +143,12 @@ int main() {
     auto logFile = *new Log::LABasicLogger(la,fichier);
     auto logCout = *new Log::LABasicLogger(la);
 
-    //Creation of CloudPoint.csv, point that the robotic arm ended to touch
-    std::ofstream PointCloud;
-    PointCloud.open("PointCloud.csv",std::ios::out);
-
-    PointCloud << "Xp" << ";" << "Yp" << ";" << "Zp" << ";";
-    PointCloud << "Xt" << ";" << "Yt" << ";" << "Zt" << ";" << "score" << std::endl;
+//    //Creation of CloudPoint.csv, point that the robotic arm ended to touch
+//    std::ofstream PointCloud;
+//    PointCloud.open("PointCloud.csv",std::ios::out);
+//
+//    PointCloud << "Xp" << ";" << "Yp" << ";" << "Zp" << ";";
+//    PointCloud << "Xt" << ";" << "Yt" << ";" << "Zt" << ";" << "score" << std::endl;
 
     // File for printing best policy stat.
     std::ofstream stats;
@@ -161,7 +161,7 @@ int main() {
     if(tparameters[3] == "startingfile"){
         auto &tpg = la.getTPGGraph();
         Environment env(set, le.getDataSources(), 8);
-        File::TPGGraphDotImporter dotImporter(ROOT_DIR"/cmake-build-release/out_best.dot", env, tpg);
+        File::TPGGraphDotImporter dotImporter(ROOT_DIR"/cmake-build-release/out_006.dot", env, tpg);
     }
 
 
@@ -169,23 +169,6 @@ int main() {
     // Train for NB_GENERATIONS generations
     for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
         le.setgeneration(i);
-
-        /*
-        if(tparameters[2] == "1"){
-            // we generate new random training targets so that at each generation, different targets are used.
-            // we delete the old targets
-            std::for_each(le.trainingTargets.begin(), le.trainingTargets.end(), [](armlearn::Input<int16_t> * t){ delete t;});
-            le.trainingTargets.clear();
-
-
-            // we create new targets
-            for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
-                auto target = le.randomGoal(tparameters);
-                le.trainingTargets.emplace_back(target);
-            }
-        }
-        */
-
 
         //Prototype to renew not all target
         std::for_each(le.trainingTargets.begin(), le.trainingTargets.begin()+NT, [](armlearn::Input<int16_t> * t){ delete t;}); //We delete the first part of target, to make a shift the value

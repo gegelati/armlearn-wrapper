@@ -151,25 +151,25 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
 }
 
 double ArmLearnWrapper::getScore() const {
-    if(learningtarget == Learn::LearningMode::VALIDATION){
-    std::vector<uint16_t> motorCoords;
-    for (int i = 0; i < motorPos.getLargestAddressSpace(); i++) {
-        motorCoords.emplace_back((uint16_t) *motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
-    }
-    std::vector<double> cartesianCoords;
-    for (int i = 0; i < cartesianPos.getLargestAddressSpace(); i++) {
-        cartesianCoords.emplace_back(
-                (double) *cartesianPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
-    }
-    auto target = this->currentTarget->getInput();
-
-
-        std::ofstream PointCloud;
-        PointCloud.open("PointCloud.csv",std::ios::app);
-
-        PointCloud << cartesianCoords[0] << ";" << cartesianCoords[1] << ";" << cartesianCoords[2] << ";";
-        PointCloud << target[0] << ";" << target[1] << ";" << target[2] << ";" << score << std::endl;
-    }
+//    if(learningtarget == Learn::LearningMode::VALIDATION){
+//    std::vector<uint16_t> motorCoords;
+//    for (int i = 0; i < motorPos.getLargestAddressSpace(); i++) {
+//        motorCoords.emplace_back((uint16_t) *motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+//    }
+//    std::vector<double> cartesianCoords;
+//    for (int i = 0; i < cartesianPos.getLargestAddressSpace(); i++) {
+//        cartesianCoords.emplace_back(
+//                (double) *cartesianPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+//    }
+//    auto target = this->currentTarget->getInput();
+//
+//
+//        std::ofstream PointCloud;
+//        PointCloud.open("PointCloud.csv",std::ios::app);
+//
+//        PointCloud << cartesianCoords[0] << ";" << cartesianCoords[1] << ";" << cartesianCoords[2] << ";";
+//        PointCloud << target[0] << ";" << target[1] << ";" << target[2] << ";" << score << std::endl;
+//    }
 
     return score;
 }
