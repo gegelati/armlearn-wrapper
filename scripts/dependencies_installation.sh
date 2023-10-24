@@ -54,7 +54,7 @@ cd ../..
 
 # get json from nlohann 
 echo "# Install json"
-git clone --depth 1 --branch v3.9.1 https://github.com/nlohmann/json.git
+git clone --depth 1 --branch v3.11.2 https://github.com/nlohmann/json.git
 cd json
 mkdir build && cd build
 cmake ..
@@ -83,7 +83,7 @@ cd ../..
 
 # get Gegelati (latest version installed, tested with 0.5.1)
 echo "# Install Gegelati"
-git clone https://github.com/gegelati/gegelati.git
+git clone --branch v1.2.0 https://github.com/gegelati/gegelati.git
 cd gegelati/bin
 cmake ..
 sudo cmake --build . --target install # On Linux
