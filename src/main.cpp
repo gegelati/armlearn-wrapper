@@ -156,10 +156,10 @@ int main() {
     Log::LAPolicyStatsLogger logStats(la, stats);
 
     // Create an exporter for all graphs
-    File::TPGGraphDotExporter dotExporter("out_000.dot", la.getTPGGraph());
+    File::TPGGraphDotExporter dotExporter("out_000.dot", *la.getTPGGraph());
 
     if(tparameters[3] == "startingfile"){
-        auto &tpg = la.getTPGGraph();
+        auto &tpg = *la.getTPGGraph();
         Environment env(set, le.getDataSources(), 8);
         File::TPGGraphDotImporter dotImporter(ROOT_DIR"/cmake-build-release/out_006.dot", env, tpg);
     }
@@ -199,7 +199,7 @@ int main() {
 
     // Export best policy statistics.
     TPG::PolicyStats ps;
-    ps.setEnvironment(la.getTPGGraph().getEnvironment());
+    ps.setEnvironment(la.getTPGGraph()->getEnvironment());
     ps.analyzePolicy(la.getBestRoot().first);
     std::ofstream bestStats;
     bestStats.open("out_best_stats.md");
