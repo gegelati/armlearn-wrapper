@@ -10,9 +10,6 @@
 
 #include "ArmLearnWrapper.h"
 
-#ifndef NB_GENERATIONS
-#define NB_GENERATIONS 50
-#endif
 
 void getKey(std::atomic<bool>& exit) {
     std::cout << std::endl;
@@ -165,9 +162,8 @@ int main() {
     }
 
 
-
-    // Train for NB_GENERATIONS generations
-    for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
+    // Train for params.nbGenerations generations
+    for (int i = 0; i < params.nbGenerations && !exitProgram; i++) {
         le.setgeneration(i);
 
         //Prototype to renew not all target
