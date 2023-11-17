@@ -1,5 +1,5 @@
-#ifndef TIC_TAC_TOE_WITH_OPPONENT_H
-#define TIC_TAC_TOE_WITH_OPPONENT_H
+#ifndef ARM_LEARN_WRAPPER_H
+#define ARM_LEARN_WRAPPER_H
 
 #include <random>
 
@@ -11,19 +11,6 @@
 #include <armlearn/widowxbuilder.h>
 #include <armlearn/basiccartesianconverter.h>
 #include <armlearn/devicelearner.h>
-
-// Proportion of target error in the reward
-#define TARGET_PROP 0.7
-// Coefficient of target error (difference between the real output and the target output, to minimize) when computing error between input and output
-#define TARGET_COEFF (TARGET_PROP / (2 * 613))
-// Coefficient of movement error (distance browsed by servomotors to reach target, to minimize) when computing error between input and output
-#define MOVEMENT_COEFF ((1 - TARGET_PROP) / 5537)
-// Coefficient of valid position error (returned if position is not valid)
-#define VALID_COEFF -1
-// Margin of error allowing to stop learning if error is below the number
-#define LEARN_ERROR_MARGIN 0.005
-// Coefficient decreasing the reward for a state as the state is closer to the initial state
-#define DECREASING_REWARD 0.99
 
 /**
 * LearningEnvironment to use armLean in order to learn how to move a robotic arm.
@@ -47,47 +34,70 @@ protected:
 
     double computeReward();
 
+    /// @brief true if the the environnement is terminated
     bool terminal = false;
 
-    /// Boolean used to control whether the LE includes the 2 servos
+    /// @brief Boolean used to control whether the LE includes the 2 servos
     /// controlling the rotation of the hand and the fingers.
     bool handServosTrained;
 
-    /// Randomness control
+    /// @brief Randomness control
     Mutator::RNG rng;
 
-    /// Current arm position
+    /// @brief Current motor position 
     Data::PrimitiveTypeArray<double> motorPos;
 
-    /// Current arm position
+    /// @brief Current hand of the arm position
     Data::PrimitiveTypeArray<double> cartesianPos;
 
-    /// Current arm and goal distance vector
+    /// @brief Current arm and goal distance vector
     Data::PrimitiveTypeArray<double> cartesianDif;
 
+    /// @brief converter used to covnert motorPos to cartesionPos
     armlearn::kinematics::Converter *converter;
 
+    /// @brief Score of the training
     double score = 0;
 
+    /// @brief Number of actions done in the episode
     size_t nbActions = 0;
 
-    std::vector<uint16_t> startingPos = BACKHOE_POSITION;
+    /// @brief Maximum number of actions doable in an episode 
+    int nbMaxActions;
 
-    /// Target currently used to move the arm.
+    /// @brief Coefficient to add a malus on the reward corresponding to the number of iterations in the episode
+    double coefRewardNbIterations = 0;
+
+    /// @brief Initial starting position of the arm
+    std::vector<uint16_t> initStartingPos = BACKHOE_POSITION;
+
+    /// @brief Current Starting position of the arm
+    std::vector<uint16_t> *currentStartingPos;
+
+    /// @brief Target currently used to move the arm.
     armlearn::Input<int16_t> *currentTarget;
 
-    /// Are the target for the Training or Validation mode
-    Learn::LearningMode learningtarget = Learn::LearningMode::TRAINING;
 
+    /// @brief Iterator of the map of training trajectories
+    std::map<std::vector<uint16_t>*, armlearn::Input<int16_t>*>::iterator trainingIterator;
+
+    /// @brief Maps with Starting positions in keys and Targets positions in values used for the training
+    std::map<std::vector<uint16_t>*, armlearn::Input<int16_t>*> trainingTrajectories;
+
+
+    /// @brief Iterator of the map of validation trajectories
+    std::map<std::vector<uint16_t>*, armlearn::Input<int16_t>*>::iterator validationIterator;
+
+    /// @brief Maps with Starting positions in keys and Targets positions in values used for the validation
+    std::map<std::vector<uint16_t>*, armlearn::Input<int16_t>*> validationTrajectories;
+        
+    /// @brief Current generation
     int generation = 0;
 
 public:
 
-    /// Inputs of learning, positions to ask to the robot in TRAINING mode
-    std::vector<armlearn::Input<int16_t> *> trainingTargets;
-    /// Inputs of learning, positions to ask to the robot in VALIDATION mode
-    std::vector<armlearn::Input<int16_t> *> validationTargets;
-
+    /// @brief Do not know
+    /// @return 
     armlearn::communication::AbstractController *iniController() {
         auto conv = new armlearn::kinematics::BasicCartesianConverter(); // Create kinematics calculator
         auto arbotix_sim = new armlearn::communication::NoWaitArmSimulator(
@@ -114,20 +124,23 @@ public:
      * \param[in] handServosTrained boolean controlling whether the 2 servos
      * controlling the hand of the robotic arm are trained.
      */
-    ArmLearnWrapper(bool handServosTrained = false)
+    ArmLearnWrapper(int nbMaxActions, double coefRewardNbIterations=0, bool handServosTrained = false)
             : LearningEnvironment((handServosTrained) ? 13 : 9), handServosTrained(handServosTrained),
-              trainingTargets(1), validationTargets(1),
+              trainingIterator(), validationIterator(),
+              nbMaxActions(), coefRewardNbIterations(),
               motorPos(6), cartesianPos(3), cartesianDif(3),
               DeviceLearner(iniController()) {
+        this->nbMaxActions = nbMaxActions;
+        this->coefRewardNbIterations = coefRewardNbIterations;
     }
 
     /**
     * \brief Copy constructor for the armLearnWrapper.
-    *
     */
     ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions),
-                                                    trainingTargets(other.trainingTargets),
-                                                    validationTargets(other.validationTargets),
+                                                    trainingIterator(other.trainingIterator),
+                                                    validationIterator(other.validationIterator), 
+                                                    nbMaxActions(other.nbMaxActions),  coefRewardNbIterations(other.coefRewardNbIterations),
                                                     motorPos(other.motorPos), cartesianPos(other.cartesianPos),
                                                     cartesianDif(other.cartesianDif), DeviceLearner(iniController()) {
 
@@ -135,90 +148,142 @@ public:
         computeInput();
     }
 
-    /// Destructor
+    /// @brief Destructor
     ~ArmLearnWrapper() {
         delete this->device;
         delete this->converter;
     };
 
 
-    /// Inherited via LearningEnvironment
+    /// @brief Inherited via LearningEnvironment
     void doAction(uint64_t actionID) override;
 
 
-    /// Inherited via LearningEnvironment
+    /// @brief Inherited via LearningEnvironment
     void reset(size_t seed = 0, Learn::LearningMode mode = Learn::LearningMode::TRAINING) override;
 
-    /// Inherited via LearningEnvironment
+    /**
+     * @brief Inherited via LearningEnvironment, create the state vector
+     */ 
     std::vector<std::reference_wrapper<const Data::DataHandler>> getDataSources() override;
 
-/**
-* Inherited from LearningEnvironment.
-*
-* The score is the sum of scores obtained during the game
-* after each move, a score increment depending of the proximity of the arm
-* regarding its goal is done.
-*/
-    double getScore() const override;
+    /// @brief Clear a given proportion of the current set of training targets 
+    void clearPropTrainingTrajectories(double prop);
 
-/// Inherited via LearningEnvironment
-    bool isTerminal() const override;
 
-/// Inherited via LearningEnvironment
-    bool isCopyable() const override;
-
-/// Inherited via LearningEnvironment
-    virtual LearningEnvironment *clone() const;
 
     /**
-    * \brief Set the currentTarget to the next target.
-    *
-    * The next currentTarget is chosen within the trainingTargets or
-    * the validationTargets lists, depending on the given modes.
-    * A left rotation of the selected list is done, to iterate on the list
-    * of targets automatically when calling the swapGoal method.
-    *
-    */
-    void swapGoal(Learn::LearningMode mode);
+     * @brief Inherited from LearningEnvironment.
+     *
+     */
+    double getScore() const override;
 
-    /// Generation a new  random
-    armlearn::Input<int16_t> *randomGoal(std::vector<std::string> tpara = {"3D","full","all","NoStartingFile"});
-    armlearn::Input<int16_t> *randomValidationGoal(std::vector<std::string> tpara = {"3D","full","all","NoStartingFile"});
+    /// @brief Inherited via LearningEnvironment
+    bool isTerminal() const override;
 
-    /// Puts a custom goal in the first slot of the trainingTargets list.
-    void customGoal(armlearn::Input<int16_t> *newGoal);
+    /// @brief Inherited via LearningEnvironment
+    bool isCopyable() const override;
 
-    /// Returns a string logging the goal (to use e.g. when there is a goal change)
+    /// @brief Inherited via LearningEnvironment
+    virtual LearningEnvironment *clone() const;
+
+    /** 
+     * @brief Update the map of training trajectories, which mean deleting a proportion of trajectories,
+     * Then create an amount of Starting positions, that can be random of a predifined one.
+     * Finally one target is created for each random starting position
+     * 
+     * @param[in] nbTrajectories Number of trajectories to create in total
+     * @param[in] doRandomStartingPosition true if the starting position are random, else they are all set to the init one
+     * @param[in] propTrajectoriesReused proportion of trajectories reused (not deleted)
+     * @param[in] limitTargets distance max that the arm will have to browse in the trajectory
+     * @param[in] limitStartingPos distance max that the starting position will be from the init one
+     */ 
+    void updateTrainingTrajectories(int nbTrajectories, bool doRandomStartingPosition, double propTrajectoriesReused,
+                                    double limitTargets, double limitStartingPos);
+
+    /** 
+     * @brief Update the map of validation trajectories, which mean deleting all current trajectories,
+     * Then create an amount of Starting positions, that can be random of a predifined one.
+     * Finally one target is created for each random starting position
+     * 
+     * @param[in] nbTrajectories Number of trajectories to create in total
+     * @param[in] doRandomStartingPosition true if the starting position are random, else they are all set to the init one
+     */ 
+    void updateValidationTrajectories(int nbTrajectories, bool doRandomStartingPosition);
+
+    /**
+     * @brief Create and return a random position with the motors
+     */
+    std::vector<uint16_t> randomMotorPos();
+
+    /**
+     * @brief Create and return a random starting position for the arm
+
+     * @param[in] validation true if the target is for the validation, else false
+     * @param[in] maxLength distance max between the generated starting pos and the initStartingPos
+     */
+    std::vector<uint16_t>* randomStartingPos(bool validation, double maxLength=0);
+
+    /**
+     * @brief Create and return a random targets in cartesian coordonates
+     * 
+     * @param[in] startingPos starting position : used to calculate the distance to browse by the arm
+     * @param[in] validation true if the target is for the validation, else false
+     * @param[in] maxLength distance max that the arm will have to browse in the trajectory
+     */
+    armlearn::Input<int16_t>* randomGoal(std::vector<uint16_t> startingPos, bool validation, double maxLength=0);
+
+    /**
+     * @brief Puts a custom goal in the first slot of the trainingTargets list.
+     */ 
+    void customTrajectory(armlearn::Input<int16_t> *newGoal, std::vector<uint16_t> startingPos, bool validation = false);
+
+    /**
+     * @brief Returns a string logging the goal (to use e.g. when there is a goal change)
+     */ 
     std::string newGoalToString() const;
 
-    /// Used to print the current situation (positions of the motors)
+    /**
+     * @brief Used to print the current situation (positions of the motors)
+     */ 
     std::string toString() const override;
 
     /**
     * @brief Executes a learning algorithm on the learning set
-    *
     */
     virtual void learn() override {}
 
-    /// Inherited via DeviceLearner
+    /**
+     * @brief Inherited via DeviceLearner
+     */ 
     virtual void test() override {}
 
-    /// Inherited via DeviceLearner
+    /**
+     * @brief Inherited via DeviceLearner
+     */ 
     virtual armlearn::Output<std::vector<uint16_t>> *produce(const armlearn::Input<uint16_t> &input) override {
         return new armlearn::Output<std::vector<uint16_t>>(std::vector<std::vector<uint16_t>>());
     }
-
-    /// returns current motors position in a vector
+    /**
+     * @brief Return current motors position in a vector
+     */ 
     std::vector<uint16_t> getMotorsPos();
 
-    /// sets a new position to begin simulation from
-    void changeStartingPos(std::vector<uint16_t> newStartingPos);
 
-    ///Fonction to test things
-    void testexp();
+    /**
+     * @brief Set generation
+     */ 
+    void setgeneration(int newGeneration);
 
-    ///Set generation
-    void setgeneration(int i);
+    /**
+     * @brief Get the initStartingPos
+     */ 
+    std::vector<uint16_t> getInitStartingPos();
+
+    /**
+     * @brief Set the new init starting position
+     */ 
+    void setInitStartingPos(std::vector<uint16_t> newInitStartingPos);
 };
 
 #endif
