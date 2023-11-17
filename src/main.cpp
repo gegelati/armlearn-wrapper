@@ -8,12 +8,10 @@
 
 #include <gegelati.h>
 #include "instructions.h"
+#include "trainingParameters.h"
 
 #include "ArmLearnWrapper.h"
 
-#ifndef NB_GENERATIONS
-#define NB_GENERATIONS 50
-#endif
 
 void getKey(std::atomic<bool>& exit) {
     std::cout << std::endl;
@@ -55,31 +53,10 @@ int main() {
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
-    std::vector<std::string> tparameters;
-    std::string myparameter;
-    std::ifstream myfile (ROOT_DIR"/TrainParam.txt");
 
-    if ( myfile.is_open() ) {
-        myfile >> myparameter;
-        while(!myfile.eof()){
-            std::for_each(myparameter.begin(), myparameter.end(), [](char & c) {
-                c = ::tolower(c);
-            });
-            tparameters.push_back(myparameter);
-            myfile >> myparameter;
-        }
-    }
-    else{
-        tparameters = {"3d","full","1","nostartingfile","noprogressive"};
-    }
-    /// [0] 2D/3D [1] close/large/full [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile [3] Learning in a progressive space
 
-    //Prototype to renew not all target
-    float ar = std::stof(tparameters[2]); //We take a look a the parameters
-    if(ar < 0 || ar > 1){ //If it is not in a possible value [0,1] (0 Mean no renew, 1 mean all, and if you are <0.5 the same value may pass on more than one generation)
-        ar = 1; //We fixe it at the basic value
-    }
-    int NT = round(params.nbIterationsPerPolicyEvaluation*ar); //Otherwise, a calculate the true number of element to replace
+    TrainingParameters trainingParams;
+    trainingParams.loadParametersFromJson(ROOT_DIR "/trainParams.json");
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper le;
@@ -155,8 +132,8 @@ int main() {
 
 
 
-    // Train for NB_GENERATIONS generations
-    for (int i = 0; i < NB_GENERATIONS && !exitProgram; i++) {
+    // Train for params.nbGenerations generations
+    for (int i = 0; i < params.nbGenerations && !exitProgram; i++) {
         le.setgeneration(i);
 
         //Prototype to renew not all target

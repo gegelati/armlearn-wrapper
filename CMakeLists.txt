@@ -65,6 +65,8 @@ endif()
 # ************** Executables ****************
 # *******************************************
 
+# includes JsonCpp library to be able to parse parameters JSON files
+include_directories("lib/JsonCpp")
 file(GLOB_RECURSE
         armgegelati_files
         ./src/*.cpp
