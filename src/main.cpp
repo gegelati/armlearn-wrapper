@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <gegelati.h>
+#include "instructions.h"
 
 #include "ArmLearnWrapper.h"
 
@@ -40,23 +41,11 @@ void getKey(std::atomic<bool>& exit) {
 }
 
 int main() {
-    // Create the instruction set for programs
-    Instructions::Set set;
-    auto minus = [](double a, double b) -> double { return a - b; };
-    auto add = [](double a, double b) -> double { return a + b; };
-    auto times = [](double a, double b) -> double { return a * b; };
-    auto divide = [](double a, double b) -> double { return a / b; };
-    auto cond = [](double a, double b) -> double { return a < b ? -a : a; };
-    auto cos = [](double a) -> double { return std::cos(a); };
-    auto sin = [](double a) -> double { return std::sin(a); };
+    std::cout << "Start ArmLearner application." << std::endl;
 
-    set.add(*(new Instructions::LambdaInstruction<double, double>(minus)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(add)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(times)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(divide)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(cond)));
-    set.add(*(new Instructions::LambdaInstruction<double>(cos)));
-    set.add(*(new Instructions::LambdaInstruction<double>(sin)));
+    // Create the instruction set for programs
+	Instructions::Set set;
+	fillInstructionSet(set);
 
 
     // Set the parameters for the learning process.
