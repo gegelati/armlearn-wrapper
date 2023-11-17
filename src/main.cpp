@@ -9,6 +9,7 @@
 #include <gegelati.h>
 #include "instructions.h"
 #include "trainingParameters.h"
+#include "armLearnLogger.h"
 
 #include "ArmLearnWrapper.h"
 
@@ -47,13 +48,9 @@ int main() {
 
 
     // Set the parameters for the learning process.
-    // (Controls mutations probability, program lengths, and graph size
-    // among other things)
     // Loads them from "params.json" file
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
-
-
 
     TrainingParameters trainingParams;
     trainingParams.loadParametersFromJson(ROOT_DIR "/trainParams.json");
@@ -81,7 +78,7 @@ int main() {
 
 
     // Instantiate and init the learning agent
-    Learn::ParallelLearningAgent la(le, set, params);
+    Learn::ParallelLearningAgent la(armLearnEnv, set, params);
     la.init();
 
 #ifndef NO_CONSOLE_CONTROL
@@ -95,26 +92,17 @@ int main() {
 #endif
 
 
-    //Adds a logger to the LA (to get statistics on learning) on std::cout et on a file
-    //Creation of the name of the file
-    std::string name="";
-    for(auto & names : tparameters)
-        name = name + names +"_";
-    name.erase(name.end()-1,name.end());
-    std::cout << name << std::endl;
-    name = name + ".ods";
-
     //Creation of the Output stream on cout and on the file
-    std::ofstream fichier(name, std::ios::out);
-    auto logFile = *new Log::LABasicLogger(la,fichier);
-    auto logCout = *new Log::LABasicLogger(la);
+    std::ofstream fichier("logs.ods", std::ios::out);
+    auto logFile = *new Log::ArmLearnLogger(la,fichier);
+    auto logCout = *new Log::ArmLearnLogger(la);
 
-//    //Creation of CloudPoint.csv, point that the robotic arm ended to touch
-//    std::ofstream PointCloud;
-//    PointCloud.open("PointCloud.csv",std::ios::out);
-//
-//    PointCloud << "Xp" << ";" << "Yp" << ";" << "Zp" << ";";
-//    PointCloud << "Xt" << ";" << "Yt" << ";" << "Zt" << ";" << "score" << std::endl;
+    /*//Creation of CloudPoint.csv, point that the robotic arm ended to touch
+    std::ofstream PointCloud;
+    PointCloud.open("PointCloud.csv",std::ios::out);
+
+    PointCloud << "Xp" << ";" << "Yp" << ";" << "Zp" << ";";
+    PointCloud << "Xt" << ";" << "Yt" << ";" << "Zt" << ";" << "score" << std::endl; */
 
     // File for printing best policy stat.
     std::ofstream stats;
@@ -122,20 +110,19 @@ int main() {
     Log::LAPolicyStatsLogger logStats(la, stats);
 
     // Create an exporter for all graphs
-    File::TPGGraphDotExporter dotExporter("out_000.dot", *la.getTPGGraph());
+    File::TPGGraphDotExporter dotExporter("out_0000.dot", *la.getTPGGraph());
 
-    if(tparameters[3] == "startingfile"){
+
+    // Use previous Graphs
+    if(trainingParams.startPreviousTPG){
         auto &tpg = *la.getTPGGraph();
-        Environment env(set, le.getDataSources(), 8);
-        File::TPGGraphDotImporter dotImporter(ROOT_DIR"/cmake-build-release/out_006.dot", env, tpg);
+        Environment env(set, armLearnEnv.getDataSources(), 8);
+        File::TPGGraphDotImporter dotImporter((std::string(ROOT_DIR) + "/build/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
     }
-
-
 
     // Train for params.nbGenerations generations
     for (int i = 0; i < params.nbGenerations && !exitProgram; i++) {
-        le.setgeneration(i);
-
+        armLearnEnv.setgeneration(i);
         //Prototype to renew not all target
         std::for_each(le.trainingTargets.begin(), le.trainingTargets.begin()+NT, [](armlearn::Input<int16_t> * t){ delete t;}); //We delete the first part of target, to make a shift the value
         le.trainingTargets.erase(le.trainingTargets.begin(),le.trainingTargets.begin()+NT);
@@ -145,10 +132,9 @@ int main() {
             le.trainingTargets.emplace_back(target);
         }
 
-
 	    //print the previous graphs
         char buff[16];
-        sprintf(buff, "out_%03d.dot", i);
+        sprintf(buff, "out_%04d.dot", i);
         dotExporter.setNewFilePath(buff);
         dotExporter.print();
 
