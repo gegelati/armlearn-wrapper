@@ -241,19 +241,21 @@ public:
     /**
      * @brief Create and return a random starting position for the arm
 
+     * @param[in] coefSize coefficient between 0 and 1 suse to be check that the random starting position generated as a distance bigger than coefSize * limit
      * @param[in] validation true if the target is for the validation, else false
      * @param[in] maxLength distance max between the generated starting pos and the initStartingPos
      */
-    std::vector<uint16_t>* randomStartingPos(bool validation, double maxLength=0);
+    std::vector<uint16_t>* randomStartingPos(double coefSize, bool validation, double maxLength=0);
 
     /**
      * @brief Create and return a random targets in cartesian coordonates
      * 
      * @param[in] startingPos starting position : used to calculate the distance to browse by the arm
+     * @param[in] coefSize coefficient between 0 and 1 suse to be check that the random starting position generated as a distance bigger than coefSize * limit
      * @param[in] validation true if the target is for the validation, else false
      * @param[in] maxLength distance max that the arm will have to browse in the trajectory
      */
-    armlearn::Input<int16_t>* randomGoal(std::vector<uint16_t> startingPos, bool validation, double maxLength=0);
+    armlearn::Input<int16_t>* randomGoal(std::vector<uint16_t> startingPos, double coefSize, bool validation, double maxLength=0);
 
     /**
      * @brief Puts a custom goal in the first slot of the trainingTargets list.
