@@ -164,11 +164,11 @@ int main() {
 
                 // Upgrade the limit of tagets
                 if (upgradeTargetsSize)
-                    currentMaxLimitTargets = std::min(currentMaxLimitTargets * trainingParams.cooefficientUpgrade, 1000.0d);
+                    currentMaxLimitTargets = std::min(currentMaxLimitTargets * trainingParams.coefficientUpgrade, 1000.0d);
 
                 // Upgrade the limit of starting positions
                 if (upgradeStartingPosSize)
-                    currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * trainingParams.cooefficientUpgrade, 200.0d);
+                    currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * trainingParams.coefficientUpgrade, 200.0d);
 
                 counterIterationUpgrade = 0;
 

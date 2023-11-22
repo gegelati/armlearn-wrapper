@@ -10,7 +10,7 @@
 	// Initial maximum distance between the random starting position and the BACKHOE one
 	"maxLengthStartingPos": 10,
 	// Coefficient to upgrade the maxLengthStartingPos and MaxLengthTargets
-	"cooefficientUpgrade": 1.2,
+	"coefficientUpgrade": 1.2,
 	// Number of iterations to cumulate to upgrade the maxLengthStartingPos and MaxLengthTargets
 	"nbIterationsUpgrade": 5,
 	// Threshold reward to exceed to increment the counter of iteration to cumulate to upgrade the maxLengthStartingPos and MaxLengthTargets

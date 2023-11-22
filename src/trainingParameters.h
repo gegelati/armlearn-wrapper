@@ -79,7 +79,7 @@ public:
     double maxLengthStartingPos = 30.0;
 
     /// Upgrade coefficient of the sphere
-    double cooefficientUpgrade = 1.2;
+    double coefficientUpgrade = 1.2;
 
     /// Number of consecuitive iterations before upgrading the sphere
     int nbIterationsUpgrade = 3;
