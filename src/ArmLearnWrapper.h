@@ -34,64 +34,71 @@ protected:
 
     double computeReward();
 
-    /// @brief true if the the environnement is terminated
+    /// true if the the environnement is terminated
     bool terminal = false;
 
     /// @brief Boolean used to control whether the LE includes the 2 servos
     /// controlling the rotation of the hand and the fingers.
     bool handServosTrained;
 
-    /// @brief Randomness control
+    /// Randomness control
     Mutator::RNG rng;
 
-    /// @brief Current motor position 
+    /// Current motor position 
     Data::PrimitiveTypeArray<double> motorPos;
 
-    /// @brief Current hand of the arm position
+    /// Current hand of the arm position
     Data::PrimitiveTypeArray<double> cartesianPos;
 
-    /// @brief Current arm and goal distance vector
+    /// Current arm and goal distance vector
     Data::PrimitiveTypeArray<double> cartesianDif;
 
-    /// @brief converter used to covnert motorPos to cartesionPos
+    /// converter used to covnert motorPos to cartesionPos
     armlearn::kinematics::Converter *converter;
 
-    /// @brief Score of the training
+    /// Score of the training
     double score = 0;
 
-    /// @brief Number of actions done in the episode
+    /// Number of actions done in the episode
     size_t nbActions = 0;
 
-    /// @brief Maximum number of actions doable in an episode 
+    /// Maximum number of actions doable in an episode 
     int nbMaxActions;
 
-    /// @brief Coefficient to add a malus on the reward corresponding to the number of iterations in the episode
+    /// Coefficient to add a malus on the reward corresponding to the number of iterations in the episode
     double coefRewardNbIterations = 0;
 
-    /// @brief Initial starting position of the arm
+    /// Initial starting position of the arm
     std::vector<uint16_t> initStartingPos = BACKHOE_POSITION;
 
-    /// @brief Current Starting position of the arm
+    /// Current Starting position of the arm
     std::vector<uint16_t> *currentStartingPos;
 
-    /// @brief Target currently used to move the arm.
+    /// Target currently used to move the arm.
     armlearn::Input<int16_t> *currentTarget;
 
 
-    /// @brief Iterator of the map of training trajectories
-    std::map<std::vector<uint16_t>*, armlearn::Input<int16_t>*>::iterator trainingIterator;
+    /// Iterator of the vactor of training trajectories
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator trainingIterator;
 
-    /// @brief Maps with Starting positions in keys and Targets positions in values used for the training
-    std::map<std::vector<uint16_t>*, armlearn::Input<int16_t>*> trainingTrajectories;
+    /// Vector with Starting positions in keys and Targets positions in values used for the training
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> trainingTrajectories;
 
 
-    /// @brief Iterator of the map of validation trajectories
-    std::map<std::vector<uint16_t>*, armlearn::Input<int16_t>*>::iterator validationIterator;
+    /// Iterator of the vactor of training validation trajectories
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator trainingValidationIterator;
 
-    /// @brief Maps with Starting positions in keys and Targets positions in values used for the validation
-    std::map<std::vector<uint16_t>*, armlearn::Input<int16_t>*> validationTrajectories;
+    /// Vector with Starting positions in keys and Targets positions in values used for the training validation
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> trainingValidationTrajectories;
+
+
+    /// Iterator of the vactor of validation trajectories
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator validationIterator;
+
+    /// Vector with Starting positions in keys and Targets positions in values used for the validation
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> validationTrajectories;
         
-    /// @brief Current generation
+    /// Current generation
     int generation = 0;
 
 public:
@@ -126,7 +133,7 @@ public:
      */
     ArmLearnWrapper(int nbMaxActions, double coefRewardNbIterations=0, bool handServosTrained = false)
             : LearningEnvironment((handServosTrained) ? 13 : 9), handServosTrained(handServosTrained),
-              trainingIterator(), validationIterator(),
+              trainingIterator(), validationIterator(), trainingValidationIterator(),
               nbMaxActions(), coefRewardNbIterations(),
               motorPos(6), cartesianPos(3), cartesianDif(3),
               DeviceLearner(iniController()) {
@@ -140,6 +147,7 @@ public:
     ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions),
                                                     trainingIterator(other.trainingIterator),
                                                     validationIterator(other.validationIterator), 
+                                                    trainingValidationIterator(other.trainingValidationIterator),
                                                     nbMaxActions(other.nbMaxActions),  coefRewardNbIterations(other.coefRewardNbIterations),
                                                     motorPos(other.motorPos), cartesianPos(other.cartesianPos),
                                                     cartesianDif(other.cartesianDif), DeviceLearner(iniController()) {
@@ -168,7 +176,7 @@ public:
     std::vector<std::reference_wrapper<const Data::DataHandler>> getDataSources() override;
 
     /// @brief Clear a given proportion of the current set of training targets 
-    void clearPropTrainingTrajectories(double prop);
+    void clearPropTrainingTrajectories(double prop, bool doRandomStartingPos);
 
 
 
@@ -188,7 +196,7 @@ public:
     virtual LearningEnvironment *clone() const;
 
     /** 
-     * @brief Update the map of training trajectories, which mean deleting a proportion of trajectories,
+     * @brief Update the vector of training trajectories, which mean deleting a proportion of trajectories,
      * Then create an amount of Starting positions, that can be random of a predifined one.
      * Finally one target is created for each random starting position
      * 
@@ -202,8 +210,22 @@ public:
                                     double limitTargets, double limitStartingPos);
 
     /** 
-     * @brief Update the map of validation trajectories, which mean deleting all current trajectories,
+     * @brief Update the vector of training validation trajectories, which mean deleting the trajectories,
      * Then create an amount of Starting positions, that can be random of a predifined one.
+     * Finally one target is created for each random starting position
+     * 
+     * @param[in] nbTrajectories Number of trajectories to create in total
+     * @param[in] doRandomStartingPosition true if the starting position are random, else they are all set to the init one
+     * @param[in] propTrajectoriesReused proportion of trajectories reused (not deleted)
+     * @param[in] limitTargets distance max that the arm will have to browse in the trajectory
+     * @param[in] limitStartingPos distance max that the starting position will be from the init one
+     */ 
+    void updateTrainingValidationTrajectories(int nbTrajectories, bool doRandomStartingPosition, double propTrajectoriesReused,
+                                              double limitTargets, double limitStartingPos);
+
+    /** 
+     * @brief Update the vector of validation trajectories, which mean deleting all current trajectories,
+     * Then create an amount of Starting positions, that are the predifined one.
      * Finally one target is created for each random starting position
      * 
      * @param[in] nbTrajectories Number of trajectories to create in total

@@ -24,6 +24,11 @@ namespace Log {
         int colWidth = 12;
 
         /**
+         * Boolean that indicate if a training validation is done
+         */
+        bool doTrainingValidation;
+
+        /**
          * \brief Logs the min, avg and max score of the generation.
          *
          * This method is used by the eval and valid callback as
@@ -43,8 +48,9 @@ namespace Log {
          * elements to.
          */
         explicit ArmLearnLogger(Learn::LearningAgent& la,
-                               std::ostream& out = std::cout)
-            : LALogger(la, out)
+                                bool doTrainingValidation=false,
+                                std::ostream& out = std::cout)
+            : LALogger(la, out), doTrainingValidation(doTrainingValidation)
         {
             // fixing float precision
             *this << std::setprecision(2) << std::fixed << std::right;

@@ -78,6 +78,13 @@ int main() {
         armLearnEnv.updateValidationTrajectories(params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition);
     }
 
+    if(trainingParams.progressiveModeTargets){
+        // Update/Generate the first training validation trajectories
+        armLearnEnv.updateTrainingValidationTrajectories(
+            params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition,
+            trainingParams.propTrajectoriesReused, currentMaxLimitTargets, currentMaxLimitStartingPos);
+    }
+
 
     // Instantiate and init the learning agent
     Learn::ParallelLearningAgent la(armLearnEnv, set, params);
@@ -96,8 +103,8 @@ int main() {
 
     //Creation of the Output stream on cout and on the file
     std::ofstream fichier("logs.ods", std::ios::out);
-    auto logFile = *new Log::ArmLearnLogger(la,fichier);
-    auto logCout = *new Log::ArmLearnLogger(la);
+    auto logFile = *new Log::ArmLearnLogger(la,trainingParams.progressiveModeTargets,fichier);
+    auto logCout = *new Log::ArmLearnLogger(la,trainingParams.progressiveModeTargets);
 
     /*//Creation of CloudPoint.csv, point that the robotic arm ended to touch
     std::ofstream PointCloud;
@@ -126,7 +133,7 @@ int main() {
     int counterIterationUpgrade = 0;
 
     // If true : will upgrade the corresponding size when counterIterationUpgrade reach the limit to upgrade
-    bool upgradeTargetsSize = false;
+    bool upgradeTargetsSize = true;
     bool upgradeStartingPosSize = true;
 
     // Train for params.nbGenerations generations
@@ -134,8 +141,9 @@ int main() {
         armLearnEnv.setgeneration(i);
 
         // Update/Generate the training trajectories
-        armLearnEnv.updateTrainingTrajectories(params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition,
-                                               trainingParams.propTrajectoriesReused, currentMaxLimitTargets, currentMaxLimitStartingPos);
+        armLearnEnv.updateTrainingTrajectories(
+            params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition,
+            trainingParams.propTrajectoriesReused, currentMaxLimitTargets, currentMaxLimitStartingPos);
 
 
 
@@ -148,38 +156,56 @@ int main() {
         // we train the TPG, see doaction for the reward function
         la.trainOneGeneration(i);
 
-        // log the current max limit
-        logFile.logEnvironnementStatus(currentMaxLimitTargets, currentMaxLimitStartingPos);
-        logCout.logEnvironnementStatus(currentMaxLimitTargets, currentMaxLimitStartingPos);
+        // Does a validation or not according to the parameter doValidation
+        if (trainingParams.progressiveModeTargets) {
+            auto validationResults =
+                la.evaluateAllRoots(i, Learn::LearningMode::TESTING);
+            logFile.logAfterValidate(validationResults);
+            logCout.logAfterValidate(validationResults);
         
 
-        // If the best TPG is above the threshold for upgrade
-        if (la.getBestScoreLastGen() > trainingParams.thresholdUpgrade){
+            // log the current max limit
+            logFile.logEnvironnementStatus(currentMaxLimitTargets, currentMaxLimitStartingPos);
+            logCout.logEnvironnementStatus(currentMaxLimitTargets, currentMaxLimitStartingPos);
+            
+            // Get the best result of the training validation
+            auto iter = validationResults.begin();
+            std::advance(iter, validationResults.size() - 1);
+            double bestResult = iter->first->getResult();
 
-            // Incremente the counter for upgrading the max current limit
-            counterIterationUpgrade += 1;
+            // If the best TPG is above the threshold for upgrade
+            if (bestResult > trainingParams.thresholdUpgrade){
 
-            // If the counter reach the number of iterations to upgrade
-            if(counterIterationUpgrade == trainingParams.nbIterationsUpgrade){
+                // Incremente the counter for upgrading the max current limit
+                counterIterationUpgrade += 1;
 
-                // Upgrade the limit of tagets
-                if (upgradeTargetsSize)
-                    currentMaxLimitTargets = std::min(currentMaxLimitTargets * trainingParams.coefficientUpgrade, 1000.0d);
+                // If the counter reach the number of iterations to upgrade
+                if(counterIterationUpgrade == trainingParams.nbIterationsUpgrade){
 
-                // Upgrade the limit of starting positions
-                if (upgradeStartingPosSize)
-                    currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * trainingParams.coefficientUpgrade, 200.0d);
+                    // Upgrade the limit of tagets
+                    if (upgradeTargetsSize)
+                        currentMaxLimitTargets = std::min(currentMaxLimitTargets * trainingParams.coefficientUpgrade, 1000.0d);
 
-                counterIterationUpgrade = 0;
+                    // Upgrade the limit of starting positions
+                    if (upgradeStartingPosSize)
+                        currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * trainingParams.coefficientUpgrade, 200.0d);
 
-                if(currentMaxLimitStartingPos > 50){
-                    upgradeTargetsSize = true;
+                    counterIterationUpgrade = 0;
+
+                    if(currentMaxLimitStartingPos > 50){
+                        upgradeTargetsSize = true;
+                    }
+
+                    // Update the training validation trajectories
+                    armLearnEnv.updateTrainingValidationTrajectories(
+                        params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition,
+                        trainingParams.propTrajectoriesReused, currentMaxLimitTargets, currentMaxLimitStartingPos);
                 }
             }
+            // Reset the counter
+            else
+                counterIterationUpgrade = 0;
         }
-        // Reset the counter
-        else
-            counterIterationUpgrade = 0;
 
         
 

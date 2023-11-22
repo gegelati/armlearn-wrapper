@@ -136,8 +136,23 @@ double ArmLearnWrapper::computeReward() {
 void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
 
     // Get the right iterator and trajectories' map
-    auto iterator = (mode == Learn::LearningMode::TRAINING) ? trainingIterator : validationIterator;
-    auto trajectories = (mode == Learn::LearningMode::TRAINING) ? &trainingTrajectories : &validationTrajectories;
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator iterator;
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>* trajectories;
+    
+    switch (mode) {
+        case Learn::LearningMode::TRAINING:
+            iterator = trainingIterator;
+            trajectories = &trainingTrajectories;
+            break;
+        case Learn::LearningMode::VALIDATION:
+            iterator = validationIterator;
+            trajectories = &validationTrajectories;
+            break;
+        case Learn::LearningMode::TESTING:
+            iterator = trainingValidationIterator;
+            trajectories = &trainingValidationTrajectories;
+            break;
+    }
 
     // Change the starting position
     this->currentStartingPos = iterator->first;
@@ -166,9 +181,9 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
     return result;
 }
 
-void ArmLearnWrapper::clearPropTrainingTrajectories(double prop){
+void ArmLearnWrapper::clearPropTrainingTrajectories(double prop, bool doRandomStartingPos){
 
-    // Do not clear and just return if the map is empty
+    // Do not clear and just return if the vector is empty
     if (trainingTrajectories.size() == 0)
         return;
 
@@ -186,12 +201,11 @@ void ArmLearnWrapper::clearPropTrainingTrajectories(double prop){
     std::advance(it, nbDeletedTrajectories);
 
     // Delete all the pointers from memory
-    std::for_each(trainingTrajectories.begin(), it, [](const std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*> &pair){
-         delete pair.first;
+    std::for_each(trainingTrajectories.begin(), it, [doRandomStartingPos](auto& pair){
+         if (doRandomStartingPos) delete pair.first; // check doublon pointeur
          delete pair.second;
     }); 
-
-    // Delete then the pair key/value in the map
+    // Delete then the pair in the vector
     trainingTrajectories.erase(trainingTrajectories.begin(), it);
 }
 
@@ -214,8 +228,9 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories, bool doRand
                                                  double limitTargets, double limitStartingPos){
 
 
+
     // Clear a define prortion of the training targets by giving the proportion of targets reused
-    clearPropTrainingTrajectories(propTrajectoriesReused);
+    clearPropTrainingTrajectories(propTrajectoriesReused, doRandomStartingPos);
 
     while(trainingTrajectories.size() < nbTrajectories){
 
@@ -225,12 +240,35 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories, bool doRand
         // Get a new random Goal
         auto newTarget = randomGoal(*newStartingPos, false, limitTargets);
 
-        // add the pair startingPos and target to the map
-        trainingTrajectories[newStartingPos] = newTarget;
+        // add the pair startingPos and target to the vector
+        trainingTrajectories.push_back(std::make_pair(newStartingPos, newTarget));
     }
 
     // Initiate the iterator of the trainingTrajectories
     trainingIterator = trainingTrajectories.begin();
+}
+
+void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories, bool doRandomStartingPos, double propTrajectoriesReused,
+                                                           double limitTargets, double limitStartingPos){
+
+
+    // Clear a define prortion of the training targets by giving the proportion of targets reused
+    trainingValidationTrajectories.clear();
+
+    while(trainingValidationTrajectories.size() < nbTrajectories){
+
+        // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
+        auto newStartingPos = (doRandomStartingPos) ? randomStartingPos(false, limitStartingPos) : &initStartingPos;
+
+        // Get a new random Goal
+        auto newTarget = randomGoal(*newStartingPos, false, limitTargets);
+
+        // add the pair startingPos and target to the vector
+        trainingValidationTrajectories.push_back(std::make_pair(newStartingPos, newTarget));
+    }
+
+    // Initiate the iterator of the trainingValidationTrajectories
+    trainingValidationIterator = trainingValidationTrajectories.begin();
 }
 
 void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories, bool doRandomStartingPos){
@@ -241,13 +279,13 @@ void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories, bool doRa
     while(validationTrajectories.size() < nbTrajectories){
 
         // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
-        auto newStartingPos = (doRandomStartingPos) ? randomStartingPos(true) : &initStartingPos;
+        auto newStartingPos = &initStartingPos;
 
         // Get a new random Goal
         auto newTarget = randomGoal(*newStartingPos, true);
 
-        // add the pair startingPos and target to the map
-        validationTrajectories[newStartingPos] = newTarget;
+        // add the pair startingPos and target to the vector
+        validationTrajectories.push_back(std::make_pair(newStartingPos, newTarget));
     }
 
     // Initiate the iterator of the validationTrajectories
@@ -332,10 +370,10 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> star
 
 void ArmLearnWrapper::customTrajectory(armlearn::Input<int16_t> *newGoal, std::vector<uint16_t> startingPos, bool validation) {
 
-    // Get the right map of trajectories
+    // Get the right vectpr of trajectories
     auto trajectories = (validation) ? trainingTrajectories : validationTrajectories;
 
-    // Delete the first key/value pair if the map is not empty
+    // Delete the first key/value pair if the vector is not empty
     if(trajectories.size() > 0){
         auto iterator = trajectories.begin();
         delete iterator->first;
@@ -344,7 +382,7 @@ void ArmLearnWrapper::customTrajectory(armlearn::Input<int16_t> *newGoal, std::v
     }
     
     // Add the custom target with the corresponding starting position
-    trajectories[&startingPos] = newGoal;
+    trajectories.push_back(std::make_pair(&startingPos, newGoal));
 }
 
 std::string ArmLearnWrapper::newGoalToString() const {

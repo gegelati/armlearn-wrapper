@@ -51,8 +51,16 @@ void Log::ArmLearnLogger::logHeader()
     }
     *this << std::setw(colWidth) << "T_total"; 
 
-    *this << std::setw(colWidth) << "S_Targ"; 
-    *this << std::setw(colWidth) << "S_StartP" << std::endl;
+    if (doTrainingValidation) {
+        *this << std::setw(colWidth) << "Min" << std::setw(colWidth) << "Avg"
+              << std::setw(colWidth) << "Max";
+    
+
+        *this << std::setw(colWidth) << "S_Targ"; 
+        *this << std::setw(colWidth) << "S_StartP";
+    }
+    *this << std::endl;
+    
 }
 
 void Log::ArmLearnLogger::logNewGeneration(uint64_t& generationNumber)
