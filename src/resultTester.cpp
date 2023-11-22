@@ -122,7 +122,7 @@ void runEvals(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearn
     double x=1;
     auto validationStartingPos = le.getInitStartingPos();
     while(x!=100000){
-        auto rnd = le.randomGoal(validationStartingPos, true);
+        auto rnd = le.randomGoal(0, validationStartingPos, true);
         le.customTrajectory(rnd, validationStartingPos);
         le.reset();
         for(int i=0; i<2000; i++) {
