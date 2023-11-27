@@ -16,6 +16,10 @@ echo "# Install Eigen3"
 git clone --depth 1 --branch 3.3.9 https://gitlab.com/libeigen/eigen.git
 sudo cp -R eigen/Eigen /usr/local/include/
 
+# get python Catkin
+echo "# Install python3-catkin (0.8.10-7)"
+sudo apt install python3-catkin=0.8.10-7
+
 # get kdl (commit 0b1b52e)
 echo "# Install orocos_kdl"
 git clone https://github.com/orocos/orocos_kinematics_dynamics.git
