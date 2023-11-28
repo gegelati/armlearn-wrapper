@@ -8,11 +8,11 @@
 	// Boolean used to activate an evaluation of the surviving roots in validation
 	// mode after the training at each generation.
 	// "doValidation" : false, // Default value
-	"doValidation" : true,
+	"doValidation" : false,
 	// Maximum number of actions performed on the learning environment during the
 	// each evaluation of a root.
 	// "maxNbActionsPerEval" : 1000, // Default value
-	"maxNbActionsPerEval" : 1000,
+	"maxNbActionsPerEval" : 5000,
 	// Maximum number of times a given root is evaluated.After this number is
 	// reached, possibly after several generations, the score of the root will be
 	// fixed, and no further evaluation will be done.
@@ -27,7 +27,7 @@
 			"maxConstValue" : 100,
 			// Maximum number of Line within the Program of the TPG.
 			// "maxProgramSize" : 96, // Default value
-			"maxProgramSize" : 20,
+			"maxProgramSize" : 10,
 			// Minimum constant value possible.
 			// "minConstValue" : -10, // Default value
 			"minConstValue" : -10,
@@ -58,14 +58,18 @@
 			"maxInitOutgoingEdges" : 3,
 			// Maximum number of outgoing edge during TPGGraph mutations.
 			// "maxOutgoingEdges" : 5, // Default value
+
 			"maxOutgoingEdges" : 5,
+
 			// Number of TPGAction vertex of the initialized TPGGraph.
 			// This parameter is generally automatically set by the LearningEnvironment.
 			// /* "nbActions" : 0,*/ // Commented by default
 			/* "nbActions" : 0,*/
 			// Number of root TPGTeams to maintain when populating the TPGGraph
 			// "nbRoots" : 100, // Default value
+
 			"nbRoots" : 360,
+
 			// Probability of adding an outgoing Edge to a Team.
 			// "pEdgeAddition" : 0.7, // Default value
 			"pEdgeAddition" : 0.8,
@@ -74,7 +78,9 @@
 			"pEdgeDeletion" : 0.8,
 			// Probability of changing the destination of an Edge.
 			// "pEdgeDestinationChange" : 0.1, // Default value
+
 			"pEdgeDestinationChange" : 0.1,
+
 			// Probability of the new destination of an Edge to be an Action.
 			// "pEdgeDestinationIsAction" : 0.5, // Default value
 			"pEdgeDestinationIsAction" : 0.6,
@@ -94,7 +100,9 @@
 	"nbIterationsPerJob" : 1,
 	// Number of evaluation of each root per generation.
 	// "nbIterationsPerPolicyEvaluation" : 5, // Default value
+
 	"nbIterationsPerPolicyEvaluation" : 20,
+
 	// Number of Constant available in each Program.
 	// "nbProgramConstant" : 0, // Default value
 	"nbProgramConstant" : 0,
@@ -106,7 +114,6 @@
 	// When undefined in the json file, this parameter is automatically set to the
 	// number of cores of the CPU.
 	// /* "nbThreads" : 0,*/ // Commented by default
-	// "nbThreads" : 2,
 	// Percentage of deleted (and regenerated) root TPGVertex at each generation.
 	// "ratioDeletedRoots" : 0.5, // Default value
 	"ratioDeletedRoots" : 0.5

@@ -132,6 +132,7 @@ int main() {
     // init Counter for upgrade the current max limit at 0
     int counterIterationUpgrade = 0;
 
+
     // If true : will upgrade the corresponding size when counterIterationUpgrade reach the limit to upgrade
     bool upgradeTargetsSize = true;
     bool upgradeStartingPosSize = true;
@@ -139,6 +140,7 @@ int main() {
     // Train for params.nbGenerations generations
     for (int i = 0; i < params.nbGenerations && !exitProgram; i++) {
         armLearnEnv.setgeneration(i);
+
 
         // Update/Generate the training trajectories
         armLearnEnv.updateTrainingTrajectories(
