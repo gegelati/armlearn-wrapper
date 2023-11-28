@@ -4,7 +4,7 @@
 	// Initial maximum distance between the target and the starting position
 	"maxLengthTargets": 30,
 	// Allow to choose if the starting position are random of the BACKHOE one
-	"doRandomStartingPosition": true,
+	"doRandomStartingPosition": false,
 	// Use the progressive mode for choosing randomly the starting position (no effect if doRandomStartingPosition is false)
 	"progressiveModeStartingPos": true,
 	// Initial maximum distance between the random starting position and the BACKHOE one
