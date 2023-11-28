@@ -39,14 +39,14 @@ int main() {
     set.add(*(new Instructions::LambdaInstruction<double>(cos)));
     set.add(*(new Instructions::LambdaInstruction<double>(sin)));
 
-    ArmLearnWrapper le;
+    ArmLearnWrapper le(1000);
 
 
     auto * validationGoal = new armlearn::Input<int16_t>({300, 50, 50});
-    le.customGoal(validationGoal);
+    auto validationStartingPos = le.getInitStartingPos();
+    le.customTrajectory(validationGoal, validationStartingPos);
     le.reset();
 
-    le.testexp();
 /*
     // Instantiate the environment that will embed the LearningEnvironment
     Environment env(set, le.getDataSources(), 8);
@@ -120,9 +120,10 @@ void runEvals(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearn
     std::cout<<"begining of runEvals"<<std::endl;
     std::ofstream o("log");
     double x=1;
+    auto validationStartingPos = le.getInitStartingPos();
     while(x!=100000){
-        auto rnd = le.randomGoal();
-        le.customGoal(rnd);
+        auto rnd = le.randomGoal(validationStartingPos, 0, true);
+        le.customTrajectory(rnd, validationStartingPos);
         le.reset();
         for(int i=0; i<2000; i++) {
             // gets the action the TPG would decide in this situation (the result can only be between 0 and 8 included)
@@ -176,7 +177,7 @@ void runRealArmAuto(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, Ar
     // open pliers
     auto motorPosOpen = new std::vector<uint16_t>(le.getMotorsPos());
     (*motorPosOpen)[5]=511;
-    le.changeStartingPos(*motorPosOpen);
+    le.setInitStartingPos(*motorPosOpen);
     path.addPoint(*motorPosOpen);
 
     goToPos(root, tee, le, path, goal1);
@@ -185,7 +186,7 @@ void runRealArmAuto(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, Ar
     // grab
     auto motorPosGrab = new std::vector<uint16_t>(le.getMotorsPos());
     (*motorPosGrab)[5]=135;
-    le.changeStartingPos(*motorPosGrab);
+    le.setInitStartingPos(*motorPosGrab);
     path.addPoint(*motorPosGrab);
 
     goToPos(root, tee, le, path, goal3);
@@ -196,7 +197,7 @@ void runRealArmAuto(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, Ar
     // release
     auto motorPosRelease = new std::vector<uint16_t>(le.getMotorsPos());
     (*motorPosRelease)[5]=511;
-    le.changeStartingPos(*motorPosRelease);
+    le.setInitStartingPos(*motorPosRelease);
     path.addPoint(*motorPosRelease);
 
     goToPos(root, tee, le, path, goal7);
@@ -306,8 +307,9 @@ void runRealArmByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, 
 
 void goToPos(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le,
             armlearn::Trajectory& path, armlearn::Input<int16_t> *target){
-
-    le.customGoal(target);
+    
+    auto validationStartingPos = le.getInitStartingPos();
+    le.customTrajectory(target, validationStartingPos);
     le.reset();
     for(int i=0; i<=500; i++) {
         uint64_t action = ((const TPG::TPGAction *) tee.executeFromRoot(*root).back())->getActionID();
@@ -318,5 +320,5 @@ void goToPos(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnW
         }
     }
     // to avoid going through backhoe
-    le.changeStartingPos(le.getMotorsPos());
+    le.setInitStartingPos(le.getMotorsPos());
 }

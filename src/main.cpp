@@ -7,6 +7,9 @@
 #include <iostream>
 
 #include <gegelati.h>
+#include "instructions.h"
+#include "trainingParameters.h"
+#include "armLearnLogger.h"
 
 #include "ArmLearnWrapper.h"
 
@@ -37,82 +40,54 @@ void getKey(std::atomic<bool>& exit) {
 }
 
 int main() {
-    // Create the instruction set for programs
-    Instructions::Set set;
-    auto minus = [](double a, double b) -> double { return a - b; };
-    auto add = [](double a, double b) -> double { return a + b; };
-    auto times = [](double a, double b) -> double { return a * b; };
-    auto divide = [](double a, double b) -> double { return a / b; };
-    auto cond = [](double a, double b) -> double { return a < b ? -a : a; };
-    auto cos = [](double a) -> double { return std::cos(a); };
-    auto sin = [](double a) -> double { return std::sin(a); };
+    std::cout << "Start ArmLearner application." << std::endl;
 
-    set.add(*(new Instructions::LambdaInstruction<double, double>(minus)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(add)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(times)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(divide)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(cond)));
-    set.add(*(new Instructions::LambdaInstruction<double>(cos)));
-    set.add(*(new Instructions::LambdaInstruction<double>(sin)));
+    // Create the instruction set for programs
+	Instructions::Set set;
+	fillInstructionSet(set);
 
 
     // Set the parameters for the learning process.
-    // (Controls mutations probability, program lengths, and graph size
-    // among other things)
     // Loads them from "params.json" file
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
-    std::vector<std::string> tparameters;
-    std::string myparameter;
-    std::ifstream myfile (ROOT_DIR"/TrainParam.txt");
-
-    if ( myfile.is_open() ) {
-        myfile >> myparameter;
-        while(!myfile.eof()){
-            std::for_each(myparameter.begin(), myparameter.end(), [](char & c) {
-                c = ::tolower(c);
-            });
-            tparameters.push_back(myparameter);
-            myfile >> myparameter;
-        }
-    }
-    else{
-        tparameters = {"3d","full","1","nostartingfile","noprogressive"};
-    }
-    /// [0] 2D/3D [1] close/large/full [2] Renew half/all targets (half not working) [3] StartingFile/NoStartingFile [3] Learning in a progressive space
-
-    //Prototype to renew not all target
-    float ar = std::stof(tparameters[2]); //We take a look a the parameters
-    if(ar < 0 || ar > 1){ //If it is not in a possible value [0,1] (0 Mean no renew, 1 mean all, and if you are <0.5 the same value may pass on more than one generation)
-        ar = 1; //We fixe it at the basic value
-    }
-    int NT = round(params.nbIterationsPerPolicyEvaluation*ar); //Otherwise, a calculate the true number of element to replace
+    TrainingParameters trainingParams;
+    trainingParams.loadParametersFromJson(ROOT_DIR "/trainParams.json");
 
     // Instantiate the LearningEnvironment
-    ArmLearnWrapper le;
+    ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams.coefRewardNbIterations);
+
+    // Prompt the number of threads
+    std::cout << "Number of threads: " << params.nbThreads << std::endl;
+
+
+    // Set a very high limit to never be annoyed by it if not progressiveModeTargets
+    double currentMaxLimitTargets = 10000;
+    // If the training is progressive, set the limit to the param value
+    if (trainingParams.progressiveModeTargets) currentMaxLimitTargets = trainingParams.maxLengthTargets;
+
+
+    // Set a very high limit to never be annoyed by it if not progressiveModeStartingPos
+    double currentMaxLimitStartingPos = 10000;
+    // If the training is progressive, set the limit to the param value
+    if (trainingParams.progressiveModeStartingPos) currentMaxLimitStartingPos = trainingParams.maxLengthStartingPos;
 
     // Generate validation targets.
-    le.validationTargets.clear();
-    for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++){
-        auto target = le.randomValidationGoal(tparameters);
-        le.validationTargets.emplace_back(target);
+    if(params.doValidation){
+        armLearnEnv.updateValidationTrajectories(params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition);
     }
 
-
-    // Generate first batch of training target, all of them will not be use. We do that in case we don't renew all target
-    std::for_each(le.trainingTargets.begin(), le.trainingTargets.end(), [](armlearn::Input<int16_t> * t){ delete t;});
-    le.trainingTargets.clear();
-
-    // we create new targets
-    for(int j=0; j<params.nbIterationsPerPolicyEvaluation; j++) {
-        auto target = le.randomGoal(tparameters);
-        le.trainingTargets.emplace_back(target);
+    if(trainingParams.progressiveModeTargets){
+        // Update/Generate the first training validation trajectories
+        armLearnEnv.updateTrainingValidationTrajectories(
+            params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition,
+            trainingParams.propTrajectoriesReused, currentMaxLimitTargets, currentMaxLimitStartingPos);
     }
 
 
     // Instantiate and init the learning agent
-    Learn::ParallelLearningAgent la(le, set, params);
+    Learn::ParallelLearningAgent la(armLearnEnv, set, params);
     la.init();
 
 #ifndef NO_CONSOLE_CONTROL
@@ -126,26 +101,17 @@ int main() {
 #endif
 
 
-    //Adds a logger to the LA (to get statistics on learning) on std::cout et on a file
-    //Creation of the name of the file
-    std::string name="";
-    for(auto & names : tparameters)
-        name = name + names +"_";
-    name.erase(name.end()-1,name.end());
-    std::cout << name << std::endl;
-    name = name + ".ods";
-
     //Creation of the Output stream on cout and on the file
-    std::ofstream fichier(name, std::ios::out);
-    auto logFile = *new Log::LABasicLogger(la,fichier);
-    auto logCout = *new Log::LABasicLogger(la);
+    std::ofstream fichier("logs.ods", std::ios::out);
+    auto logFile = *new Log::ArmLearnLogger(la,trainingParams.progressiveModeTargets,fichier);
+    auto logCout = *new Log::ArmLearnLogger(la,trainingParams.progressiveModeTargets);
 
-//    //Creation of CloudPoint.csv, point that the robotic arm ended to touch
-//    std::ofstream PointCloud;
-//    PointCloud.open("PointCloud.csv",std::ios::out);
-//
-//    PointCloud << "Xp" << ";" << "Yp" << ";" << "Zp" << ";";
-//    PointCloud << "Xt" << ";" << "Yt" << ";" << "Zt" << ";" << "score" << std::endl;
+    /*//Creation of CloudPoint.csv, point that the robotic arm ended to touch
+    std::ofstream PointCloud;
+    PointCloud.open("PointCloud.csv",std::ios::out);
+
+    PointCloud << "Xp" << ";" << "Yp" << ";" << "Zp" << ";";
+    PointCloud << "Xt" << ";" << "Yt" << ";" << "Zt" << ";" << "score" << std::endl; */
 
     // File for printing best policy stat.
     std::ofstream stats;
@@ -153,37 +119,98 @@ int main() {
     Log::LAPolicyStatsLogger logStats(la, stats);
 
     // Create an exporter for all graphs
-    File::TPGGraphDotExporter dotExporter("out_000.dot", *la.getTPGGraph());
+    File::TPGGraphDotExporter dotExporter("out_0000.dot", *la.getTPGGraph());
 
-    if(tparameters[3] == "startingfile"){
+
+    // Use previous Graphs
+    if(trainingParams.startPreviousTPG){
         auto &tpg = *la.getTPGGraph();
-        Environment env(set, le.getDataSources(), 8);
-        File::TPGGraphDotImporter dotImporter(ROOT_DIR"/cmake-build-release/out_006.dot", env, tpg);
+        Environment env(set, armLearnEnv.getDataSources(), 8);
+        File::TPGGraphDotImporter dotImporter((std::string(ROOT_DIR) + "/build/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
     }
 
+    // init Counter for upgrade the current max limit at 0
+    int counterIterationUpgrade = 0;
+
+
+    // If true : will upgrade the corresponding size when counterIterationUpgrade reach the limit to upgrade
+    bool upgradeTargetsSize = true;
+    bool upgradeStartingPosSize = true;
 
     // Train for params.nbGenerations generations
     for (int i = 0; i < params.nbGenerations && !exitProgram; i++) {
-        le.setgeneration(i);
+        armLearnEnv.setgeneration(i);
 
-        //Prototype to renew not all target
-        std::for_each(le.trainingTargets.begin(), le.trainingTargets.begin()+NT, [](armlearn::Input<int16_t> * t){ delete t;}); //We delete the first part of target, to make a shift the value
-        le.trainingTargets.erase(le.trainingTargets.begin(),le.trainingTargets.begin()+NT);
 
-         for(int j=0;j<NT;j++){
-            auto target = le.randomGoal(tparameters);
-            le.trainingTargets.emplace_back(target);
-        }
+        // Update/Generate the training trajectories
+        armLearnEnv.updateTrainingTrajectories(
+            params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition,
+            trainingParams.propTrajectoriesReused, currentMaxLimitTargets, currentMaxLimitStartingPos);
+
 
 
 	    //print the previous graphs
         char buff[16];
-        sprintf(buff, "out_%03d.dot", i);
+        sprintf(buff, "out_%04d.dot", i);
         dotExporter.setNewFilePath(buff);
         dotExporter.print();
 
         // we train the TPG, see doaction for the reward function
         la.trainOneGeneration(i);
+
+        // Does a validation or not according to the parameter doValidation
+        if (trainingParams.progressiveModeTargets) {
+            auto validationResults =
+                la.evaluateAllRoots(i, Learn::LearningMode::TESTING);
+            logFile.logAfterValidate(validationResults);
+            logCout.logAfterValidate(validationResults);
+        
+
+            // log the current max limit
+            logFile.logEnvironnementStatus(currentMaxLimitTargets, currentMaxLimitStartingPos);
+            logCout.logEnvironnementStatus(currentMaxLimitTargets, currentMaxLimitStartingPos);
+            
+            // Get the best result of the training validation
+            auto iter = validationResults.begin();
+            std::advance(iter, validationResults.size() - 1);
+            double bestResult = iter->first->getResult();
+
+            // If the best TPG is above the threshold for upgrade
+            if (bestResult > trainingParams.thresholdUpgrade){
+
+                // Incremente the counter for upgrading the max current limit
+                counterIterationUpgrade += 1;
+
+                // If the counter reach the number of iterations to upgrade
+                if(counterIterationUpgrade == trainingParams.nbIterationsUpgrade){
+
+                    // Upgrade the limit of tagets
+                    if (upgradeTargetsSize)
+                        currentMaxLimitTargets = std::min(currentMaxLimitTargets * trainingParams.coefficientUpgrade, 1000.0d);
+
+                    // Upgrade the limit of starting positions
+                    if (upgradeStartingPosSize)
+                        currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * trainingParams.coefficientUpgrade, 200.0d);
+
+                    counterIterationUpgrade = 0;
+
+                    if(currentMaxLimitStartingPos > 50){
+                        upgradeTargetsSize = true;
+                    }
+
+                    // Update the training validation trajectories
+                    armLearnEnv.updateTrainingValidationTrajectories(
+                        params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition,
+                        trainingParams.propTrajectoriesReused, currentMaxLimitTargets, currentMaxLimitStartingPos);
+                }
+            }
+            // Reset the counter
+            else
+                counterIterationUpgrade = 0;
+        }
+
+        
+
     }
 
 

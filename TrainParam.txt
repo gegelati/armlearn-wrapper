@@ -1,7 +1,0 @@
-3D
-full
-1
-NoStartingFile
-progressive
-
-

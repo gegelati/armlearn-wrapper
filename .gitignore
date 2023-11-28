@@ -54,3 +54,9 @@ Thumbs.db
 **/cmake-build-debug/
 **/cmake-build-release/
 
+# Curve Scripts files for know
+**/curve_scripts/
+
+# VsCode generated files
+**/.vscode/
+
