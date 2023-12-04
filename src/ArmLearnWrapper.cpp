@@ -174,13 +174,13 @@ double ArmLearnWrapper::computeReward() {
 
     /// Compute the number of actions taken in the episode divide by the maximum number of actions takeable in an episode
     /// This ratio is multiplied by a coefficient that allow to choose the impact of this ratio on the reward
-    double valNbIterations = coefRewardNbIterations * (static_cast<double>(nbActions) / nbMaxActions);
+    double valNbIterations = params.coefRewardNbIterations * (static_cast<double>(nbActions) / nbMaxActions);
 
     // set Score
     score = -1 * err;
 
     // Tempory reward to force to stop close to the objective
-    if (err < 5){
+    if (score > params.thresholdUpgrade){
 
         // Incremente a counter
         nbActionsInThreshold++;
@@ -248,28 +248,28 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
 }
 
 
-void ArmLearnWrapper::clearPropTrainingTrajectories(double prop, bool doRandomStartingPos){
+void ArmLearnWrapper::clearPropTrainingTrajectories(){
 
     // Do not clear and just return if the vector is empty
     if (trainingTrajectories.size() == 0)
         return;
 
     // Clear all and return if the proportion is 1 (or above, even if it should not be higher than 1)
-    if (prop >= 1){
+    if (params.propTrajectoriesReused >= 1){
         trainingTrajectories.clear();
         return;
     }
 
     // Compute the number of trajectories we want to delete
-    auto nbDeletedTrajectories = static_cast<int>(round(trainingTrajectories.size() * (1-prop)));
+    auto nbDeletedTrajectories = static_cast<int>(round(trainingTrajectories.size() * (1-params.propTrajectoriesReused)));
 
     // Take an iterator to reach the last deleted trajectory
     auto it = trainingTrajectories.begin();
     std::advance(it, nbDeletedTrajectories);
 
     // Delete all the pointers from memory
-    std::for_each(trainingTrajectories.begin(), it, [doRandomStartingPos](auto& pair){
-         if (doRandomStartingPos) delete pair.first; // check doublon pointeur
+    std::for_each(trainingTrajectories.begin(), it, [this](auto& pair){
+         if (this->params.doRandomStartingPosition) delete pair.first; // check doublon pointeur
          delete pair.second;
     }); 
     // Delete then the pair in the vector
@@ -294,17 +294,17 @@ bool ArmLearnWrapper::isCopyable() const {
 }
 
 
-void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories, bool doRandomStartingPos, double propTrajectoriesReused){
+void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
 
 
 
     // Clear a define prortion of the training targets by giving the proportion of targets reused
-    clearPropTrainingTrajectories(propTrajectoriesReused, doRandomStartingPos);
+    clearPropTrainingTrajectories();
 
     for (int i=0; i<nbTrajectories; i++){
 
         // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
-        auto newStartingPos = (doRandomStartingPos) ? randomStartingPos(false) : &initStartingPos;
+        auto newStartingPos = (params.doRandomStartingPosition) ? randomStartingPos(false) : &initStartingPos;
 
         // Get a new random Goal
         auto newTarget = randomGoal(*newStartingPos, false);
@@ -317,7 +317,7 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories, bool doRand
     trainingIterator = trainingTrajectories.begin();
 }
 
-void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories, bool doRandomStartingPos, double propTrajectoriesReused){
+void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories){
 
 
     // Clear a define prortion of the training targets by giving the proportion of targets reused
@@ -326,7 +326,7 @@ void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories, b
     for (int i=0; i<nbTrajectories; i++){
 
         // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
-        auto newStartingPos = (doRandomStartingPos) ? randomStartingPos(false) : &initStartingPos;
+        auto newStartingPos = (params.doRandomStartingPosition) ? randomStartingPos(false) : &initStartingPos;
 
         // Get a new random Goal
         auto newTarget = randomGoal(*newStartingPos, false);
@@ -451,6 +451,39 @@ void ArmLearnWrapper::customTrajectory(armlearn::Input<int16_t> *newGoal, std::v
     trajectories.push_back(std::make_pair(&startingPos, newGoal));
 }
 
+void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation){
+    // If the best TPG is above the threshold for upgrade
+    if (bestResult > params.thresholdUpgrade){
+
+        // Incremente the counter for upgrading the max current limit
+        counterIterationUpgrade += 1;
+
+        // If the counter reach the number of iterations to upgrade
+        if(counterIterationUpgrade == params.nbIterationsUpgrade){
+
+            // Upgrade the limit of tagets
+            if (params.progressiveModeTargets){
+                currentMaxLimitTarget = std::min(currentMaxLimitTarget * params.coefficientUpgrade, 1000.0d);
+            }
+
+
+            // Upgrade the limit of starting positions
+            if (params.progressiveModeStartingPos){
+                currentMaxLimitStartingPos = std::min(currentMaxLimitTarget * params.coefficientUpgrade, 200.0d);
+            }
+
+
+            counterIterationUpgrade = 0;
+
+            // Update the training validation trajectories
+            updateTrainingValidationTrajectories(nbIterationsPerPolicyEvaluation);
+        }
+    }
+    // Reset the counter
+    else
+        counterIterationUpgrade = 0;
+}
+
 std::string ArmLearnWrapper::newGoalToString() const {
 
     // Log the current coordonate of the target
@@ -519,16 +552,8 @@ void ArmLearnWrapper::setInitStartingPos(std::vector<uint16_t> newInitStartingPo
     initStartingPos = newInitStartingPos;
 }
 
-void ArmLearnWrapper::setCurrentMaxLimitTarget(double newCurrentMaxLimitTarget){
-    currentMaxLimitTarget = newCurrentMaxLimitTarget;
-}
-
 double ArmLearnWrapper::getCurrentMaxLimitTarget(){
     return currentMaxLimitTarget;
-}
-
-void ArmLearnWrapper::setCurrentMaxLimitStartingPos(double newCurrentMaxLimitStartingPos){
-    currentMaxLimitStartingPos = newCurrentMaxLimitStartingPos;
 }
 
 double ArmLearnWrapper::getCurrentMaxLimitStartingPos(){

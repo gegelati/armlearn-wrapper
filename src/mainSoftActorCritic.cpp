@@ -59,18 +59,10 @@ int main() {
     sacParams.loadParametersFromJson(ROOT_DIR "/sacParams.json");
 
     // Instantiate the LearningEnvironment
-    ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams.coefRewardNbIterations);
+    ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams);
 
     // Prompt the number of threads
     std::cout << "Number of threads: " << gegelatiParams.nbThreads << std::endl;
-
-
-    // If the training is progressive, set the limit to the param value
-    if (trainingParams.progressiveModeTargets) armLearnEnv.setCurrentMaxLimitTarget(trainingParams.maxLengthTargets);
-
-
-    // If the training is progressive, set the limit to the param value
-    if (trainingParams.progressiveModeStartingPos) armLearnEnv.setCurrentMaxLimitStartingPos(trainingParams.maxLengthStartingPos);
 
     // Generate validation targets.
     if(gegelatiParams.doValidation){
@@ -79,8 +71,7 @@ int main() {
 
     if(trainingParams.progressiveModeTargets){
         // Update/Generate the first training validation trajectories
-        armLearnEnv.updateTrainingValidationTrajectories(
-            gegelatiParams.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition, trainingParams.propTrajectoriesReused);
+        armLearnEnv.updateTrainingValidationTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
     }
 
 
@@ -107,8 +98,7 @@ int main() {
 
 
         // Update/Generate the training trajectories
-        armLearnEnv.updateTrainingTrajectories(
-            gegelatiParams.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition, trainingParams.propTrajectoriesReused);
+        armLearnEnv.updateTrainingTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
 
 
         learningAgent.trainOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
@@ -116,47 +106,8 @@ int main() {
         // Does a validation or not according to the parameter doValidation
         if (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos) {
             std::cout<<" - CurrLimit "<<armLearnEnv.getCurrentMaxLimitTarget()<<std::endl;
-            /*auto validationResults =
-                la.evaluateAllRoots(i, Learn::LearningMode::TESTING);
-            
-            // Get the best result of the training validation
-            auto iter = validationResults.begin();
-            std::advance(iter, validationResults.size() - 1);
-            double bestResult = iter->first->getResult();*/
 
-            // If the best TPG is above the threshold for upgrade
-            if (learningAgent.getResult() > 0){
-
-                // Incremente the counter for upgrading the max current limit
-                counterIterationUpgrade += 1;
-
-                // If the counter reach the number of iterations to upgrade
-                if(counterIterationUpgrade == trainingParams.nbIterationsUpgrade){
-
-                    // Upgrade the limit of tagets
-                    if (trainingParams.progressiveModeTargets){
-                        auto currentMaxLimitTarget = std::min(armLearnEnv.getCurrentMaxLimitTarget() * trainingParams.coefficientUpgrade, 1000.0d);
-                        armLearnEnv.setCurrentMaxLimitTarget(currentMaxLimitTarget);
-                    }
-
-
-                    // Upgrade the limit of starting positions
-                    if (trainingParams.progressiveModeStartingPos){
-                        auto currentMaxLimitStartingPos = std::min(armLearnEnv.getCurrentMaxLimitStartingPos() * trainingParams.coefficientUpgrade, 200.0d);
-                        armLearnEnv.setCurrentMaxLimitStartingPos(currentMaxLimitStartingPos);
-                    }
-
-
-                    counterIterationUpgrade = 0;
-
-                    // Update the training validation trajectories
-                    armLearnEnv.updateTrainingValidationTrajectories(
-                        gegelatiParams.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition, trainingParams.propTrajectoriesReused);
-                }
-            }
-            // Reset the counter
-            else
-                counterIterationUpgrade = 0;
+            armLearnEnv.updateCurrentLimits(learningAgent.getResult(), gegelatiParams.nbIterationsPerPolicyEvaluation);
         }
 
         /*if (gegelatiParams.doValidation){
