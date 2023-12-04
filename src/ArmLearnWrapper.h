@@ -177,6 +177,8 @@ public:
     /// @brief Inherited via LearningEnvironment
     void doAction(uint64_t actionID) override;
 
+    /// Do a multi continuous action.
+    void doActionContinuous(std::vector<float> actions);
 
     /// @brief Inherited via LearningEnvironment
     void reset(size_t seed = 0, Learn::LearningMode mode = Learn::LearningMode::TRAINING) override;

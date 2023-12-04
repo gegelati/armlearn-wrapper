@@ -122,6 +122,43 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
 
 }
 
+void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
+
+    std::vector<double> out;
+    for (float &action : actions) {
+        out.push_back(1.0 * action * M_PI / 180);
+    }
+    out.push_back(0.0);
+    out.push_back(0.0);
+
+
+
+    // Scale the positions
+    auto scaledOutput = device->scalePosition(out, -M_PI, M_PI);
+
+
+    // changes relative coordinates to absolute
+    for (int i = 0; i < 4; i++) {
+        double inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+        scaledOutput[i] = (scaledOutput[i] - 2048) + inputI;
+    }
+
+    double inputI = (double) *(motorPos.getDataAt(typeid(double), 4).getSharedPointer<const double>());
+    scaledOutput[4] = (scaledOutput[4] - 511) + inputI;
+    inputI = (double) *(motorPos.getDataAt(typeid(double), 5).getSharedPointer<const double>());
+    scaledOutput[5] = (scaledOutput[5] - 256) + inputI;
+
+    auto validOutput = device->toValidPosition(scaledOutput);
+    device->setPosition(validOutput); // Update position
+    device->waitFeedback();
+
+    
+    computeInput(); // to update  positions
+
+    nbActions++;
+    reward = computeReward(); // Computation of reward
+}
+
 double ArmLearnWrapper::computeReward() {
 
     // Get the cartiesion coordonates of the arm

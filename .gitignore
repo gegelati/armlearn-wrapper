@@ -47,6 +47,7 @@ Thumbs.db
 !**/lib/JsonCpp/
 **/dat/
 **/build/
+**/models
 
 # CLion generated files
 **/.idea/
