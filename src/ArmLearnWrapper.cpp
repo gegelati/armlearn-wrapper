@@ -22,7 +22,7 @@ void ArmLearnWrapper::computeInput() {
         }
     }
 
-    // Get the cartesian coordonates of the motos
+    // Get the cartesian coordonates of the motors
     auto newCartesianCoords = converter->computeServoToCoord(newMotorPos)->getCoord();
 
     // For each motor, save the position and the relative position with the target
@@ -30,6 +30,14 @@ void ArmLearnWrapper::computeInput() {
         cartesianPos.setDataAt(typeid(double), i, newCartesianCoords[i]);
         cartesianDif.setDataAt(typeid(double), i, this->currentTarget->getInput()[i] - newCartesianCoords[i]);
     }
+}
+
+std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::getDataSources() {
+    auto result = std::vector<std::reference_wrapper<const Data::DataHandler>>();
+    result.emplace_back(cartesianPos);
+    result.emplace_back(cartesianDif);
+    result.emplace_back(motorPos);
+    return result;
 }
 
 void ArmLearnWrapper::doAction(uint64_t actionID) {
@@ -86,15 +94,16 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
             break;
     }
 
-    // Scale the positions
+    // Scale the positions : this return a vector of int between 0 and 4096 corresponding to the step
     auto scaledOutput = device->scalePosition(out, -M_PI, M_PI);
 
     // changes relative coordinates to absolute
     for (int i = 0; i < 4; i++) {
         double inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+
+        // Substract by 2048 to get the out value indacted by the action
         scaledOutput[i] = (scaledOutput[i] - 2048) + inputI;
     }
-    // TODO find out scaledOutput[0] += 1; // kdesnos: I don't know what the purpose of this line is
 
     double inputI = (double) *(motorPos.getDataAt(typeid(double), 4).getSharedPointer<const double>());
     scaledOutput[4] = (scaledOutput[4] - 511) + inputI;
@@ -105,12 +114,12 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
     device->setPosition(validOutput); // Update position
     device->waitFeedback();
 
+    
     computeInput(); // to update  positions
 
     nbActions++;
-    auto reward = computeReward(); // Computation of reward
+    reward = computeReward(); // Computation of reward
 
-    score = reward; //Change reward
 }
 
 double ArmLearnWrapper::computeReward() {
@@ -123,15 +132,39 @@ double ArmLearnWrapper::computeReward() {
     }
     auto target = this->currentTarget->getInput();
 
-    // Calcul que Distance with the target
+    // Compute que Distance with the target
     auto err = computeSquaredError(target, cartesianCoords);
 
-    /// Calcul the number of actions taken in the episode divide by the maximum number of actions takeable in an episode
+    /// Compute the number of actions taken in the episode divide by the maximum number of actions takeable in an episode
     /// This ratio is multiplied by a coefficient that allow to choose the impact of this ratio on the reward
     double valNbIterations = coefRewardNbIterations * (static_cast<double>(nbActions) / nbMaxActions);
-    
 
-    return -1 * (err + valNbIterations);
+    // set Score
+    score = -1 * err;
+
+    // Tempory reward to force to stop close to the objective
+    if (err < 5){
+
+        // Incremente a counter
+        nbActionsInThreshold++;
+
+        // If the counter reach 10 or terminal is true (because the arm can stop and set terminal=true with action 8)
+        if(nbActionsInThreshold == 10 || terminal){
+            terminal = true;
+            return 1000;
+        }
+        // Else return 0 (still better than any reward not close to the objective)
+        return 0;
+
+    // If not close to the objective
+    } else{
+        // reset counter
+        nbActionsInThreshold=0;
+
+        // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the currentMaxLimitTarget)
+        return  -err/30;
+    }
+    
 }
 
 
@@ -174,14 +207,9 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
     score = 0;
     nbActions = 0;
     terminal = false;
+    nbActionsInThreshold=0;
 }
 
-std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::getDataSources() {
-    auto result = std::vector<std::reference_wrapper<const Data::DataHandler>>();
-    result.emplace_back(cartesianDif);
-    result.emplace_back(motorPos);
-    return result;
-}
 
 void ArmLearnWrapper::clearPropTrainingTrajectories(double prop, bool doRandomStartingPos){
 
@@ -216,6 +244,9 @@ double ArmLearnWrapper::getScore() const {
     return score;
 }
 
+double ArmLearnWrapper::getReward() const {
+    return reward;
+}
 
 bool ArmLearnWrapper::isTerminal() const {
     return terminal;

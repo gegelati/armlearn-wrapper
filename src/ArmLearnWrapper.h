@@ -59,8 +59,13 @@ protected:
     /// Score of the training
     double score = 0;
 
+    /// Reward of the last action done
+    double reward = 0;
+
     /// Number of actions done in the episode
     size_t nbActions = 0;
+
+    int nbActionsInThreshold=0;
 
     /// Maximum number of actions doable in an episode 
     int nbMaxActions;
@@ -185,6 +190,9 @@ public:
      *
      */
     double getScore() const override;
+
+    /// @brief Return the reward for the last action done;
+    double getReward() const;
 
     /// @brief Inherited via LearningEnvironment
     bool isTerminal() const override;
