@@ -33,6 +33,10 @@ if(${TESTING})
     add_definitions(-DNB_GENERATIONS=10)
 endif()
 
+
+# Include directories for JSONcpp
+include_directories("${CMAKE_SOURCE_DIR}/lib/JsonCpp")
+
 # *******************************************
 # *********** GEGELATI LIBRARY **************
 # *******************************************
@@ -65,11 +69,11 @@ endif()
 # ************** Executables ****************
 # *******************************************
 
-# includes JsonCpp library to be able to parse parameters JSON files
-include_directories("lib/JsonCpp")
+
 file(GLOB_RECURSE
         armgegelati_files
         ./src/*.cpp
+        ./lib/JsonCpp/*.cpp
         ./src/*.h
         )
 list(REMOVE_ITEM
@@ -84,7 +88,6 @@ include_directories (/usr/local/include/eigen3)
 add_executable(armGegelati ${armgegelati_files})
 
 target_link_libraries(armGegelati ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
-target_link_libraries(armGegelati)
 target_compile_definitions(armGegelati PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
 
 

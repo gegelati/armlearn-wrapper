@@ -43,7 +43,8 @@ Thumbs.db
 
 # Typical folders
 **/bin/
-**/lib/
+**/lib/*/
+!**/lib/JsonCpp/
 **/dat/
 **/build/
 
