@@ -70,6 +70,12 @@ protected:
     /// Maximum number of actions doable in an episode 
     int nbMaxActions;
 
+    /// Limit for the creation of of random targets
+    double currentMaxLimitTarget = 10000;
+
+    /// Limit for the creation of of random Starting position
+    double currentMaxLimitStartingPos = 10000;
+
     /// Coefficient to add a malus on the reward corresponding to the number of iterations in the episode
     double coefRewardNbIterations = 0;
 
@@ -211,11 +217,8 @@ public:
      * @param[in] nbTrajectories Number of trajectories to create in total
      * @param[in] doRandomStartingPosition true if the starting position are random, else they are all set to the init one
      * @param[in] propTrajectoriesReused proportion of trajectories reused (not deleted)
-     * @param[in] limitTargets distance max that the arm will have to browse in the trajectory
-     * @param[in] limitStartingPos distance max that the starting position will be from the init one
      */ 
-    void updateTrainingTrajectories(int nbTrajectories, bool doRandomStartingPosition, double propTrajectoriesReused,
-                                    double limitTargets, double limitStartingPos);
+    void updateTrainingTrajectories(int nbTrajectories, bool doRandomStartingPosition, double propTrajectoriesReused);
 
     /** 
      * @brief Update the vector of training validation trajectories, which mean deleting the trajectories,
@@ -225,21 +228,17 @@ public:
      * @param[in] nbTrajectories Number of trajectories to create in total
      * @param[in] doRandomStartingPosition true if the starting position are random, else they are all set to the init one
      * @param[in] propTrajectoriesReused proportion of trajectories reused (not deleted)
-     * @param[in] limitTargets distance max that the arm will have to browse in the trajectory
-     * @param[in] limitStartingPos distance max that the starting position will be from the init one
      */ 
-    void updateTrainingValidationTrajectories(int nbTrajectories, bool doRandomStartingPosition, double propTrajectoriesReused,
-                                              double limitTargets, double limitStartingPos);
+    void updateTrainingValidationTrajectories(int nbTrajectories, bool doRandomStartingPosition, double propTrajectoriesReused);
 
     /** 
      * @brief Update the vector of validation trajectories, which mean deleting all current trajectories,
      * Then create an amount of Starting positions, that are the predifined one.
-     * Finally one target is created for each random starting position
+     * Finally one target is created for each starting position
      * 
      * @param[in] nbTrajectories Number of trajectories to create in total
-     * @param[in] doRandomStartingPosition true if the starting position are random, else they are all set to the init one
      */ 
-    void updateValidationTrajectories(int nbTrajectories, bool doRandomStartingPosition);
+    void updateValidationTrajectories(int nbTrajectories);
 
     /**
      * @brief Create and return a random position with the motors
@@ -251,9 +250,8 @@ public:
 
      * @param[in] coefSize coefficient between 0 and 1 suse to be check that the random starting position generated as a distance bigger than coefSize * limit
      * @param[in] validation true if the target is for the validation, else false
-     * @param[in] maxLength distance max between the generated starting pos and the initStartingPos
      */
-    std::vector<uint16_t>* randomStartingPos(double coefSize, bool validation, double maxLength=0);
+    std::vector<uint16_t>* randomStartingPos(bool validation);
 
     /**
      * @brief Create and return a random targets in cartesian coordonates
@@ -263,7 +261,7 @@ public:
      * @param[in] validation true if the target is for the validation, else false
      * @param[in] maxLength distance max that the arm will have to browse in the trajectory
      */
-    armlearn::Input<int16_t>* randomGoal(std::vector<uint16_t> startingPos, double coefSize, bool validation, double maxLength=0);
+    armlearn::Input<int16_t>* randomGoal(std::vector<uint16_t> startingPos, bool validation);
 
     /**
      * @brief Puts a custom goal in the first slot of the trainingTargets list.
@@ -316,6 +314,18 @@ public:
      * @brief Set the new init starting position
      */ 
     void setInitStartingPos(std::vector<uint16_t> newInitStartingPos);
+
+    /// Set new currentMaxLimitTarget
+    void setCurrentMaxLimitTarget(double newCurrentMaxLimitTarget);
+
+    /// Get currentMaxLimitTarget
+    double getCurrentMaxLimitTarget();
+
+    /// Set new currentMaxLimitStartingPos
+    void setCurrentMaxLimitStartingPos(double newCurrentMaxLimitStartingPos);
+
+    /// Get currentMaxLimitStartingPos
+    double getCurrentMaxLimitStartingPos();
 };
 
 #endif

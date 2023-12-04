@@ -24,7 +24,7 @@ void ArmLearnWrapper::computeInput() {
 
     // Get the cartesian coordonates of the motors
     auto newCartesianCoords = converter->computeServoToCoord(newMotorPos)->getCoord();
-
+   
     // For each motor, save the position and the relative position with the target
     for (int i = 0; i < newCartesianCoords.size(); i++) {
         cartesianPos.setDataAt(typeid(double), i, newCartesianCoords[i]);
@@ -162,7 +162,7 @@ double ArmLearnWrapper::computeReward() {
         nbActionsInThreshold=0;
 
         // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the currentMaxLimitTarget)
-        return  -err/30;
+        return  -err/currentMaxLimitTarget;
     }
     
 }
@@ -223,7 +223,7 @@ void ArmLearnWrapper::clearPropTrainingTrajectories(double prop, bool doRandomSt
         return;
     }
 
-    // Calcul the number of trajectories we want to delete
+    // Compute the number of trajectories we want to delete
     auto nbDeletedTrajectories = static_cast<int>(round(trainingTrajectories.size() * (1-prop)));
 
     // Take an iterator to reach the last deleted trajectory
@@ -257,8 +257,7 @@ bool ArmLearnWrapper::isCopyable() const {
 }
 
 
-void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories, bool doRandomStartingPos, double propTrajectoriesReused,
-                                                 double limitTargets, double limitStartingPos){
+void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories, bool doRandomStartingPos, double propTrajectoriesReused){
 
 
 
@@ -268,10 +267,10 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories, bool doRand
     for (int i=0; i<nbTrajectories; i++){
 
         // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
-        auto newStartingPos = (doRandomStartingPos) ? randomStartingPos(i/nbTrajectories, false, limitStartingPos) : &initStartingPos;
+        auto newStartingPos = (doRandomStartingPos) ? randomStartingPos(false) : &initStartingPos;
 
         // Get a new random Goal
-        auto newTarget = randomGoal(*newStartingPos, static_cast<double>(i)/nbTrajectories, false, limitTargets);
+        auto newTarget = randomGoal(*newStartingPos, false);
 
         // add the pair startingPos and target to the vector
         trainingTrajectories.push_back(std::make_pair(newStartingPos, newTarget));
@@ -281,8 +280,7 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories, bool doRand
     trainingIterator = trainingTrajectories.begin();
 }
 
-void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories, bool doRandomStartingPos, double propTrajectoriesReused,
-                                                           double limitTargets, double limitStartingPos){
+void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories, bool doRandomStartingPos, double propTrajectoriesReused){
 
 
     // Clear a define prortion of the training targets by giving the proportion of targets reused
@@ -291,10 +289,10 @@ void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories, b
     for (int i=0; i<nbTrajectories; i++){
 
         // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
-        auto newStartingPos = (doRandomStartingPos) ? randomStartingPos(i/nbTrajectories, false, limitStartingPos) : &initStartingPos;
+        auto newStartingPos = (doRandomStartingPos) ? randomStartingPos(false) : &initStartingPos;
 
         // Get a new random Goal
-        auto newTarget = randomGoal(*newStartingPos, static_cast<double>(i)/nbTrajectories, false, limitTargets);
+        auto newTarget = randomGoal(*newStartingPos, false);
 
         // add the pair startingPos and target to the vector
         trainingValidationTrajectories.push_back(std::make_pair(newStartingPos, newTarget));
@@ -304,18 +302,18 @@ void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories, b
     trainingValidationIterator = trainingValidationTrajectories.begin();
 }
 
-void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories, bool doRandomStartingPos){
+void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
 
     // Clear all the current validation trajectories
     validationTrajectories.clear();
 
     for (int i=0; i<nbTrajectories; i++){
 
-        // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
+        // Get a new starting pos based on the BACKHOE_POSITION
         auto newStartingPos = &initStartingPos;
 
         // Get a new random Goal
-        auto newTarget = randomGoal(*newStartingPos, static_cast<double>(i)/nbTrajectories, true);
+        auto newTarget = randomGoal(*newStartingPos, true);
 
         // add the pair startingPos and target to the vector
         validationTrajectories.push_back(std::make_pair(newStartingPos, newTarget));
@@ -344,7 +342,7 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(){
     return validMotorPos;
 }
 
-std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(double coefSize, bool validation, double maxLength){
+std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
 
     std::vector<uint16_t> motorPos;
     std::vector<double> newStartingPos;
@@ -357,19 +355,19 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(double coefSize, bool 
         // Get a random motor positions
         motorPos = randomMotorPos();
 
-        // Calculate the cartesian coordonates of those motor positions
+        // Compute the cartesian coordonates of those motor positions
         newStartingPos = converter->computeServoToCoord(motorPos)->getCoord();
 
-        // Calculate the distance the new starting position and the initial one
+        // Compute the distance the new starting position and the initial one
         distance = computeSquaredError(converter->computeServoToCoord(initStartingPos)->getCoord(), newStartingPos);
 
-    } while ((!validation && distance > maxLength) || distance < maxLength * std::min(coefSize, 0.8));
+    } while (!validation && distance > currentMaxLimitStartingPos);
 
     return new std::vector<uint16_t>(motorPos);
 
 }
 
-armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> startingPos, double coefSize, bool validation, double maxLength){
+armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> startingPos, bool validation){
 
     std::vector<uint16_t> motorPos;
     std::vector<double> newCartesianCoords;
@@ -382,13 +380,13 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> star
         // Get a random motor positions
         motorPos = randomMotorPos();
 
-        // Calculate the cartesian coordonates of those motor positions
+        // Compute the cartesian coordonates of those motor positions
         newCartesianCoords = converter->computeServoToCoord(motorPos)->getCoord();
 
-        // Calculate the distance to browse
+        // Compute the distance to browse
         distance = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
 
-    } while ((!validation && distance > maxLength) || distance < maxLength * std::min(coefSize, 0.8));
+    } while (!validation && distance > currentMaxLimitTarget);
 
     // Create the input to return
     return new armlearn::Input<int16_t>(
@@ -484,3 +482,18 @@ void ArmLearnWrapper::setInitStartingPos(std::vector<uint16_t> newInitStartingPo
     initStartingPos = newInitStartingPos;
 }
 
+void ArmLearnWrapper::setCurrentMaxLimitTarget(double newCurrentMaxLimitTarget){
+    currentMaxLimitTarget = newCurrentMaxLimitTarget;
+}
+
+double ArmLearnWrapper::getCurrentMaxLimitTarget(){
+    return currentMaxLimitTarget;
+}
+
+void ArmLearnWrapper::setCurrentMaxLimitStartingPos(double newCurrentMaxLimitStartingPos){
+    currentMaxLimitStartingPos = newCurrentMaxLimitStartingPos;
+}
+
+double ArmLearnWrapper::getCurrentMaxLimitStartingPos(){
+    return currentMaxLimitStartingPos;
+}

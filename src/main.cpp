@@ -61,28 +61,21 @@ int main() {
     // Prompt the number of threads
     std::cout << "Number of threads: " << params.nbThreads << std::endl;
 
-
-    // Set a very high limit to never be annoyed by it if not progressiveModeTargets
-    double currentMaxLimitTargets = 10000;
     // If the training is progressive, set the limit to the param value
-    if (trainingParams.progressiveModeTargets) currentMaxLimitTargets = trainingParams.maxLengthTargets;
+    if (trainingParams.progressiveModeTargets) armLearnEnv.setCurrentMaxLimitTarget(trainingParams.maxLengthTargets);
 
-
-    // Set a very high limit to never be annoyed by it if not progressiveModeStartingPos
-    double currentMaxLimitStartingPos = 10000;
     // If the training is progressive, set the limit to the param value
-    if (trainingParams.progressiveModeStartingPos) currentMaxLimitStartingPos = trainingParams.maxLengthStartingPos;
+    if (trainingParams.progressiveModeStartingPos) armLearnEnv.setCurrentMaxLimitStartingPos(trainingParams.maxLengthStartingPos);
 
     // Generate validation targets.
     if(params.doValidation){
-        armLearnEnv.updateValidationTrajectories(params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition);
+        armLearnEnv.updateValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
     }
 
     if(trainingParams.progressiveModeTargets){
         // Update/Generate the first training validation trajectories
         armLearnEnv.updateTrainingValidationTrajectories(
-            params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition,
-            trainingParams.propTrajectoriesReused, currentMaxLimitTargets, currentMaxLimitStartingPos);
+            params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition, trainingParams.propTrajectoriesReused);
     }
 
 
@@ -132,11 +125,6 @@ int main() {
     // init Counter for upgrade the current max limit at 0
     int counterIterationUpgrade = 0;
 
-
-    // If true : will upgrade the corresponding size when counterIterationUpgrade reach the limit to upgrade
-    bool upgradeTargetsSize = true;
-    bool upgradeStartingPosSize = true;
-
     // Train for params.nbGenerations generations
     for (int i = 0; i < params.nbGenerations && !exitProgram; i++) {
         armLearnEnv.setgeneration(i);
@@ -144,8 +132,7 @@ int main() {
 
         // Update/Generate the training trajectories
         armLearnEnv.updateTrainingTrajectories(
-            params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition,
-            trainingParams.propTrajectoriesReused, currentMaxLimitTargets, currentMaxLimitStartingPos);
+            params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition, trainingParams.propTrajectoriesReused);
 
 
 
@@ -159,7 +146,7 @@ int main() {
         la.trainOneGeneration(i);
 
         // Does a validation or not according to the parameter doValidation
-        if (trainingParams.progressiveModeTargets) {
+        if (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos) {
             auto validationResults =
                 la.evaluateAllRoots(i, Learn::LearningMode::TESTING);
             logFile.logAfterValidate(validationResults);
@@ -167,8 +154,8 @@ int main() {
         
 
             // log the current max limit
-            logFile.logEnvironnementStatus(currentMaxLimitTargets, currentMaxLimitStartingPos);
-            logCout.logEnvironnementStatus(currentMaxLimitTargets, currentMaxLimitStartingPos);
+            logFile.logEnvironnementStatus(armLearnEnv.getCurrentMaxLimitTarget(), armLearnEnv.getCurrentMaxLimitStartingPos());
+            logCout.logEnvironnementStatus(armLearnEnv.getCurrentMaxLimitTarget(), armLearnEnv.getCurrentMaxLimitStartingPos());
             
             // Get the best result of the training validation
             auto iter = validationResults.begin();
@@ -185,23 +172,24 @@ int main() {
                 if(counterIterationUpgrade == trainingParams.nbIterationsUpgrade){
 
                     // Upgrade the limit of tagets
-                    if (upgradeTargetsSize)
-                        currentMaxLimitTargets = std::min(currentMaxLimitTargets * trainingParams.coefficientUpgrade, 1000.0d);
+                    if (trainingParams.progressiveModeTargets){
+                        auto currentMaxLimitTarget = std::min(armLearnEnv.getCurrentMaxLimitTarget() * trainingParams.coefficientUpgrade, 1000.0d);
+                        armLearnEnv.setCurrentMaxLimitTarget(currentMaxLimitTarget);
+                    }
+
 
                     // Upgrade the limit of starting positions
-                    if (upgradeStartingPosSize)
-                        currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * trainingParams.coefficientUpgrade, 200.0d);
+                    if (trainingParams.progressiveModeStartingPos){
+                        auto currentMaxLimitStartingPos = std::min(armLearnEnv.getCurrentMaxLimitStartingPos() * trainingParams.coefficientUpgrade, 200.0d);
+                        armLearnEnv.setCurrentMaxLimitStartingPos(currentMaxLimitStartingPos);
+                    }
+
 
                     counterIterationUpgrade = 0;
 
-                    if(currentMaxLimitStartingPos > 50){
-                        upgradeTargetsSize = true;
-                    }
-
                     // Update the training validation trajectories
                     armLearnEnv.updateTrainingValidationTrajectories(
-                        params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition,
-                        trainingParams.propTrajectoriesReused, currentMaxLimitTargets, currentMaxLimitStartingPos);
+                        params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition, trainingParams.propTrajectoriesReused);
                 }
             }
             // Reset the counter
