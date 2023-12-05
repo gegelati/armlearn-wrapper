@@ -93,7 +93,7 @@ int main() {
     int counterIterationUpgrade = 0;
 
     // Load the validation trajectories
-    armLearnEnv.loadValidationTrajectories()
+    armLearnEnv.loadValidationTrajectories();
 
     // Train for params.nbGenerations generations
     for (int i = 0; i < gegelatiParams.nbGenerations && !exitProgram; i++) {

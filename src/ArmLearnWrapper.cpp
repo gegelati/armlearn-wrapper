@@ -324,10 +324,10 @@ void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories){
 
 
     // Clear a define prortion of the training targets by giving the proportion of targets reused
-    std::for_each(trainingValidationTrajectories.begin(), trainingValidationTrajectories.end(), [](auto& pair){
-        delete pair.first;
-        delete pair.second;
-    });
+    std::for_each(trainingValidationTrajectories.begin(), trainingValidationTrajectories.end(), [this](auto& pair){
+         if (this->params.doRandomStartingPosition) delete pair.first; // check doublon pointeur
+         delete pair.second;
+    }); 
 
     for (int i=0; i<nbTrajectories; i++){
 
@@ -348,10 +348,10 @@ void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories){
 void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
 
     // Clear all the current validation trajectories
-    std::for_each(validationTrajectories.begin(), validationTrajectories.end(), [](auto& pair){
-        delete pair.first;
-        delete pair.second;
-    });
+    std::for_each(validationTrajectories.begin(), validationTrajectories.end(), [this](auto& pair){
+         if (this->params.doRandomStartingPosition) delete pair.first; // check doublon pointeur
+         delete pair.second;
+    }); 
 
     for (int i=0; i<nbTrajectories; i++){
 
@@ -451,7 +451,7 @@ void ArmLearnWrapper::customTrajectory(armlearn::Input<int16_t> *newGoal, std::v
     // Delete the first key/value pair if the vector is not empty
     if(trajectories.size() > 0){
         auto iterator = trajectories.begin();
-        delete iterator->first;
+        if (this->params.doRandomStartingPosition) delete iterator->first;
         delete iterator->second;
         trajectories.erase(iterator);
     }
@@ -564,10 +564,10 @@ void ArmLearnWrapper::saveValidationTrajectories() {
 void ArmLearnWrapper::loadValidationTrajectories() {
 
     // Clear the trajectories
-    std::for_each(validationTrajectories.begin(), validationTrajectories.end(), [](auto& pair){
-        delete pair.first;
+    std::for_each(validationTrajectories.begin(), validationTrajectories.end(), [this](auto& pair){
+        if (this->params.doRandomStartingPosition) delete pair.first; // check doublon pointeur
         delete pair.second;
-    });
+    }); 
 
     // Get file
     std::ifstream inFile("ValidationTrajectories.txt");
