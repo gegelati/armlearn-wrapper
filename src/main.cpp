@@ -86,11 +86,13 @@ int main() {
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
 #endif
 
+    // If a validation target is done
+    bool doValidationTarget = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
 
     //Creation of the Output stream on cout and on the file
     std::ofstream fichier("logs.ods", std::ios::out);
-    auto logFile = *new Log::ArmLearnLogger(la,trainingParams.progressiveModeTargets,fichier);
-    auto logCout = *new Log::ArmLearnLogger(la,trainingParams.progressiveModeTargets);
+    auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,fichier);
+    auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget);
 
     /*//Creation of CloudPoint.csv, point that the robotic arm ended to touch
     std::ofstream PointCloud;
@@ -145,7 +147,7 @@ int main() {
         la.trainOneGeneration(i);
 
         // Does a validation or not according to the parameter doValidation
-        if (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos) {
+        if (doValidationTarget) {
             auto validationResults =
                 la.evaluateAllRoots(i, Learn::LearningMode::TESTING);
             logFile.logAfterValidate(validationResults);

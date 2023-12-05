@@ -58,6 +58,8 @@ int main() {
     SACParameters sacParams;
     sacParams.loadParametersFromJson(ROOT_DIR "/sacParams.json");
 
+
+
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams);
 
@@ -75,10 +77,6 @@ int main() {
     }
 
 
-    // Instantiate the softActorCritic engine
-    ArmSacEngine learningAgent(sacParams, &armLearnEnv, gegelatiParams.maxNbActionsPerEval);
-    
-
 #ifndef NO_CONSOLE_CONTROL
     std::atomic<bool> exitProgram = true; // (set to false by other thread)
 
@@ -88,6 +86,13 @@ int main() {
 #else
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
 #endif
+
+    // If a validation target is done
+    bool doTrainingValidation = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
+
+    // Instantiate the softActorCritic engine
+    ArmSacEngine learningAgent(sacParams, &armLearnEnv, gegelatiParams.maxNbActionsPerEval, 
+                               gegelatiParams.doValidation, doTrainingValidation);
 
     // Save the validation trajectories
     if (trainingParams.saveValidationTrajectories){
@@ -110,16 +115,20 @@ int main() {
         // Train
         learningAgent.trainOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
 
-        // Validate
-        learningAgent.validateOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
         // Does a validation or not according to the parameter doValidation
-        if (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos) {
+        if (gegelatiParams.doValidation){
+            learningAgent.validateOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
+        }
 
+        // Does a training validation or not according to doTrainingValidation
+        if (doTrainingValidation) {
             learningAgent.validateTrainingOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
 
+            // Update limits
             armLearnEnv.updateCurrentLimits(learningAgent.getResult(), gegelatiParams.nbIterationsPerPolicyEvaluation);
-
+            learningAgent.logLimits();
         }
+        learningAgent.logTimes();
 
     }
 

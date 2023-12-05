@@ -1,9 +1,11 @@
 #include <torch/torch.h>
+#include <algorithm>
+#include <numeric>
 
 #include "armSacEngine.h"
 
 
-double ArmSacEngine::runOneEpisode(uint16_t seed, bool training){
+double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode){
 
     torch::Tensor newState;
     torch::Tensor actionTensor;
@@ -11,8 +13,10 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, bool training){
     uint64_t actionTaken;
     double singleReward;
     double result=0;
+        
 
-    armLearnEnv->reset(seed, Learn::LearningMode::TRAINING);
+    armLearnEnv->reset(seed, mode);
+
     bool terminated = false;
     torch::Tensor state = getTensorState();
 
@@ -33,28 +37,15 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, bool training){
 
         std::vector<float> actionVector(actionTensor.data_ptr<float>(), actionTensor.data_ptr<float>() + actionTensor.numel());
 
-        /*std::vector<float> stateVector(state.data_ptr<float>(), state.data_ptr<float>() + state.numel());
-
-        std::cout<<"Actions ";
-        for(auto val : actionVector){
-            std::cout<<val<<" ";
-        }
-
-        std::cout<<"- State ";
-        for(auto val : stateVector){
-            std::cout<<val<<" ";
-        }*/
-
         armLearnEnv->doActionContinuous(actionVector);
         newState = getTensorState();
         
         singleReward = armLearnEnv->getReward();
         
-        //std::cout<<"- Reward "<<singleReward<<std::endl;
         nbActions++;
         terminated = (armLearnEnv->isTerminal() || nbActions == maxNbActions);
 
-        if(training){
+        if(mode == Learn::LearningMode::TRAINING){
             if(nbActions < maxNbActions)
                 learningAgent.remember(state, actionTensor, singleReward, newState, terminated);
 
@@ -65,42 +56,154 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, bool training){
         state = newState;
         result += singleReward;
     }
+    
     return result;
 }
 
 void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
 
-    double result = 0.0;
-    double score = 0.0;
-    double singleReward = 0.0;
+    logNewGeneration();
+
+    double result=0.0;
+    double score=0.0;
     
     // we train the TPG, see doaction for the reward function
     for(int j = 0; j < nbIterationTraining; j++){
 
         uint64_t seed = generation * 100000 + j;
-        result += runOneEpisode(seed, true);
+        result += runOneEpisode(seed, Learn::LearningMode::TRAINING);
         score += armLearnEnv->getScore();
     }
-    result = result / nbIterationTraining;
-    score = score / nbIterationTraining;
-    if(score > -5){
+    result /= nbIterationTraining;
+    score /= nbIterationTraining;
+    logTraining(score, result);
+
+    generation++;
+    
+}
+
+
+void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
+
+    double score;
+    // we train the TPG, see doaction for the reward function
+    for(int j = 0; j < nbIterationValidation; j++){
+
+        uint64_t seed = generation * 43000000000 + j;
+        runOneEpisode(seed, Learn::LearningMode::VALIDATION);
+        score += armLearnEnv->getScore();
+    }
+    score /= nbIterationValidation;
+
+    logValidation(score);
+}
+
+void ArmSacEngine::validateTrainingOneGeneration(uint16_t nbIterationTrainingValidation){
+
+    double score;
+    // we train the TPG, see doaction for the reward function
+    for(int j = 0; j < nbIterationTrainingValidation; j++){
+
+        uint64_t seed = generation * 5000000 + j;
+        runOneEpisode(seed, Learn::LearningMode::TESTING);
+        score += armLearnEnv->getScore();
+    }
+    score /= nbIterationTrainingValidation;
+
+    logTrainingValidation(score);
+}
+
+void ArmSacEngine::chronoFromNow(){
+    checkpoint = std::make_shared<std::chrono::time_point<
+    std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+}
+
+void ArmSacEngine::logNewGeneration(std::ostream& out)
+{
+    out << std::setw(colWidth) << generation << std::setw(colWidth);
+    chronoFromNow();
+}
+
+void ArmSacEngine::logHeader(std::ostream& out){
+
+    // Second line of header
+    //*this << std::right;
+    out << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Train"<< std::setw(colWidth)<<"Reward";
+
+    if (doValidation) {
+        out << std::setw(colWidth) << "Valid" ;
+    }
+
+    if (doTrainingValidation){
+        out << std::setw(colWidth) << "TrainVal";
+        out << std::setw(colWidth) << "S_StartP"<<std::setw(colWidth)<<"S_Targ";
+    }
+
+
+    out << std::setw(colWidth) << "T_Train";
+    if (doValidation) {
+        out << std::setw(colWidth) << "T_valid";
+    }
+    if (doTrainingValidation) {
+        out << std::setw(colWidth) << "T_TrainVal";
+    }
+    out << std::setw(colWidth) << "T_total"; 
+
+    out << std::endl;
+    
+}
+
+void ArmSacEngine::logTraining(double score, double result, std::ostream& out){
+
+    out<<score<<std::setw(colWidth);
+    lastScore = score;
+
+    out<<result<<std::setw(colWidth);
+    lastResult = result;
+
+    trainingTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
+    chronoFromNow();
+}
+
+void ArmSacEngine::logValidation(double score, std::ostream& out){
+
+    out<<score<<std::setw(colWidth);
+    lastValidationScore = score;
+
+    if(lastValidationScore > bestScore){
+        bestScore = lastValidationScore;
         learningAgent.saveModels();
     }
 
-    memoryResult.push_back(result);
-    memoryScore.push_back(score);
-    auto moyenneReward = std::accumulate(memoryResult.begin(), memoryResult.end(), 0.0) / memoryResult.size();
-    auto moyenneScore = std::accumulate(memoryScore.begin(), memoryScore.end(), 0.0) / memoryScore.size();
-    
-    auto recentMoyenneReward = (memoryResult.size()>10) ? std::accumulate(memoryResult.end()-10, memoryResult.end(), 0.0) / 10 : moyenneReward;
+    validationTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
+    chronoFromNow();
 
-    std::cout<<"Gen "<<generation<<" - Result "<<result<<" - Score "<<score;
-    std::cout<<" - Mean Result "<<moyenneReward<<" - Mean Result Last 10 "<<recentMoyenneReward<<" - Mean Score "<<moyenneScore;
+}
 
-    generation++;
-    lastResult = result;
-    lastScore = score;
-    
+void ArmSacEngine::logTrainingValidation(double score, std::ostream& out){
+
+    out<<score<<std::setw(colWidth);
+    lastScore = score; 
+
+    trainingValidationTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
+}
+
+void ArmSacEngine::logLimits(std::ostream& out){
+    out<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth);
+    out<<armLearnEnv->getCurrentMaxLimitTarget()<<std::setw(colWidth);
+}
+
+void ArmSacEngine::logTimes(std::ostream& out){
+    totalTime += trainingTime + validationTime + trainingValidationTime;
+
+    out<<trainingTime<<std::setw(colWidth);
+    if(doValidation){
+        out<<validationTime<<std::setw(colWidth);
+    }
+    if(doTrainingValidation){
+        out<<trainingValidationTime<<std::setw(colWidth);
+    }
+    out<<totalTime<<std::endl;
 }
 
 double ArmSacEngine::getScore(){
@@ -127,7 +230,6 @@ torch::Tensor ArmSacEngine::getTensorState(){
         tensorState[i+6] = *dataSrc.at(2).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/4096;
         //std::cout<<*dataSrc.at(2).get().getDataAt(typeid(double), i).getSharedPointer<const double>()<<" ";
     }
-    //std::cout<<std::endl;
     
     return tensorState.view({1, -1});
 }
