@@ -99,6 +99,12 @@ public:
     /// Proportion of targets reused at each generation
     double coefRewardNbIterations = 0;
 
+    /// true to load the validation trajectories
+    bool loadValidationTrajectories = false;
+
+    /// true to save the validation trajectories
+    bool saveValidationTrajectories = false;
+
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.

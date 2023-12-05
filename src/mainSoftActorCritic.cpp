@@ -89,37 +89,40 @@ int main() {
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
 #endif
 
-    // init Counter for upgrade the current max limit at 0
-    int counterIterationUpgrade = 0;
+    // Save the validation trajectories
+    if (trainingParams.saveValidationTrajectories){
+        armLearnEnv.saveValidationTrajectories();
+    }
 
     // Load the validation trajectories
-    armLearnEnv.loadValidationTrajectories();
+    if(trainingParams.loadValidationTrajectories){
+        armLearnEnv.loadValidationTrajectories();
+    }
 
     // Train for params.nbGenerations generations
     for (int i = 0; i < gegelatiParams.nbGenerations && !exitProgram; i++) {
         armLearnEnv.setgeneration(i);
 
-
         // Update/Generate the training trajectories
         armLearnEnv.updateTrainingTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
 
 
+        // Train
         learningAgent.trainOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
 
+        // Validate
+        learningAgent.validateOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
         // Does a validation or not according to the parameter doValidation
         if (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos) {
-            std::cout<<" - CurrLimit "<<armLearnEnv.getCurrentMaxLimitTarget()<<std::endl;
+
+            learningAgent.validateTrainingOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
 
             armLearnEnv.updateCurrentLimits(learningAgent.getResult(), gegelatiParams.nbIterationsPerPolicyEvaluation);
+
         }
 
-        /*if (gegelatiParams.doValidation){
-
-        }*/
-
-        
-
     }
+
 
 
 #ifndef NO_CONSOLE_CONTROL
