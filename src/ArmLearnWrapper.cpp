@@ -191,7 +191,7 @@ double ArmLearnWrapper::computeReward() {
             return 1000;
         }
         // Else return 0 (still better than any reward not close to the objective)
-        return 0;
+        return -err/(currentMaxLimitTarget*10);
 
     // If not close to the objective
     } else{
@@ -463,13 +463,15 @@ void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPer
 
             // Upgrade the limit of tagets
             if (params.progressiveModeTargets){
-                currentMaxLimitTarget = std::min(currentMaxLimitTarget * params.coefficientUpgrade, 1000.0d);
+                currentMaxLimitTarget = std::min(currentMaxLimitTarget * params.coefficientUpgrade, currentMaxLimitTarget + 30);
+                currentMaxLimitTarget = std::min(currentMaxLimitTarget, 1000.0d);
             }
 
 
             // Upgrade the limit of starting positions
             if (params.progressiveModeStartingPos){
-                currentMaxLimitStartingPos = std::min(currentMaxLimitTarget * params.coefficientUpgrade, 200.0d);
+                currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * params.coefficientUpgrade, currentMaxLimitStartingPos + 30);
+                currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos, 200.0d);
             }
 
 

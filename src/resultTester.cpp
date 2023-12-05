@@ -39,7 +39,8 @@ int main() {
     set.add(*(new Instructions::LambdaInstruction<double>(cos)));
     set.add(*(new Instructions::LambdaInstruction<double>(sin)));
 
-    ArmLearnWrapper le(1000);
+    TrainingParameters params;
+    ArmLearnWrapper le(1000, params);
 
 
     auto * validationGoal = new armlearn::Input<int16_t>({300, 50, 50});
