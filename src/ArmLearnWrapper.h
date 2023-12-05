@@ -88,10 +88,6 @@ protected:
     /// Current Starting position of the arm
     std::vector<uint16_t> *currentStartingPos;
 
-    /// Target currently used to move the arm.
-    armlearn::Input<int16_t> *currentTarget;
-
-
     /// Iterator of the vactor of training trajectories
     std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator trainingIterator;
 
@@ -114,6 +110,10 @@ protected:
         
     /// Current generation
     int generation = 0;
+
+    /// Target currently used to move the arm.
+    armlearn::Input<int16_t> *currentTarget;
+
 
 public:
 
@@ -292,6 +292,12 @@ public:
      * @brief Inherited via DeviceLearner
      */ 
     virtual void test() override {}
+
+    /// Save the validation trajectories in a ValidationTrajectories.txt file
+    void saveValidationTrajectories();
+
+    /// Load the validation trajectories from a ValidationTrajectories.txt file
+    void loadValidationTrajectories();
 
     /**
      * @brief Inherited via DeviceLearner

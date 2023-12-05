@@ -118,6 +118,9 @@ int main() {
     // init Counter for upgrade the current max limit at 0
     int counterIterationUpgrade = 0;
 
+    // Save the validation trajectories
+    armLearnEnv.saveValidationTrajectories();
+
     // Train for params.nbGenerations generations
     for (int i = 0; i < params.nbGenerations && !exitProgram; i++) {
         armLearnEnv.setgeneration(i);

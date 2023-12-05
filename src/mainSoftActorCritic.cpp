@@ -92,6 +92,9 @@ int main() {
     // init Counter for upgrade the current max limit at 0
     int counterIterationUpgrade = 0;
 
+    // Load the validation trajectories
+    armLearnEnv.loadValidationTrajectories()
+
     // Train for params.nbGenerations generations
     for (int i = 0; i < gegelatiParams.nbGenerations && !exitProgram; i++) {
         armLearnEnv.setgeneration(i);

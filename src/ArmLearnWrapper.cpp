@@ -1,5 +1,8 @@
 #include "ArmLearnWrapper.h"
 #include <iostream>
+#include <fstream>
+#include <vector>
+#include <utility>
 #include <random>
 #include <algorithm>
 
@@ -321,7 +324,10 @@ void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories){
 
 
     // Clear a define prortion of the training targets by giving the proportion of targets reused
-    trainingValidationTrajectories.clear();
+    std::for_each(trainingValidationTrajectories.begin(), trainingValidationTrajectories.end(), [](auto& pair){
+        delete pair.first;
+        delete pair.second;
+    });
 
     for (int i=0; i<nbTrajectories; i++){
 
@@ -342,7 +348,10 @@ void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories){
 void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
 
     // Clear all the current validation trajectories
-    validationTrajectories.clear();
+    std::for_each(validationTrajectories.begin(), validationTrajectories.end(), [](auto& pair){
+        delete pair.first;
+        delete pair.second;
+    });
 
     for (int i=0; i<nbTrajectories; i++){
 
@@ -436,7 +445,7 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> star
 
 void ArmLearnWrapper::customTrajectory(armlearn::Input<int16_t> *newGoal, std::vector<uint16_t> startingPos, bool validation) {
 
-    // Get the right vectpr of trajectories
+    // Get the right vector of trajectories
     auto trajectories = (validation) ? trainingTrajectories : validationTrajectories;
 
     // Delete the first key/value pair if the vector is not empty
@@ -526,6 +535,74 @@ std::string ArmLearnWrapper::toString() const {
 
 Learn::LearningEnvironment *ArmLearnWrapper::clone() const {
     return new ArmLearnWrapper(*this);
+}
+
+void ArmLearnWrapper::saveValidationTrajectories() {
+    // Create file
+    std::ofstream outFile("ValidationTrajectories.txt");
+
+    if (outFile.is_open()) {
+        // For each validation trajectories
+        for (auto item : validationTrajectories) {
+            // Get the starting position
+            for (auto value : *item.first) {
+                outFile << value << " ";
+            }
+
+            // Then the target
+            outFile << item.second->getInput()[0] << " ";
+            outFile << item.second->getInput()[1] << " ";
+            outFile << item.second->getInput()[2] << " " << std::endl;;
+        }
+        outFile << std::endl;
+        outFile.close();
+    } else {
+        std::cerr << "Error while openning file for saving validation trajectories" << std::endl;
+    }
+}
+
+void ArmLearnWrapper::loadValidationTrajectories() {
+
+    // Clear the trajectories
+    std::for_each(validationTrajectories.begin(), validationTrajectories.end(), [](auto& pair){
+        delete pair.first;
+        delete pair.second;
+    });
+
+    // Get file
+    std::ifstream inFile("ValidationTrajectories.txt");
+
+    if (inFile.is_open()) {
+        int value;
+        inFile >> value;
+        do {
+            std::vector<uint16_t>* startingPos = new std::vector<uint16_t>();
+            int i = 0;
+            do { // Get the starting position
+                startingPos->push_back(static_cast<uint16_t>(value));
+                i++;
+            } while (inFile >> value && i < 6);
+
+            std::vector<int> target;
+            do { // Get the target
+                target.push_back(static_cast<uint16_t>(value));
+                i++;
+            } while (inFile >> value && i < 9);
+
+            auto targetInput = new armlearn::Input<int16_t>({
+                (int16_t) (target[0]), //X
+                (int16_t) (target[1]), //Y
+                (int16_t) (target[2])});
+
+            // Add to trajectories
+            validationTrajectories.push_back(std::make_pair(startingPos, targetInput));
+        } while(inFile.peek() != EOF);
+
+        // Close the file
+        inFile.close();
+    } else {
+        std::cerr << "Error while openning file for loading validation trajectories" << std::endl;
+    }
 }
 
 std::vector<uint16_t> ArmLearnWrapper::getMotorsPos() {
