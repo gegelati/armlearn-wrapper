@@ -231,6 +231,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
 
     // Change the starting position
     this->currentStartingPos = iterator->first;
+
     device->setPosition(*currentStartingPos); // Reset position
     device->waitFeedback();
 
@@ -328,6 +329,7 @@ void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories){
          if (this->params.doRandomStartingPosition) delete pair.first; // check doublon pointeur
          delete pair.second;
     }); 
+    trainingValidationTrajectories.clear();
 
     for (int i=0; i<nbTrajectories; i++){
 
@@ -352,6 +354,7 @@ void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
          if (this->params.doRandomStartingPosition) delete pair.first; // check doublon pointeur
          delete pair.second;
     }); 
+    validationTrajectories.clear();
 
     for (int i=0; i<nbTrajectories; i++){
 
@@ -433,7 +436,6 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> star
         distance = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
 
     } while (!validation && distance > currentMaxLimitTarget);
-
     // Create the input to return
     return new armlearn::Input<int16_t>(
     {
@@ -568,6 +570,7 @@ void ArmLearnWrapper::loadValidationTrajectories() {
         if (this->params.doRandomStartingPosition) delete pair.first; // check doublon pointeur
         delete pair.second;
     }); 
+    validationTrajectories.clear();
 
     // Get file
     std::ifstream inFile("ValidationTrajectories.txt");
@@ -600,6 +603,9 @@ void ArmLearnWrapper::loadValidationTrajectories() {
 
         // Close the file
         inFile.close();
+
+        // Initiate the iterator of the validationTrajectories
+        validationIterator = validationTrajectories.begin();
     } else {
         std::cerr << "Error while openning file for loading validation trajectories" << std::endl;
     }
