@@ -6,7 +6,7 @@
 	// Allow to choose if the starting position are random of the BACKHOE one
 	"doRandomStartingPosition": false,
 	// Use the progressive mode for choosing randomly the starting position (no effect if doRandomStartingPosition is false)
-	"progressiveModeStartingPos": true,
+	"progressiveModeStartingPos": false,
 	// Initial maximum distance between the random starting position and the BACKHOE one
 	"maxLengthStartingPos": 10,
 	// Coefficient to upgrade the maxLengthStartingPos and MaxLengthTargets
@@ -14,7 +14,7 @@
 	// Number of iterations to cumulate to upgrade the maxLengthStartingPos and MaxLengthTargets
 	"nbIterationsUpgrade": 5,
 	// Threshold reward to exceed to increment the counter of iteration to cumulate to upgrade the maxLengthStartingPos and MaxLengthTargets
-	"thresholdUpgrade" : -8,
+	"thresholdUpgrade" : -5,
 	// Allow to start with a predifined TPG
 	"startPreviousTPG": false,
 	// Name of the predifined TPG (no effect if startPreviousTPG is false)
@@ -23,5 +23,9 @@
 	"propTrajectoriesReused": 0.5,
 	// Coefficient to choose the impact of the number of iterations taken by a TPG on the reward
 	// The formula is : reward = init_reward - coefRewardNbIterations * (nbActionTaken / nbMaxActionTaken)
-	"coefRewardNbIterations": 1
+	"coefRewardNbIterations": 1,
+	// true to load the validation trajectories
+	"loadValidationTrajectories": true,
+	// true to save the validation trajectories
+	"saveValidationTrajectories": false
 }
