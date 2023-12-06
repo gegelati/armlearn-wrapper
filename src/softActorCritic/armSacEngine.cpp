@@ -46,10 +46,18 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode){
         terminated = (armLearnEnv->isTerminal() || nbActions == maxNbActions);
 
         if(mode == Learn::LearningMode::TRAINING){
+
+            auto time = std::make_shared<std::chrono::time_point<
+            std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+
             if(nbActions < maxNbActions)
                 learningAgent.remember(state, actionTensor, singleReward, newState, terminated);
 
             learningAgent.learn();
+
+            learningTime += ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *time)).count();
+
+
         }
 
 
@@ -67,6 +75,8 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
     double result=0.0;
     double score=0.0;
     
+    learningTime = 0.0;
+
     // we train the TPG, see doaction for the reward function
     for(int j = 0; j < nbIterationTraining; j++){
 
@@ -96,7 +106,7 @@ void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
     score /= nbIterationValidation;
 
     logValidation(score);
-}
+};
 
 void ArmSacEngine::validateTrainingOneGeneration(uint16_t nbIterationTrainingValidation){
 
@@ -118,56 +128,65 @@ void ArmSacEngine::chronoFromNow(){
     std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
 }
 
-void ArmSacEngine::logNewGeneration(std::ostream& out)
+void ArmSacEngine::logNewGeneration()
 {
-    out << std::setw(colWidth) << generation << std::setw(colWidth);
+
+    std::cout << std::setw(colWidth) << generation << std::setw(colWidth);
+    file << std::setw(colWidth) << generation << std::setw(colWidth);
+
     chronoFromNow();
-}
-
-void ArmSacEngine::logHeader(std::ostream& out){
-
-    // Second line of header
-    //*this << std::right;
-    out << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Train"<< std::setw(colWidth)<<"Reward";
-
-    if (doValidation) {
-        out << std::setw(colWidth) << "Valid" ;
-    }
-
-    if (doTrainingValidation){
-        out << std::setw(colWidth) << "TrainVal";
-        out << std::setw(colWidth) << "S_StartP"<<std::setw(colWidth)<<"S_Targ";
-    }
-
-
-    out << std::setw(colWidth) << "T_Train";
-    if (doValidation) {
-        out << std::setw(colWidth) << "T_valid";
-    }
-    if (doTrainingValidation) {
-        out << std::setw(colWidth) << "T_TrainVal";
-    }
-    out << std::setw(colWidth) << "T_total"; 
-
-    out << std::endl;
     
 }
 
-void ArmSacEngine::logTraining(double score, double result, std::ostream& out){
+void ArmSacEngine::logHeader(){
 
-    out<<score<<std::setw(colWidth);
+    // Second line of header
+    //*this << std::right;
+    std::cout << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Train"<< std::setw(colWidth)<<"Reward";
+    file << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Train"<< std::setw(colWidth)<<"Reward";
+
+    if (doValidation) {
+        std::cout << std::setw(colWidth) << "Valid" ;
+        file << std::setw(colWidth) << "Valid" ;
+    }
+
+    if (doTrainingValidation){
+        std::cout << std::setw(colWidth) << "TrainVal"<<std::setw(colWidth) << "S_StartP"<<std::setw(colWidth)<<"S_Targ";
+        file << std::setw(colWidth) << "TrainVal"<<std::setw(colWidth) << "S_StartP"<<std::setw(colWidth)<<"S_Targ";
+    }
+
+
+    std::cout << std::setw(colWidth) << "T_Train"<<std::setw(colWidth)<< "T_Learn";
+    file << std::setw(colWidth) << "T_Train"<<std::setw(colWidth)<< "T_Learn";
+    if (doValidation) {
+        std::cout << std::setw(colWidth) << "T_valid";
+        file << std::setw(colWidth) << "T_valid";
+    }
+    if (doTrainingValidation) {
+        std::cout << std::setw(colWidth) << "T_TrainVal";
+        file << std::setw(colWidth) << "T_TrainVal";
+    }
+    std::cout << std::setw(colWidth) << "T_total"<<std::endl;
+    file << std::setw(colWidth) << "T_total"<<std::endl;
+    
+}
+
+void ArmSacEngine::logTraining(double score, double result){
+
+    std::cout<<score<<std::setw(colWidth)<<result<<std::setw(colWidth);
+    file<<score<<std::setw(colWidth)<<result<<std::setw(colWidth);
+
     lastScore = score;
-
-    out<<result<<std::setw(colWidth);
     lastResult = result;
 
     trainingTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
     chronoFromNow();
 }
 
-void ArmSacEngine::logValidation(double score, std::ostream& out){
+void ArmSacEngine::logValidation(double score){
 
-    out<<score<<std::setw(colWidth);
+    std::cout<<score<<std::setw(colWidth);
+    file<<score<<std::setw(colWidth);
     lastValidationScore = score;
 
     if(lastValidationScore > bestScore){
@@ -178,32 +197,42 @@ void ArmSacEngine::logValidation(double score, std::ostream& out){
     validationTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
     chronoFromNow();
 
+
+
+
 }
 
-void ArmSacEngine::logTrainingValidation(double score, std::ostream& out){
+void ArmSacEngine::logTrainingValidation(double score){
 
-    out<<score<<std::setw(colWidth);
+    std::cout<<score<<std::setw(colWidth);
+    file<<score<<std::setw(colWidth);
     lastScore = score; 
 
     trainingValidationTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
 }
 
-void ArmSacEngine::logLimits(std::ostream& out){
-    out<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth);
-    out<<armLearnEnv->getCurrentMaxLimitTarget()<<std::setw(colWidth);
+void ArmSacEngine::logLimits(){
+
+    std::cout<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<armLearnEnv->getCurrentMaxLimitTarget()<<std::setw(colWidth);
+    file<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<armLearnEnv->getCurrentMaxLimitTarget()<<std::setw(colWidth);
 }
 
-void ArmSacEngine::logTimes(std::ostream& out){
+void ArmSacEngine::logTimes(){
+
     totalTime += trainingTime + validationTime + trainingValidationTime;
 
-    out<<trainingTime<<std::setw(colWidth);
+    std::cout<<trainingTime<<std::setw(colWidth)<<learningTime<<std::setw(colWidth);
+    file<<trainingTime<<std::setw(colWidth)<<learningTime<<std::setw(colWidth);
     if(doValidation){
-        out<<validationTime<<std::setw(colWidth);
+        std::cout<<validationTime<<std::setw(colWidth);
+        file<<validationTime<<std::setw(colWidth);
     }
     if(doTrainingValidation){
-        out<<trainingValidationTime<<std::setw(colWidth);
+        std::cout<<trainingValidationTime<<std::setw(colWidth);
+        file<<trainingValidationTime<<std::setw(colWidth);
     }
-    out<<totalTime<<std::endl;
+    std::cout<<totalTime<<std::endl;
+    file<<totalTime<<std::endl;
 }
 
 double ArmSacEngine::getScore(){

@@ -90,8 +90,11 @@ int main() {
     // If a validation target is done
     bool doTrainingValidation = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
 
+    //Creation of the Output stream on cout and on the file
+    std::ofstream file("logs.ods", std::ios::out);
+
     // Instantiate the softActorCritic engine
-    ArmSacEngine learningAgent(sacParams, &armLearnEnv, gegelatiParams.maxNbActionsPerEval, 
+    ArmSacEngine learningAgent(sacParams, &armLearnEnv, file, gegelatiParams.maxNbActionsPerEval, 
                                gegelatiParams.doValidation, doTrainingValidation);
 
     // Save the validation trajectories
@@ -125,7 +128,7 @@ int main() {
             learningAgent.validateTrainingOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
 
             // Update limits
-            armLearnEnv.updateCurrentLimits(learningAgent.getResult(), gegelatiParams.nbIterationsPerPolicyEvaluation);
+            armLearnEnv.updateCurrentLimits(learningAgent.getScore(), gegelatiParams.nbIterationsPerPolicyEvaluation);
             learningAgent.logLimits();
         }
         learningAgent.logTimes();
