@@ -90,6 +90,13 @@ public:
     /// True to load the models
     bool loadModels = false;
 
+    /// True to unable multiple actions
+    bool multipleActions = true;
+
+    /// True to unable continuous actions. Note : actions can only be continuous if multiple actions is unable
+    bool continuousActions = true;
+
+
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.

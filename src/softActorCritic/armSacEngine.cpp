@@ -26,23 +26,32 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode){
     // Do iterations while the episode is not terminated
     while (!terminated && nbActions < maxNbActions) {
 
-        // Get the continuous action and the discretised one
+        // Get the continuous action
         actionTensor = learningAgent.chooseAction(state);
-        /*
-        mulAction = (actionTensor.item<float>() + 1) * 4;
-        actionTaken = 0;
-        
-        while(actionTaken + 1 < mulAction){
-            actionTaken++;
+
+        if(!sacParams.multipleActions){
+            mulAction = (actionTensor.item<float>() + 1) * 4;
+            actionTaken = 0;
+            
+            while(actionTaken + 1 < mulAction){
+                actionTaken++;
+            }
+
+            armLearnEnv->doAction(actionTaken);
+        } else {
+
+            if (!sacParams.continuousActions){
+                actionTensor = torch::round(actionTensor);
+            }
+
+            // Convert actionTensor to an actionVector
+            std::vector<float> actionVector(actionTensor.data_ptr<float>(), actionTensor.data_ptr<float>() + actionTensor.numel());
+
+            // Do a continuous action
+            armLearnEnv->doActionContinuous(actionVector);
+
         }
 
-        armLearnEnv.doAction(actionTaken);*/
-
-        // Convert actionTensor to an actionVector
-        std::vector<float> actionVector(actionTensor.data_ptr<float>(), actionTensor.data_ptr<float>() + actionTensor.numel());
-
-        // Do a continuous action
-        armLearnEnv->doActionContinuous(actionVector);
 
         // Get the new state
         newState = getTensorState();

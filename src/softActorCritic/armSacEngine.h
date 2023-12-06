@@ -64,9 +64,8 @@ class ArmSacEngine{
     public:
         ArmSacEngine(SACParameters sacParams, ArmLearnWrapper* armLearnEnv, std::ostream& file,
         uint16_t maxNbActions, bool doValidation=false, bool doTrainingValidation=false)
-        : sacParams(sacParams), file(file),
-        learningAgent(sacParams, 10, 4),
-        armLearnEnv(armLearnEnv) {
+        : sacParams(sacParams), file(file), armLearnEnv(armLearnEnv), learningAgent(sacParams, 10, (sacParams.multipleActions) ? 4:1) {
+
             this->maxNbActions = maxNbActions;
             this->doValidation=doValidation;
             this->doTrainingValidation=doTrainingValidation;

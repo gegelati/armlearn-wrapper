@@ -82,6 +82,16 @@ void SACParameters::setParameterFromString(const std::string& param, Json::Value
         loadModels = (bool)value.asBool();
         return;
     }
+
+    if (param == "multipleActions") {
+        multipleActions = (bool)value.asBool();
+        return;
+    }
+
+    if (param == "continuousActions") {
+        continuousActions = (bool)value.asBool();
+        return;
+    }
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }
