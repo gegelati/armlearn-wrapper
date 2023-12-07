@@ -190,16 +190,16 @@ double ArmLearnWrapper::computeReward() {
             terminal = true;
             return 1000;
         }
-        // Else return 0 (still better than any reward not close to the objective)
-        return -err/(currentMaxLimitTarget*10);
+        // Else distance divided by 10 times the initCurrentMaxLimitTarget (still better than any reward not close to the objective)
+        return -err/(params.maxLengthTargets*10);
 
     // If not close to the objective
     } else{
         // reset counter
         nbActionsInThreshold=0;
 
-        // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the currentMaxLimitTarget)
-        return  -err/currentMaxLimitTarget;
+        // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)
+        return  -err/params.maxLengthTargets;
     }
     
 }
