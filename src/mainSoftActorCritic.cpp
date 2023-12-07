@@ -133,9 +133,12 @@ int main() {
         if (doTrainingValidation) {
             learningAgent.validateTrainingOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
 
+            // Log the limits
+            learningAgent.logLimits();
+
             // Update limits
             armLearnEnv.updateCurrentLimits(learningAgent.getLastTrainingValidationScore(), gegelatiParams.nbIterationsPerPolicyEvaluation);
-            learningAgent.logLimits();
+
         }
         learningAgent.logTimes();
 
