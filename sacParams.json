@@ -16,5 +16,9 @@
 	// Size of the second layer of the models
 	"sizeHL2" : 256,
 	// True to load the models
-	"loadModels": false
+	"loadModels": false,
+	// True to unable multiple actions
+	"multipleActions": false,
+	// True to unable continuous actions. Note : actions can only be continuous if multiple actions is unable
+	"continuousActions": false
 }
