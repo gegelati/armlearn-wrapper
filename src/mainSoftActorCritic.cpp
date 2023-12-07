@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <gegelati.h>
+#include <torch/torch.h>
 #include "instructions.h"
 #include "trainingParameters.h"
 #include "armLearnLogger.h"
@@ -43,6 +44,9 @@ void getKey(std::atomic<bool>& exit) {
 int main() {
     std::cout << "Start ArmLearner application." << std::endl;
 
+    // Set random seed
+    torch::manual_seed(4564684687468876);
+
     // Create the instruction set for programs
 	Instructions::Set set;
 	fillInstructionSet(set);
@@ -66,12 +70,15 @@ int main() {
     // Prompt the number of threads
     std::cout << "Number of threads: " << gegelatiParams.nbThreads << std::endl;
 
+    // If a validation target is done
+    bool doTrainingValidation = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
+
     // Generate validation targets.
     if(gegelatiParams.doValidation){
         armLearnEnv.updateValidationTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
     }
 
-    if(trainingParams.progressiveModeTargets){
+    if(doTrainingValidation){
         // Update/Generate the first training validation trajectories
         armLearnEnv.updateTrainingValidationTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
     }
@@ -87,8 +94,7 @@ int main() {
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
 #endif
 
-    // If a validation target is done
-    bool doTrainingValidation = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
+
 
     //Creation of the Output stream on cout and on the file
     std::ofstream file("logs.ods", std::ios::out);

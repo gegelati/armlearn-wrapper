@@ -30,13 +30,18 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode){
         actionTensor = learningAgent.chooseAction(state);
 
         if(!sacParams.multipleActions){
+            // actionTensor return float between -1 and 1. 
+            // Add 1 and multiply by 4 return a float between 0 and 8
+            // The discrete armLearn has 9 actions
             mulAction = (actionTensor.item<float>() + 1) * 4;
             actionTaken = 0;
             
+            // Get the action
             while(actionTaken + 1 < mulAction){
                 actionTaken++;
             }
 
+            // Do the action
             armLearnEnv->doAction(actionTaken);
         } else {
 
@@ -122,7 +127,7 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
 
 void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
 
-    double score;
+    double score = 0;
 
     // Validate for nbIterationTraining episode(s)
     for(int j = 0; j < nbIterationValidation; j++){
@@ -141,7 +146,7 @@ void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
 
 void ArmSacEngine::validateTrainingOneGeneration(uint16_t nbIterationTrainingValidation){
 
-    double score;
+    double score = 0;
 
     // Validate training for nbIterationTraining episode(s)
     for(int j = 0; j < nbIterationTrainingValidation; j++){

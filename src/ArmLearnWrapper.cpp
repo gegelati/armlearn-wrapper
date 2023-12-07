@@ -77,9 +77,6 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
             break;
         case 8:
             out = {0, 0, 0, 0, 0, 0};
-            // Since the arm is not moving, its position will remain identical, and
-            // the action will keep being selected. So, terminate the eval.
-            this->terminal = true;
             break;
 
             // Following cases only when the hand is trained
@@ -189,7 +186,7 @@ double ArmLearnWrapper::computeReward() {
         nbActionsInThreshold++;
 
         // If the counter reach 10 or terminal is true (because the arm can stop and set terminal=true with action 8)
-        if(nbActionsInThreshold == 10 || terminal){
+        if(nbActionsInThreshold == 10){
             terminal = true;
             return 1000;
         }
