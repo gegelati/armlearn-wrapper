@@ -56,16 +56,10 @@ int main() {
     trainingParams.loadParametersFromJson(ROOT_DIR "/trainParams.json");
 
     // Instantiate the LearningEnvironment
-    ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams.coefRewardNbIterations);
+    ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams);
 
     // Prompt the number of threads
     std::cout << "Number of threads: " << params.nbThreads << std::endl;
-
-    // If the training is progressive, set the limit to the param value
-    if (trainingParams.progressiveModeTargets) armLearnEnv.setCurrentMaxLimitTarget(trainingParams.maxLengthTargets);
-
-    // If the training is progressive, set the limit to the param value
-    if (trainingParams.progressiveModeStartingPos) armLearnEnv.setCurrentMaxLimitStartingPos(trainingParams.maxLengthStartingPos);
 
     // Generate validation targets.
     if(params.doValidation){
@@ -74,8 +68,7 @@ int main() {
 
     if(trainingParams.progressiveModeTargets){
         // Update/Generate the first training validation trajectories
-        armLearnEnv.updateTrainingValidationTrajectories(
-            params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition, trainingParams.propTrajectoriesReused);
+        armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
     }
 
 
@@ -93,11 +86,13 @@ int main() {
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
 #endif
 
+    // If a validation target is done
+    bool doValidationTarget = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
 
     //Creation of the Output stream on cout and on the file
     std::ofstream fichier("logs.ods", std::ios::out);
-    auto logFile = *new Log::ArmLearnLogger(la,trainingParams.progressiveModeTargets,fichier);
-    auto logCout = *new Log::ArmLearnLogger(la,trainingParams.progressiveModeTargets);
+    auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,fichier);
+    auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget);
 
     /*//Creation of CloudPoint.csv, point that the robotic arm ended to touch
     std::ofstream PointCloud;
@@ -122,8 +117,15 @@ int main() {
         File::TPGGraphDotImporter dotImporter((std::string(ROOT_DIR) + "/build/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
     }
 
-    // init Counter for upgrade the current max limit at 0
-    int counterIterationUpgrade = 0;
+    // Save the validation trajectories
+    if (trainingParams.saveValidationTrajectories){
+        armLearnEnv.saveValidationTrajectories();
+    }
+
+    // Load the validation trajectories
+    if(trainingParams.loadValidationTrajectories){
+        armLearnEnv.loadValidationTrajectories();
+    }
 
     // Train for params.nbGenerations generations
     for (int i = 0; i < params.nbGenerations && !exitProgram; i++) {
@@ -131,8 +133,7 @@ int main() {
 
 
         // Update/Generate the training trajectories
-        armLearnEnv.updateTrainingTrajectories(
-            params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition, trainingParams.propTrajectoriesReused);
+        armLearnEnv.updateTrainingTrajectories(params.nbIterationsPerPolicyEvaluation);
 
 
 
@@ -146,7 +147,7 @@ int main() {
         la.trainOneGeneration(i);
 
         // Does a validation or not according to the parameter doValidation
-        if (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos) {
+        if (doValidationTarget) {
             auto validationResults =
                 la.evaluateAllRoots(i, Learn::LearningMode::TESTING);
             logFile.logAfterValidate(validationResults);
@@ -162,42 +163,8 @@ int main() {
             std::advance(iter, validationResults.size() - 1);
             double bestResult = iter->first->getResult();
 
-            // If the best TPG is above the threshold for upgrade
-            if (bestResult > trainingParams.thresholdUpgrade){
-
-                // Incremente the counter for upgrading the max current limit
-                counterIterationUpgrade += 1;
-
-                // If the counter reach the number of iterations to upgrade
-                if(counterIterationUpgrade == trainingParams.nbIterationsUpgrade){
-
-                    // Upgrade the limit of tagets
-                    if (trainingParams.progressiveModeTargets){
-                        auto currentMaxLimitTarget = std::min(armLearnEnv.getCurrentMaxLimitTarget() * trainingParams.coefficientUpgrade, 1000.0d);
-                        armLearnEnv.setCurrentMaxLimitTarget(currentMaxLimitTarget);
-                    }
-
-
-                    // Upgrade the limit of starting positions
-                    if (trainingParams.progressiveModeStartingPos){
-                        auto currentMaxLimitStartingPos = std::min(armLearnEnv.getCurrentMaxLimitStartingPos() * trainingParams.coefficientUpgrade, 200.0d);
-                        armLearnEnv.setCurrentMaxLimitStartingPos(currentMaxLimitStartingPos);
-                    }
-
-
-                    counterIterationUpgrade = 0;
-
-                    // Update the training validation trajectories
-                    armLearnEnv.updateTrainingValidationTrajectories(
-                        params.nbIterationsPerPolicyEvaluation, trainingParams.doRandomStartingPosition, trainingParams.propTrajectoriesReused);
-                }
-            }
-            // Reset the counter
-            else
-                counterIterationUpgrade = 0;
+            armLearnEnv.updateCurrentLimits(bestResult, params.nbIterationsPerPolicyEvaluation);
         }
-
-        
 
     }
 

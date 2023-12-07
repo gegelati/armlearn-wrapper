@@ -33,7 +33,6 @@ if(${TESTING})
     add_definitions(-DNB_GENERATIONS=10)
 endif()
 
-
 # Include directories for JSONcpp
 include_directories("${CMAKE_SOURCE_DIR}/lib/JsonCpp")
 
@@ -69,6 +68,8 @@ endif()
 # ************** Executables ****************
 # *******************************************
 
+set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/lib/libtorch")
+find_package(Torch)
 
 file(GLOB_RECURSE
         armgegelati_files
@@ -80,8 +81,23 @@ list(REMOVE_ITEM
         armgegelati_files
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp)
 
+# Delete softActorCritic files for know
+file(GLOB 
+        sacFiles
+        ./src/softActorCritic/*.cpp
+        ./src/softActorCritic/*.h)
+
+foreach(sacFile ${sacFiles})
+    list(REMOVE_ITEM
+            armgegelati_files
+            ${sacFile})
+endforeach()
+
+
+# includes JsonCpp library to be able to parse parameters JSON files
 include_directories (/usr/local/include/eigen3)
 
 # armGegelati: Training Gegelati on the ArmLearnWrapper learning environment
@@ -89,6 +105,7 @@ add_executable(armGegelati ${armgegelati_files})
 
 target_link_libraries(armGegelati ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
 target_compile_definitions(armGegelati PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+
 
 
 # armGrabGegelati: Control the robotic arm with gegelati.
@@ -107,3 +124,25 @@ target_compile_definitions(armGrabGegelati PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}
 # armGrabStandalone: Control the robotic arm without gegelati
 add_executable(armGrabStandalone ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp)
 target_link_libraries(armGrabStandalone /usr/local/lib/libarmlearn.so)
+
+
+list(REMOVE_ITEM
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.h)
+
+list(APPEND
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp)
+
+foreach(sacFile ${sacFiles})
+    list(APPEND
+            armgegelati_files
+            ${sacFile})
+endforeach()
+
+# armSoftActorCritic: Training SoftActorCritic on the ArmLearnWrapper learning environment
+add_executable(armSoftActorCritic ${armgegelati_files})
+
+target_link_libraries(armSoftActorCritic ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
+target_compile_definitions(armSoftActorCritic PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")

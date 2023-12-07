@@ -98,6 +98,16 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "loadValidationTrajectories"){
+        loadValidationTrajectories = (bool)value.asBool();
+        return;
+    }
+
+    if (param == "saveValidationTrajectories"){
+        saveValidationTrajectories = (bool)value.asBool();
+        return;
+    }
+
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }

@@ -11,6 +11,7 @@
 #include <armlearn/widowxbuilder.h>
 #include <armlearn/basiccartesianconverter.h>
 #include <armlearn/devicelearner.h>
+#include "trainingParameters.h"
 
 /**
 * LearningEnvironment to use armLean in order to learn how to move a robotic arm.
@@ -33,6 +34,8 @@ protected:
     void computeInput();
 
     double computeReward();
+
+    TrainingParameters params;
 
     /// true if the the environnement is terminated
     bool terminal = false;
@@ -76,18 +79,14 @@ protected:
     /// Limit for the creation of of random Starting position
     double currentMaxLimitStartingPos = 10000;
 
-    /// Coefficient to add a malus on the reward corresponding to the number of iterations in the episode
-    double coefRewardNbIterations = 0;
+    /// Counter used to know if the currents limits have to be upgraded
+    uint16_t counterIterationUpgrade = 0;
 
     /// Initial starting position of the arm
     std::vector<uint16_t> initStartingPos = BACKHOE_POSITION;
 
     /// Current Starting position of the arm
     std::vector<uint16_t> *currentStartingPos;
-
-    /// Target currently used to move the arm.
-    armlearn::Input<int16_t> *currentTarget;
-
 
     /// Iterator of the vactor of training trajectories
     std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator trainingIterator;
@@ -111,6 +110,10 @@ protected:
         
     /// Current generation
     int generation = 0;
+
+    /// Target currently used to move the arm.
+    armlearn::Input<int16_t> *currentTarget;
+
 
 public:
 
@@ -142,14 +145,13 @@ public:
      * \param[in] handServosTrained boolean controlling whether the 2 servos
      * controlling the hand of the robotic arm are trained.
      */
-    ArmLearnWrapper(int nbMaxActions, double coefRewardNbIterations=0, bool handServosTrained = false)
+    ArmLearnWrapper(int nbMaxActions, TrainingParameters params, bool handServosTrained = false)
             : LearningEnvironment((handServosTrained) ? 13 : 9), handServosTrained(handServosTrained),
               trainingIterator(), validationIterator(), trainingValidationIterator(),
-              nbMaxActions(), coefRewardNbIterations(),
-              motorPos(6), cartesianPos(3), cartesianDif(3),
-              DeviceLearner(iniController()) {
-        this->nbMaxActions = nbMaxActions;
-        this->coefRewardNbIterations = coefRewardNbIterations;
+              nbMaxActions(nbMaxActions), motorPos(6), cartesianPos(3), cartesianDif(3),
+              DeviceLearner(iniController()), params(params) {
+        if (params.progressiveModeStartingPos) this->currentMaxLimitStartingPos=params.maxLengthStartingPos;
+        if (params.progressiveModeTargets) this->currentMaxLimitTarget=params.maxLengthTargets;
     }
 
     /**
@@ -159,10 +161,9 @@ public:
                                                     trainingIterator(other.trainingIterator),
                                                     validationIterator(other.validationIterator), 
                                                     trainingValidationIterator(other.trainingValidationIterator),
-                                                    nbMaxActions(other.nbMaxActions),  coefRewardNbIterations(other.coefRewardNbIterations),
-                                                    motorPos(other.motorPos), cartesianPos(other.cartesianPos),
-                                                    cartesianDif(other.cartesianDif), DeviceLearner(iniController()) {
-
+                                                    nbMaxActions(other.nbMaxActions), motorPos(other.motorPos),
+                                                    cartesianPos(other.cartesianPos), cartesianDif(other.cartesianDif),
+                                                    DeviceLearner(iniController()), params(other.params) {
         this->reset(0);
         computeInput();
     }
@@ -177,6 +178,8 @@ public:
     /// @brief Inherited via LearningEnvironment
     void doAction(uint64_t actionID) override;
 
+    /// Do a multi continuous action.
+    void doActionContinuous(std::vector<float> actions);
 
     /// @brief Inherited via LearningEnvironment
     void reset(size_t seed = 0, Learn::LearningMode mode = Learn::LearningMode::TRAINING) override;
@@ -187,7 +190,7 @@ public:
     std::vector<std::reference_wrapper<const Data::DataHandler>> getDataSources() override;
 
     /// @brief Clear a given proportion of the current set of training targets 
-    void clearPropTrainingTrajectories(double prop, bool doRandomStartingPos);
+    void clearPropTrainingTrajectories();
 
 
 
@@ -215,10 +218,8 @@ public:
      * Finally one target is created for each random starting position
      * 
      * @param[in] nbTrajectories Number of trajectories to create in total
-     * @param[in] doRandomStartingPosition true if the starting position are random, else they are all set to the init one
-     * @param[in] propTrajectoriesReused proportion of trajectories reused (not deleted)
      */ 
-    void updateTrainingTrajectories(int nbTrajectories, bool doRandomStartingPosition, double propTrajectoriesReused);
+    void updateTrainingTrajectories(int nbTrajectories);
 
     /** 
      * @brief Update the vector of training validation trajectories, which mean deleting the trajectories,
@@ -226,10 +227,8 @@ public:
      * Finally one target is created for each random starting position
      * 
      * @param[in] nbTrajectories Number of trajectories to create in total
-     * @param[in] doRandomStartingPosition true if the starting position are random, else they are all set to the init one
-     * @param[in] propTrajectoriesReused proportion of trajectories reused (not deleted)
      */ 
-    void updateTrainingValidationTrajectories(int nbTrajectories, bool doRandomStartingPosition, double propTrajectoriesReused);
+    void updateTrainingValidationTrajectories(int nbTrajectories);
 
     /** 
      * @brief Update the vector of validation trajectories, which mean deleting all current trajectories,
@@ -269,6 +268,12 @@ public:
     void customTrajectory(armlearn::Input<int16_t> *newGoal, std::vector<uint16_t> startingPos, bool validation = false);
 
     /**
+     * @brief Check if the current limits for starting position and targets have to be updated based on the bestResult
+     * If the limits are updated, the trajectories are updated based on the nbIterationsPerPolicyEvaluation 
+     */ 
+    void updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation);
+
+    /**
      * @brief Returns a string logging the goal (to use e.g. when there is a goal change)
      */ 
     std::string newGoalToString() const;
@@ -287,6 +292,12 @@ public:
      * @brief Inherited via DeviceLearner
      */ 
     virtual void test() override {}
+
+    /// Save the validation trajectories in a ValidationTrajectories.txt file
+    void saveValidationTrajectories();
+
+    /// Load the validation trajectories from a ValidationTrajectories.txt file
+    void loadValidationTrajectories();
 
     /**
      * @brief Inherited via DeviceLearner
@@ -315,14 +326,8 @@ public:
      */ 
     void setInitStartingPos(std::vector<uint16_t> newInitStartingPos);
 
-    /// Set new currentMaxLimitTarget
-    void setCurrentMaxLimitTarget(double newCurrentMaxLimitTarget);
-
     /// Get currentMaxLimitTarget
     double getCurrentMaxLimitTarget();
-
-    /// Set new currentMaxLimitStartingPos
-    void setCurrentMaxLimitStartingPos(double newCurrentMaxLimitStartingPos);
 
     /// Get currentMaxLimitStartingPos
     double getCurrentMaxLimitStartingPos();

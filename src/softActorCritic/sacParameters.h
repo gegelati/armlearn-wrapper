@@ -1,6 +1,6 @@
 
-#ifndef TRAINING_PARAMETERS_H
-#define TRAINING_PARAMETERS_H
+#ifndef SAC_PARAMETERS_H
+#define SAC_PARAMETERS_H
 
 #include <thread>
 #include <iostream>
@@ -9,7 +9,7 @@ namespace Json {
     class Value;
 }
 
-class TrainingParameters {
+class SACParameters {
 
 
 private:
@@ -63,47 +63,39 @@ private:
                                 Json::Value const& value);
 
 public:
-    /// True if the starting positions are set randomly
-    bool doRandomStartingPosition = true;
+    /// Learning rate of the models
+    double lr = 0.003;
 
-    /// True if the sphere will grow progressivly
-    bool progressiveModeTargets = true;
+    /// Gamma for bellman equation
+    double gamma = 0.99;
 
-    /// Init size of the sphere within which the target will be instantiate
-    double maxLengthTargets = 30.0;
+    /// Reward scale 
+    double rewardScale = 2.0;
 
-    /// True if the sphere will grow progressivly
-    bool progressiveModeStartingPos = true;
+    /// Size of the buffer
+    int sizeBuffer = 100000;
 
-    /// Init size of the sphere within which the target will be instantiate
-    double maxLengthStartingPos = 30.0;
+    /// Batch size of training iterations
+    int batchSize = 256;
 
-    /// Upgrade coefficient of the sphere
-    double coefficientUpgrade = 1.2;
+    /// Coefficient to update the targetValue model
+    double tau = 0.005;
 
-    /// Number of consecuitive iterations before upgrading the sphere
-    int nbIterationsUpgrade = 3;
+    /// Size of the first layer of the models
+    int sizeHL1 = 256;
 
-    /// Threshold that the best TPG has to surpass to increment the upgrade coefficient
-    double thresholdUpgrade = -3.0;
+    /// Size of the second layer of the models
+    int sizeHL2 = 256;
 
-    /// True to start with a previous TPG
-    bool startPreviousTPG = false;
+    /// True to load the models
+    bool loadModels = false;
 
-    /// Name of the file of previous TPG
-    std::string namePreviousTPG = "";
+    /// True to unable multiple actions
+    bool multipleActions = true;
 
-    /// Proportion of targets reused at each generation
-    double propTrajectoriesReused = 1;
+    /// True to unable continuous actions. Note : actions can only be continuous if multiple actions is unable
+    bool continuousActions = true;
 
-    /// Proportion of targets reused at each generation
-    double coefRewardNbIterations = 0;
-
-    /// true to load the validation trajectories
-    bool loadValidationTrajectories = false;
-
-    /// true to save the validation trajectories
-    bool saveValidationTrajectories = false;
 
     /**
      * \brief Loads a given json file and fills the parameters it contains
