@@ -128,30 +128,57 @@ int main() {
     }
 
     // Train for params.nbGenerations generations
-    for (int i = 0; i < params.nbGenerations && !exitProgram; i++) {
+    for (uint64_t i = 0; i < params.nbGenerations && !exitProgram; i++) {
         armLearnEnv.setgeneration(i);
 
 
         // Update/Generate the training trajectories
         armLearnEnv.updateTrainingTrajectories(params.nbIterationsPerPolicyEvaluation);
 
-
-
 	    //print the previous graphs
         char buff[16];
-        sprintf(buff, "out_%04d.dot", i);
+        sprintf(buff, "out_%04d.dot", static_cast<uint16_t>(i));
         dotExporter.setNewFilePath(buff);
         dotExporter.print();
 
-        // we train the TPG, see doaction for the reward function
-        la.trainOneGeneration(i);
+        // Log new generation
+        logFile.logNewGeneration(i);
+        logCout.logNewGeneration(i);
+
+        // Populate Sequentially
+        Mutator::TPGMutator::populateTPG(*la.getTPGGraph(), la.getArchive(),
+                                        params.mutation, la.getRNG(),
+                                        params.nbThreads);
+
+        logFile.logAfterPopulateTPG();
+        logCout.logAfterPopulateTPG();
+
+        // Evaluate
+        auto results = la.evaluateAllRoots(i, Learn::LearningMode::TRAINING);
+        logFile.logAfterEvaluate(results);
+        logCout.logAfterEvaluate(results);
+
+        // Remove worst performing roots
+        la.decimateWorstRoots(results);
+
+        // Update the best
+        la.updateEvaluationRecords(results);
+
+        logFile.logAfterDecimate();
+        logCout.logAfterDecimate();
+
+        // Does a validation or not according to the parameter doValidation
+        if (params.doValidation) {
+            auto validationResults = la.evaluateAllRoots(i, Learn::LearningMode::VALIDATION);
+            logFile.logAfterValidate(validationResults);
+            logCout.logAfterValidate(validationResults);
+        }
 
         // Does a validation or not according to the parameter doValidation
         if (doValidationTarget) {
-            auto validationResults =
-                la.evaluateAllRoots(i, Learn::LearningMode::TESTING);
-            logFile.logAfterValidate(validationResults);
-            logCout.logAfterValidate(validationResults);
+            auto trainingValidationResults = la.evaluateAllRoots(i, Learn::LearningMode::TESTING);
+            logFile.logAfterTrainingValidate(trainingValidationResults);
+            logCout.logAfterTrainingValidate(trainingValidationResults);
         
 
             // log the current max limit
@@ -159,12 +186,14 @@ int main() {
             logCout.logEnvironnementStatus(armLearnEnv.getCurrentMaxLimitTarget(), armLearnEnv.getCurrentMaxLimitStartingPos());
             
             // Get the best result of the training validation
-            auto iter = validationResults.begin();
-            std::advance(iter, validationResults.size() - 1);
+            auto iter = trainingValidationResults.begin();
+            std::advance(iter, trainingValidationResults.size() - 1);
             double bestResult = iter->first->getResult();
 
             armLearnEnv.updateCurrentLimits(bestResult, params.nbIterationsPerPolicyEvaluation);
         }
+        logFile.logEndOfTraining();
+        logCout.logEndOfTraining();
 
     }
 

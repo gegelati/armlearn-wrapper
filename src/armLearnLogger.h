@@ -21,12 +21,18 @@ namespace Log {
         /**
          * Width of columns when logging values.
          */
-        int colWidth = 12;
+        int colWidth = 10;
 
         /**
          * Boolean that indicate if a training validation is done
          */
         bool doTrainingValidation;
+
+        /**
+         * Keeps the duration of the training validation to be able to log it
+         * some time after it is computed.
+         */
+        double trainingValidTime = 0.0;
 
         /**
          * \brief Logs the min, avg and max score of the generation.
@@ -118,6 +124,19 @@ namespace Log {
         virtual void logAfterValidate(
             std::multimap<std::shared_ptr<Learn::EvaluationResult>,
                           const TPG::TPGVertex*>& results) override;
+
+        /**
+         *
+         * \brief Logs the min, avg and max score of the generation.
+         *
+         * If doTrainingValidation is true, no eval results are logged so that
+         * the logger can only show validation results.
+         *
+         * \param[in] results scores of the validation.
+         */
+        void logAfterTrainingValidate(
+            std::multimap<std::shared_ptr<Learn::EvaluationResult>,
+                          const TPG::TPGVertex*>& results);
 
         /**
          * Inherited via LaLogger

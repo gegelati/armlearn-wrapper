@@ -33,6 +33,10 @@ void Log::ArmLearnLogger::logHeader()
         *this << std::setw(2 * colWidth) << " " << std::setw(1 * colWidth)
               << "Valid";
     }
+    if (doTrainingValidation) {
+        *this << std::setw(2 * colWidth) << " " << std::setw(1 * colWidth)
+              << "Train Valid";
+    }
     *this << std::endl;
 
     // Second line of header
@@ -44,12 +48,6 @@ void Log::ArmLearnLogger::logHeader()
         *this << std::setw(colWidth) << "Min" << std::setw(colWidth) << "Avg"
               << std::setw(colWidth) << "Max";
     }
-    *this << std::setw(colWidth) << "T_mutat" << std::setw(colWidth)
-          << "T_eval";
-    if (doValidation) {
-        *this << std::setw(colWidth) << "T_valid";
-    }
-    *this << std::setw(colWidth) << "T_total"; 
 
     if (doTrainingValidation) {
         *this << std::setw(colWidth) << "Min" << std::setw(colWidth) << "Avg"
@@ -59,6 +57,18 @@ void Log::ArmLearnLogger::logHeader()
         *this << std::setw(colWidth) << "S_Targ"; 
         *this << std::setw(colWidth) << "S_StartP";
     }
+
+    *this << std::setw(colWidth) << "T_mutat" << std::setw(colWidth)
+          << "T_eval";
+    if (doValidation) {
+        *this << std::setw(colWidth) << "T_val";
+    }
+    if (doTrainingValidation) {
+        *this << std::setw(colWidth) << "T_TrVal";
+    }
+    *this << std::setw(colWidth) << "T_total"; 
+
+
     *this << std::endl;
     
 }
@@ -89,8 +99,6 @@ void Log::ArmLearnLogger::logAfterEvaluate(
 
     logResults(results);
     
-    
-
     // resets checkpoint to be able to show validation time if there is some
     chronoFromNow();
 }
@@ -106,6 +114,17 @@ void Log::ArmLearnLogger::logAfterValidate(
     logResults(results);
 }
 
+void Log::ArmLearnLogger::logAfterTrainingValidate(
+    std::multimap<std::shared_ptr<Learn::EvaluationResult>,
+                  const TPG::TPGVertex*>& results)
+{
+    trainingValidTime = getDurationFrom(*checkpoint);
+
+    // being in this method means training validation is active, and so we are sure we
+    // can log results
+    logResults(results);
+}
+
 void Log::ArmLearnLogger::logEndOfTraining()
 {
     *this << std::setw(colWidth) << mutationTime;
@@ -113,11 +132,14 @@ void Log::ArmLearnLogger::logEndOfTraining()
     if (doValidation) {
         *this << std::setw(colWidth) << validTime;
     }
-    *this << std::setw(colWidth) << getDurationFrom(*start);
+    if (doTrainingValidation){
+        *this << std::setw(colWidth) << trainingValidTime;
+    }
+    *this << std::setw(colWidth) << getDurationFrom(*start) << std::endl;
 }
 
 void Log::ArmLearnLogger::logEnvironnementStatus(double envSizeTargets, double envSizeStartingPos)
 {
     *this << std::setw(colWidth) << envSizeTargets;
-    *this << std::setw(colWidth) << envSizeStartingPos << std::endl;
+    *this << std::setw(colWidth) << envSizeStartingPos;
 }
