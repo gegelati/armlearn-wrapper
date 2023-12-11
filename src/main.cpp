@@ -74,7 +74,7 @@ int main() {
 
     // Instantiate and init the learning agent
     Learn::ParallelLearningAgent la(armLearnEnv, set, params);
-    la.init();
+    la.init(trainingParams.seed);
 
 #ifndef NO_CONSOLE_CONTROL
     std::atomic<bool> exitProgram = true; // (set to false by other thread)

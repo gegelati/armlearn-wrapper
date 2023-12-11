@@ -105,6 +105,9 @@ public:
     /// true to save the validation trajectories
     bool saveValidationTrajectories = false;
 
+    /// Seed to init the algorithm
+    uint64_t seed = 0;
+
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.

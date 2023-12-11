@@ -25,7 +25,9 @@
 	// The formula is : reward = init_reward - coefRewardNbIterations * (nbActionTaken / nbMaxActionTaken)
 	"coefRewardNbIterations": 1,
 	// true to load the validation trajectories
-	"loadValidationTrajectories": true,
+	"loadValidationTrajectories": false,
 	// true to save the validation trajectories
-	"saveValidationTrajectories": false
+	"saveValidationTrajectories": true,
+	// Seed to init the algorithm (gegelati or SAC)
+	"seed": 42
 }
