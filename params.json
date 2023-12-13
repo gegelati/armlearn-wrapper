@@ -12,7 +12,7 @@
 	// Maximum number of actions performed on the learning environment during the
 	// each evaluation of a root.
 	// "maxNbActionsPerEval" : 1000, // Default value
-	"maxNbActionsPerEval" : 5000,
+	"maxNbActionsPerEval" : 50,
 	// Maximum number of times a given root is evaluated.After this number is
 	// reached, possibly after several generations, the score of the root will be
 	// fixed, and no further evaluation will be done.
@@ -101,7 +101,7 @@
 	// Number of evaluation of each root per generation.
 	// "nbIterationsPerPolicyEvaluation" : 5, // Default value
 
-	"nbIterationsPerPolicyEvaluation" : 20,
+	"nbIterationsPerPolicyEvaluation" : 2,
 
 	// Number of Constant available in each Program.
 	// "nbProgramConstant" : 0, // Default value

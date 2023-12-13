@@ -50,10 +50,10 @@ int main() {
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
+    File::ParametersParser::loadParametersFromJson("params.json", params);
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson(ROOT_DIR "/trainParams.json");
+    trainingParams.loadParametersFromJson("trainParams.json");
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams);
