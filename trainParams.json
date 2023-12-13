@@ -29,5 +29,7 @@
 	// true to save the validation trajectories
 	"saveValidationTrajectories": true,
 	// Seed to init the algorithm (gegelati or SAC)
-	"seed": 42
+	"seed": 42,
+	// Set interactive mode or not (usefull for calcul machine)
+	"interactiveMode": true
 }

@@ -76,15 +76,20 @@ int main() {
     Learn::ParallelLearningAgent la(armLearnEnv, set, params);
     la.init(trainingParams.seed);
 
-#ifndef NO_CONSOLE_CONTROL
-    std::atomic<bool> exitProgram = true; // (set to false by other thread)
+    std::atomic<bool> exitProgram = false; // (set to false by other thread)
+    std::thread threadKeyboard;
 
-    std::thread threadKeyboard(getKey, std::ref(exitProgram));
+    if (trainingParams.interactiveMode){
+#ifndef NO_CONSOLE_CONTROL
+
+    threadKeyboard = std::thread(getKey, std::ref(exitProgram));
 
     while (exitProgram); // Wait for other thread to print key info.
 #else
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
 #endif
+    }
+
 
     // If a validation target is done
     bool doValidationTarget = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
@@ -221,11 +226,13 @@ int main() {
         delete (&set.getInstruction(i));
     }
 
+    if (trainingParams.interactiveMode) {
 #ifndef NO_CONSOLE_CONTROL
     // Exit the thread
     std::cout << "Exiting program, press a key then [enter] to exit if nothing happens.";
     threadKeyboard.join();
 #endif
+    }
 
     return 0;
 }

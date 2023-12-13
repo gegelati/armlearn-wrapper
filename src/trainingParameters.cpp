@@ -113,6 +113,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "interactiveMode"){
+        interactiveMode = (bool)value.asBool();
+        return;
+    }
+
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }

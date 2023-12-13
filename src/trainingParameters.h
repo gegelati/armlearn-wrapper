@@ -108,6 +108,9 @@ public:
     /// Seed to init the algorithm
     uint64_t seed = 0;
 
+    /// Set interactive mode or not (usefull for calcul machine)
+    bool interactiveMode = false;
+
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.
