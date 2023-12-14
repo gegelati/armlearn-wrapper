@@ -50,10 +50,10 @@ int main() {
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson("params.json", params);
+    File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", params);
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson("trainParams.json");
+    trainingParams.loadParametersFromJson(ROOT_DIR "/trainParams.json");
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams);
@@ -172,16 +172,34 @@ int main() {
         logFile.logAfterDecimate();
         logCout.logAfterDecimate();
 
+        // Créez la nouvelle std::multimap pour stocker les 5 derniers éléments
+        std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> saveResults;
+
+        // Utilisez un itérateur pour parcourir la std::multimap d'origine à partir de la fin
+        auto it = results.rbegin();
+        for (int i = 0; i < 5 && it != results.rend(); ++i, ++it) {
+            // Ajoutez les éléments à la nouvelle std::multimap
+            saveResults.insert(*it);
+        }
+
         // Does a validation or not according to the parameter doValidation
         if (params.doValidation) {
-            auto validationResults = la.evaluateAllRoots(i, Learn::LearningMode::VALIDATION);
+            //auto validationResults = la.evaluateAllRoots(i, Learn::LearningMode::VALIDATION);
+            std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> validationResults;
+            for (const auto& pair : saveResults) {
+                validationResults.insert(std::make_pair(la.evaluateOneRoot(i, Learn::LearningMode::VALIDATION, pair.second), pair.second));
+            }
             logFile.logAfterValidate(validationResults);
             logCout.logAfterValidate(validationResults);
         }
 
         // Does a validation or not according to the parameter doValidation
         if (doValidationTarget) {
-            auto trainingValidationResults = la.evaluateAllRoots(i, Learn::LearningMode::TESTING);
+            //auto trainingValidationResults = la.evaluateAllRoots(i, Learn::LearningMode::TESTING);
+            std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> trainingValidationResults;
+            for (const auto& pair : saveResults) {
+                trainingValidationResults.insert(std::make_pair(la.evaluateOneRoot(i, Learn::LearningMode::TESTING, pair.second), pair.second));
+            }
             logFile.logAfterTrainingValidate(trainingValidationResults);
             logCout.logAfterTrainingValidate(trainingValidationResults);
         

@@ -112,6 +112,8 @@ void Log::ArmLearnLogger::logAfterValidate(
     // being in this method means validation is active, and so we are sure we
     // can log results
     logResults(results);
+
+    chronoFromNow();
 }
 
 void Log::ArmLearnLogger::logAfterTrainingValidate(
