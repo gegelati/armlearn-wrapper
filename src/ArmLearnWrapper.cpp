@@ -538,7 +538,7 @@ Learn::LearningEnvironment *ArmLearnWrapper::clone() const {
 
 void ArmLearnWrapper::saveValidationTrajectories() {
     // Create file
-    std::ofstream outFile("params/ValidationTrajectories.txt");
+    std::ofstream outFile("/params/ValidationTrajectories.txt");
 
     if (outFile.is_open()) {
         // For each validation trajectories
@@ -570,7 +570,7 @@ void ArmLearnWrapper::loadValidationTrajectories() {
     validationTrajectories.clear();
 
     // Get file
-    std::ifstream inFile("params/ValidationTrajectories.txt");
+    std::ifstream inFile("/params/ValidationTrajectories.txt");
 
     if (inFile.is_open()) {
         int value;
