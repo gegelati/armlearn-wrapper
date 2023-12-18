@@ -348,7 +348,6 @@ void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
 
     // Clear all the current validation trajectories
     std::for_each(validationTrajectories.begin(), validationTrajectories.end(), [this](auto& pair){
-         if (this->params.doRandomStartingPosition) delete pair.first; // check doublon pointeur
          delete pair.second;
     }); 
     validationTrajectories.clear();
@@ -562,16 +561,15 @@ void ArmLearnWrapper::saveValidationTrajectories() {
 
 void ArmLearnWrapper::loadValidationTrajectories() {
 
+
     // Clear the trajectories
     std::for_each(validationTrajectories.begin(), validationTrajectories.end(), [this](auto& pair){
-        if (this->params.doRandomStartingPosition) delete pair.first; // check doublon pointeur
         delete pair.second;
     }); 
     validationTrajectories.clear();
 
     // Get file
     std::ifstream inFile("/params/ValidationTrajectories.txt");
-
     if (inFile.is_open()) {
         int value;
         inFile >> value;
