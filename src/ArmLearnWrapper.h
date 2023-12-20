@@ -70,6 +70,8 @@ protected:
 
     int nbActionsInThreshold=0;
 
+    bool isMoving=true;
+
     /// Maximum number of actions doable in an episode 
     int nbMaxActions;
 
@@ -152,6 +154,7 @@ public:
               DeviceLearner(iniController()), params(params) {
         if (params.progressiveModeStartingPos) this->currentMaxLimitStartingPos=params.maxLengthStartingPos;
         if (params.progressiveModeTargets) this->currentMaxLimitTarget=params.maxLengthTargets;
+        rng.setSeed(params.seed);
     }
 
     /**
@@ -242,7 +245,7 @@ public:
     /**
      * @brief Create and return a random position with the motors
      */
-    std::vector<uint16_t> randomMotorPos();
+    std::vector<uint16_t> randomMotorPos(bool validation);
 
     /**
      * @brief Create and return a random starting position for the arm

@@ -134,7 +134,7 @@ namespace Log {
          *
          * \param[in] results scores of the validation.
          */
-        void logAfterTrainingValidate(
+        virtual void logAfterTrainingValidate(
             std::multimap<std::shared_ptr<Learn::EvaluationResult>,
                           const TPG::TPGVertex*>& results);
 
@@ -152,7 +152,7 @@ namespace Log {
          * \param envSizeTargets Size of the environnement for the targets
          * \param envSizeStartingPos Size of the environnement for the starting positions
          */
-        void logEnvironnementStatus(double envSizeTargets, double envSizeStartingPos);
+        virtual void logEnvironnementStatus(double envSizeTargets, double envSizeStartingPos);
 
     };
 

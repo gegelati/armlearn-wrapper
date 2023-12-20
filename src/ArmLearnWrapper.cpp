@@ -77,6 +77,7 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
             break;
         case 8:
             out = {0, 0, 0, 0, 0, 0};
+            isMoving=false;
             break;
 
             // Following cases only when the hand is trained
@@ -186,7 +187,7 @@ double ArmLearnWrapper::computeReward() {
         nbActionsInThreshold++;
 
         // If the counter reach 10 or terminal is true (because the arm can stop and set terminal=true with action 8)
-        if(nbActionsInThreshold == 10){
+        if(nbActionsInThreshold == 10 || !isMoving){
             terminal = true;
             return 1000;
         }
@@ -197,6 +198,10 @@ double ArmLearnWrapper::computeReward() {
     } else{
         // reset counter
         nbActionsInThreshold=0;
+
+        if(!isMoving){
+            terminal = true;
+        }
 
         // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)
         return  -err/params.maxLengthTargets;
@@ -246,6 +251,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
     nbActions = 0;
     terminal = false;
     nbActionsInThreshold=0;
+    isMoving = true;
 }
 
 
@@ -368,7 +374,7 @@ void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
     validationIterator = validationTrajectories.begin();
 }
 
-std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(){
+/*std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(){
     uint16_t i, j, k, l;
     std::vector<uint16_t> newMotorPos, validMotorPos;
 
@@ -377,6 +383,37 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(){
     j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
     k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
     l = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+
+    // Create the vector of motor positions
+    newMotorPos = {i,j,k,l,512,256};
+
+    // Use this function to convert the vector of motor positions into a valid one
+    validMotorPos = device->toValidPosition(newMotorPos);
+
+    return validMotorPos;
+}*/
+
+std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation){
+    uint16_t i, j, k, l;
+    std::vector<uint16_t> newMotorPos, validMotorPos;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::normal_distribution<double> distribution(2048, currentMaxLimitTarget);
+
+    if(!validation){
+        // Get random motor coordonates
+        i = (int16_t) std::max(std::min(distribution(gen), 4096.0),0.0);
+        j = (int16_t) std::max(std::min(distribution(gen), 4096.0),0.0);
+        k = (int16_t) std::max(std::min(distribution(gen), 4096.0),0.0);
+        l = (int16_t) std::max(std::min(distribution(gen), 4096.0),0.0);
+    }
+    else{
+        i = (int16_t) (rng.getUnsignedInt64(1, 4094));
+        j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+        k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+        l = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+    }
 
     // Create the vector of motor positions
     newMotorPos = {i,j,k,l,512,256};
@@ -398,7 +435,7 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
     // Do one time then only while the distance is above the distance between the new starting position and the initial one
     do {
         // Get a random motor positions
-        motorPos = randomMotorPos();
+        motorPos = randomMotorPos(validation);
 
         // Compute the cartesian coordonates of those motor positions
         newStartingPos = converter->computeServoToCoord(motorPos)->getCoord();
@@ -420,18 +457,21 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> star
     // Init the distance at -1 to be sure that the while condition never return true during validation
     double distance = -1;
 
+    int i =0;
+
     // Do one time then only while the distance is above the distance to browse
     do {
         // Get a random motor positions
-        motorPos = randomMotorPos();
+        motorPos = randomMotorPos(validation);
 
         // Compute the cartesian coordonates of those motor positions
         newCartesianCoords = converter->computeServoToCoord(motorPos)->getCoord();
 
         // Compute the distance to browse
         distance = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
+        
+    } while (!validation && distance > 100000);
 
-    } while (!validation && distance > currentMaxLimitTarget);
     // Create the input to return
     return new armlearn::Input<int16_t>(
     {
@@ -470,14 +510,14 @@ void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPer
 
             // Upgrade the limit of tagets
             if (params.progressiveModeTargets){
-                currentMaxLimitTarget = std::min(currentMaxLimitTarget * params.coefficientUpgrade, currentMaxLimitTarget + 30);
-                currentMaxLimitTarget = std::min(currentMaxLimitTarget, 1000.0d);
+                currentMaxLimitTarget = std::min(currentMaxLimitTarget * params.coefficientUpgrade, currentMaxLimitTarget + 20);
+                currentMaxLimitTarget = std::min(currentMaxLimitTarget, 10000.0d);
             }
 
 
             // Upgrade the limit of starting positions
             if (params.progressiveModeStartingPos){
-                currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * params.coefficientUpgrade, currentMaxLimitStartingPos + 30);
+                currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * params.coefficientUpgrade, currentMaxLimitStartingPos + 100);
                 currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos, 200.0d);
             }
 

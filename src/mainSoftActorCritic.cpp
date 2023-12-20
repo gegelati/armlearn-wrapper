@@ -44,9 +44,6 @@ void getKey(std::atomic<bool>& exit) {
 int main() {
     std::cout << "Start ArmLearner application." << std::endl;
 
-    // Set random seed
-    torch::manual_seed(4564684687468876);
-
     // Create the instruction set for programs
 	Instructions::Set set;
 	fillInstructionSet(set);
@@ -54,15 +51,16 @@ int main() {
     // Set the parameters from Gegelati.
     // Loads them from "params.json" file
     Learn::LearningParameters gegelatiParams;
-    File::ParametersParser::loadParametersFromJson(ROOT_DIR "/params.json", gegelatiParams);
+    File::ParametersParser::loadParametersFromJson("params/params.json", gegelatiParams);
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson(ROOT_DIR "/trainParams.json");
+    trainingParams.loadParametersFromJson("params/trainParams.json");
 
     SACParameters sacParams;
-    sacParams.loadParametersFromJson(ROOT_DIR "/sacParams.json");
+    sacParams.loadParametersFromJson("params/sacParams.json");
 
-
+    // Set random seed
+    torch::manual_seed(trainingParams.seed);
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams);

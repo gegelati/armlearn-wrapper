@@ -12,6 +12,7 @@
 #include "armLearnLogger.h"
 
 #include "ArmLearnWrapper.h"
+#include "armLearningAgent.h"
 
 
 void getKey(std::atomic<bool>& exit) {
@@ -50,10 +51,10 @@ int main() {
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson("/params/params.json", params);
+    File::ParametersParser::loadParametersFromJson("params/params.json", params);
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson("/params/trainParams.json");
+    trainingParams.loadParametersFromJson("params/trainParams.json");
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams);
@@ -71,9 +72,12 @@ int main() {
         armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
     }
 
+    // If a validation target is done
+    bool doValidationTarget = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
 
     // Instantiate and init the learning agent
-    Learn::ParallelLearningAgent la(armLearnEnv, set, params);
+    Learn::ArmLearningAgent la(armLearnEnv, set, params, doValidationTarget);
+
     la.init(trainingParams.seed);
 
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
@@ -91,11 +95,9 @@ int main() {
     }
 
 
-    // If a validation target is done
-    bool doValidationTarget = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
 
     //Creation of the Output stream on cout and on the file
-    std::ofstream fichier("/outLogs/logs.ods", std::ios::out);
+    std::ofstream fichier("outLogs/logs.ods", std::ios::out);
     auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,fichier);
     auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget);
 
@@ -108,18 +110,18 @@ int main() {
 
     // File for printing best policy stat.
     std::ofstream stats;
-    stats.open("/outLogs/bestPolicyStats.md");
+    stats.open("outLogs/bestPolicyStats.md");
     Log::LAPolicyStatsLogger logStats(la, stats);
 
     // Create an exporter for all graphs
-    File::TPGGraphDotExporter dotExporter("/outLogs/out_0000.dot", *la.getTPGGraph());
+    File::TPGGraphDotExporter dotExporter("outLogs/out_0000.dot", *la.getTPGGraph());
 
 
     // Use previous Graphs
     if(trainingParams.startPreviousTPG){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, armLearnEnv.getDataSources(), 8);
-        File::TPGGraphDotImporter dotImporter((std::string(ROOT_DIR) + "/build/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
+        File::TPGGraphDotImporter dotImporter(std::string("outLogs/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
     }
 
     // Save the validation trajectories
@@ -142,88 +144,18 @@ int main() {
 
 	    //print the previous graphs
         char buff[16];
-        sprintf(buff, "/outLogs/out_%04d.dot", static_cast<uint16_t>(i));
+        sprintf(buff, "outLogs/out_%04d.dot", static_cast<uint16_t>(i));
         dotExporter.setNewFilePath(buff);
         dotExporter.print();
 
-        // Log new generation
-        logFile.logNewGeneration(i);
-        logCout.logNewGeneration(i);
-
-        // Populate Sequentially
-        Mutator::TPGMutator::populateTPG(*la.getTPGGraph(), la.getArchive(),
-                                        params.mutation, la.getRNG(),
-                                        params.nbThreads);
-
-        logFile.logAfterPopulateTPG();
-        logCout.logAfterPopulateTPG();
-
-        // Evaluate
-        auto results = la.evaluateAllRoots(i, Learn::LearningMode::TRAINING);
-        logFile.logAfterEvaluate(results);
-        logCout.logAfterEvaluate(results);
-
-        // Remove worst performing roots
-        la.decimateWorstRoots(results);
-
-        // Update the best
-        la.updateEvaluationRecords(results);
-
-        logFile.logAfterDecimate();
-        logCout.logAfterDecimate();
-
-        // Créez la nouvelle std::multimap pour stocker les 5 derniers éléments
-        std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> saveResults;
-
-        // Utilisez un itérateur pour parcourir la std::multimap d'origine à partir de la fin
-        auto it = results.rbegin();
-        for (int i = 0; i < 5 && it != results.rend(); ++i, ++it) {
-            // Ajoutez les éléments à la nouvelle std::multimap
-            saveResults.insert(*it);
-        }
-
-        // Does a validation or not according to the parameter doValidation
-        if (params.doValidation) {
-            //auto validationResults = la.evaluateAllRoots(i, Learn::LearningMode::VALIDATION);
-            std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> validationResults;
-            for (const auto& pair : saveResults) {
-                validationResults.insert(std::make_pair(la.evaluateOneRoot(i, Learn::LearningMode::VALIDATION, pair.second), pair.second));
-            }
-            logFile.logAfterValidate(validationResults);
-            logCout.logAfterValidate(validationResults);
-        }
-
-        // Does a validation or not according to the parameter doValidation
-        if (doValidationTarget) {
-            //auto trainingValidationResults = la.evaluateAllRoots(i, Learn::LearningMode::TESTING);
-            std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> trainingValidationResults;
-            for (const auto& pair : saveResults) {
-                trainingValidationResults.insert(std::make_pair(la.evaluateOneRoot(i, Learn::LearningMode::TESTING, pair.second), pair.second));
-            }
-            logFile.logAfterTrainingValidate(trainingValidationResults);
-            logCout.logAfterTrainingValidate(trainingValidationResults);
-        
-
-            // log the current max limit
-            logFile.logEnvironnementStatus(armLearnEnv.getCurrentMaxLimitTarget(), armLearnEnv.getCurrentMaxLimitStartingPos());
-            logCout.logEnvironnementStatus(armLearnEnv.getCurrentMaxLimitTarget(), armLearnEnv.getCurrentMaxLimitStartingPos());
-            
-            // Get the best result of the training validation
-            auto iter = trainingValidationResults.begin();
-            std::advance(iter, trainingValidationResults.size() - 1);
-            double bestResult = iter->first->getResult();
-
-            armLearnEnv.updateCurrentLimits(bestResult, params.nbIterationsPerPolicyEvaluation);
-        }
-        logFile.logEndOfTraining();
-        logCout.logEndOfTraining();
+        la.trainOneGeneration(i);
 
     }
 
 
     // Keep best policy
     la.keepBestPolicy();
-    dotExporter.setNewFilePath("/outLogs/out_best.dot");
+    dotExporter.setNewFilePath("outLogs/out_best.dot");
     dotExporter.print();
 
 
@@ -232,7 +164,7 @@ int main() {
     ps.setEnvironment(la.getTPGGraph()->getEnvironment());
     ps.analyzePolicy(la.getBestRoot().first);
     std::ofstream bestStats;
-    bestStats.open("/outLogs/out_best_stats.md");
+    bestStats.open("outLogs/out_best_stats.md");
     bestStats << ps;
     bestStats.close();
 
