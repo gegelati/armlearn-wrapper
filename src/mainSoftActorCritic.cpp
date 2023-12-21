@@ -44,9 +44,10 @@ int main() {
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams);
 
-    // Prompt the number of threads and set it to torch
-    std::cout << "Number of threads: " << gegelatiParams.nbThreads << std::endl;
+    // Set and Prompt the number of threads
     torch::set_num_threads(gegelatiParams.nbThreads);
+    std::cout << "Number of threads: " << torch::get_num_threads() << std::endl;
+
 
     // If a validation target is done
     bool doTrainingValidation = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
