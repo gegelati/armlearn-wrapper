@@ -64,7 +64,12 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
     }
 
     if (param == "coefficientUpgrade") {
-        coefficientUpgrade = (double)value.asDouble();
+        coefficientUpgradeMult = (double)value.asDouble();
+        return;
+    }
+
+    if (param == "coefficientUpgrade") {
+        coefficientUpgradeAdd = (double)value.asDouble();
         return;
     }
 

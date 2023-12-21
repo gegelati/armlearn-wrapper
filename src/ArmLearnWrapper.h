@@ -46,6 +46,7 @@ protected:
 
     /// Randomness control
     Mutator::RNG rng;
+    std::mt19937 gen;
 
     /// Current motor position 
     Data::PrimitiveTypeArray<double> motorPos;
@@ -151,11 +152,11 @@ public:
             : LearningEnvironment((handServosTrained) ? 13 : 9), handServosTrained(handServosTrained),
               trainingIterator(), validationIterator(), trainingValidationIterator(),
               nbMaxActions(nbMaxActions), motorPos(6), cartesianPos(3), cartesianDif(3),
-              DeviceLearner(iniController()), params(params) {
+              DeviceLearner(iniController()), params(params), gen(params.seed) {
         if (params.progressiveModeStartingPos) this->currentMaxLimitStartingPos=params.maxLengthStartingPos;
         if (params.progressiveModeTargets) this->currentMaxLimitTarget=params.maxLengthTargets;
         rng.setSeed(params.seed);
-    }
+        }
 
     /**
     * \brief Copy constructor for the armLearnWrapper.
@@ -166,7 +167,7 @@ public:
                                                     trainingValidationIterator(other.trainingValidationIterator),
                                                     nbMaxActions(other.nbMaxActions), motorPos(other.motorPos),
                                                     cartesianPos(other.cartesianPos), cartesianDif(other.cartesianDif),
-                                                    DeviceLearner(iniController()), params(other.params) {
+                                                    DeviceLearner(iniController()), params(other.params), gen(params.seed) {
         this->reset(0);
         computeInput();
     }
@@ -245,7 +246,7 @@ public:
     /**
      * @brief Create and return a random position with the motors
      */
-    std::vector<uint16_t> randomMotorPos(bool validation);
+    std::vector<uint16_t> randomMotorPos(bool validation, bool isTarget);
 
     /**
      * @brief Create and return a random starting position for the arm

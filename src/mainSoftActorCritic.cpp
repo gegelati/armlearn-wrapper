@@ -38,14 +38,15 @@ int main() {
     SACParameters sacParams;
     sacParams.loadParametersFromJson((slashToAdd + "params/sacParams.json").c_str());
 
-    // Set random seed
-    torch::manual_seed(trainingParams.seed);
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams);
 
     // Set and Prompt the number of threads
     torch::set_num_threads(gegelatiParams.nbThreads);
+
+    // Set random seed
+    torch::manual_seed(trainingParams.seed);
     std::cout << "Number of threads: " << torch::get_num_threads() << std::endl;
 
 

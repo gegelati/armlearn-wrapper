@@ -78,8 +78,11 @@ public:
     /// Init size of the sphere within which the target will be instantiate
     double maxLengthStartingPos = 30.0;
 
-    /// Upgrade coefficient of the sphere
-    double coefficientUpgrade = 1.2;
+    /// Upgrade coefficient of the sphere with multiplication
+    double coefficientUpgradeMult = 1.2;
+
+    /// Upgrade coefficient of the sphere with addition
+    double coefficientUpgradeAdd = 20;
 
     /// Number of consecuitive iterations before upgrading the sphere
     int nbIterationsUpgrade = 3;

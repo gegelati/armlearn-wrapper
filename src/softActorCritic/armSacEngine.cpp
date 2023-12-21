@@ -104,11 +104,8 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
     double result=0.0;
     double score=0.0;
 
-    //TODO mettre en parametre
-    int nbTrainingEpisode = 5;
-
     // Train for nbIterationTraining episode(s)
-    for(int j = 0; j < nbTrainingEpisode; j++){
+    for(int j = 0; j < sacParams.nbEpisodeTraining; j++){
 
         uint64_t seed = generation * 100000 + j;
         // Add result
@@ -118,8 +115,8 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
         score += armLearnEnv->getScore();
     }
     // Get the mean score and result
-    result /= nbTrainingEpisode;
-    score /= nbTrainingEpisode;
+    result /= sacParams.nbEpisodeTraining;
+    score /= sacParams.nbEpisodeTraining;
 
     // Log the training
     logTraining(score, result);

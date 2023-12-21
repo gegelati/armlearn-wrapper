@@ -394,15 +394,17 @@ void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
     return validMotorPos;
 }*/
 
-std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation){
+std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation, bool isTarget){
     uint16_t i, j, k, l;
     std::vector<uint16_t> newMotorPos, validMotorPos;
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::normal_distribution<double> distribution(2048, currentMaxLimitTarget);
+    auto limit = (isTarget) ? currentMaxLimitTarget: currentMaxLimitStartingPos;
 
-    if(!validation){
+
+    if(!validation && limit < 750){
+        // Create distribution
+        std::normal_distribution<double> distribution(2048, limit);
+        
         // Get random motor coordonates
         i = (int16_t) std::max(std::min(distribution(gen), 4096.0),1.0);
         j = (int16_t) std::max(std::min(distribution(gen), 3071.0),1025.0);
@@ -436,7 +438,7 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
     // Do one time then only while the distance is above the distance between the new starting position and the initial one
     do {
         // Get a random motor positions
-        motorPos = randomMotorPos(validation);
+        motorPos = randomMotorPos(validation, false);
 
         // Compute the cartesian coordonates of those motor positions
         newStartingPos = converter->computeServoToCoord(motorPos)->getCoord();
@@ -463,7 +465,7 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> star
     // Do one time then only while the distance is above the distance to browse
     do {
         // Get a random motor positions
-        motorPos = randomMotorPos(validation);
+        motorPos = randomMotorPos(validation, true);
 
         // Compute the cartesian coordonates of those motor positions
         newCartesianCoords = converter->computeServoToCoord(motorPos)->getCoord();
@@ -511,15 +513,15 @@ void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPer
 
             // Upgrade the limit of tagets
             if (params.progressiveModeTargets){
-                currentMaxLimitTarget = std::min(currentMaxLimitTarget * params.coefficientUpgrade, currentMaxLimitTarget + 20);
-                currentMaxLimitTarget = std::min(currentMaxLimitTarget, 10000.0d);
+                currentMaxLimitTarget = std::min(currentMaxLimitTarget * params.coefficientUpgradeMult, currentMaxLimitTarget + params.coefficientUpgradeAdd);
+                currentMaxLimitTarget = std::min(currentMaxLimitTarget, 1000.0d);
             }
 
 
             // Upgrade the limit of starting positions
             if (params.progressiveModeStartingPos){
-                currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * params.coefficientUpgrade, currentMaxLimitStartingPos + 100);
-                currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos, 200.0d);
+                currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * params.coefficientUpgradeMult, currentMaxLimitStartingPos + params.coefficientUpgradeAdd);
+                currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos, 1000.0d);
             }
 
 
