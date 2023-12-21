@@ -4,6 +4,7 @@
 #include <cfloat>
 #include <algorithm>
 #include <fstream>
+#include <filesystem>
 #include <iostream>
 
 #include <gegelati.h>
@@ -47,14 +48,19 @@ int main() {
 	Instructions::Set set;
 	fillInstructionSet(set);
 
+    // This is important for the singularity image
+    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
+
+    TrainingParameters trainingParams;
+    trainingParams.loadParametersFromJson((slashToAdd + "params/trainParams.json").c_str());
+
 
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson("/params/params.json", params);
+    File::ParametersParser::loadParametersFromJson((slashToAdd + "params/params.json").c_str(), params);
 
-    TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson("/params/trainParams.json");
+
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams);
@@ -97,7 +103,7 @@ int main() {
 
 
     //Creation of the Output stream on cout and on the file
-    std::ofstream fichier("/outLogs/logs.ods", std::ios::out);
+    std::ofstream fichier((slashToAdd + "outLogs/logs.ods").c_str(), std::ios::out);
     auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,fichier);
     auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget);
 
@@ -110,18 +116,18 @@ int main() {
 
     // File for printing best policy stat.
     std::ofstream stats;
-    stats.open("/outLogs/bestPolicyStats.md");
+    stats.open((slashToAdd + "outLogs/bestPolicyStats.md").c_str());
     Log::LAPolicyStatsLogger logStats(la, stats);
 
     // Create an exporter for all graphs
-    File::TPGGraphDotExporter dotExporter("/outLogs/out_0000.dot", *la.getTPGGraph());
+    File::TPGGraphDotExporter dotExporter((slashToAdd + "outLogs/out_0000.dot").c_str(), *la.getTPGGraph());
 
 
     // Use previous Graphs
     if(trainingParams.startPreviousTPG){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, armLearnEnv.getDataSources(), 8);
-        File::TPGGraphDotImporter dotImporter(std::string("/outLogs/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
+        File::TPGGraphDotImporter dotImporter((slashToAdd + "outLogs/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
     }
 
     // Save the validation trajectories
@@ -144,7 +150,7 @@ int main() {
 
 	    //print the previous graphs
         char buff[16];
-        sprintf(buff, "/outLogs/out_%04d.dot", static_cast<uint16_t>(i));
+        sprintf(buff, (slashToAdd + "outLogs/out_%04d.dot").c_str(), static_cast<uint16_t>(i));
         dotExporter.setNewFilePath(buff);
         dotExporter.print();
 
@@ -155,7 +161,7 @@ int main() {
 
     // Keep best policy
     la.keepBestPolicy();
-    dotExporter.setNewFilePath("/outLogs/out_best.dot");
+    dotExporter.setNewFilePath((slashToAdd + "outLogs/out_best.dot").c_str());
     dotExporter.print();
 
 
@@ -164,7 +170,7 @@ int main() {
     ps.setEnvironment(la.getTPGGraph()->getEnvironment());
     ps.analyzePolicy(la.getBestRoot().first);
     std::ofstream bestStats;
-    bestStats.open("/outLogs/out_best_stats.md");
+    bestStats.open((slashToAdd + "outLogs/out_best_stats.md").c_str());
     bestStats << ps;
     bestStats.close();
 

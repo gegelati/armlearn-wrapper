@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cfloat>
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 
@@ -16,31 +17,6 @@
 #include "softActorCritic/armSacEngine.h"
 #include "softActorCritic/sacParameters.h"
 
-void getKey(std::atomic<bool>& exit) {
-    std::cout << std::endl;
-    std::cout << "Press `q` then [Enter] to exit." << std::endl;
-    std::cout.flush();
-
-    exit = false;
-
-    while (!exit) {
-        char c;
-        std::cin >> c;
-        switch (c) {
-        case 'q':
-        case 'Q':
-            exit = true;
-            break;
-        default:
-            printf("Invalid key '%c' pressed.", c);
-            std::cout.flush();
-        }
-    }
-
-    printf("Program will terminate at the end of next generation.\n");
-    std::cout.flush();
-}
-
 int main() {
     std::cout << "Start ArmLearner application." << std::endl;
 
@@ -48,16 +24,19 @@ int main() {
 	Instructions::Set set;
 	fillInstructionSet(set);
 
+    // This is important for the singularity image
+    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
+
     // Set the parameters from Gegelati.
     // Loads them from "params.json" file
     Learn::LearningParameters gegelatiParams;
-    File::ParametersParser::loadParametersFromJson("/params/params.json", gegelatiParams);
+    File::ParametersParser::loadParametersFromJson((slashToAdd + "params/params.json").c_str(), gegelatiParams);
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson("/params/trainParams.json");
+    trainingParams.loadParametersFromJson((slashToAdd + "params/trainParams.json").c_str());
 
     SACParameters sacParams;
-    sacParams.loadParametersFromJson("/params/sacParams.json");
+    sacParams.loadParametersFromJson((slashToAdd + "params/sacParams.json").c_str());
 
     // Set random seed
     torch::manual_seed(trainingParams.seed);
@@ -65,8 +44,9 @@ int main() {
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams);
 
-    // Prompt the number of threads
+    // Prompt the number of threads and set it to torch
     std::cout << "Number of threads: " << gegelatiParams.nbThreads << std::endl;
+    torch::set_num_threads(gegelatiParams.nbThreads);
 
     // If a validation target is done
     bool doTrainingValidation = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
@@ -84,23 +64,11 @@ int main() {
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
     std::thread threadKeyboard;
 
-    if(trainingParams.interactiveMode){
-#ifndef NO_CONSOLE_CONTROL
-    std::atomic<bool> exitProgram = true; // (set to false by other thread)
-
-    std::thread threadKeyboard(getKey, std::ref(exitProgram));
-
-    while (exitProgram); // Wait for other thread to print key info.
-#else
-    std::atomic<bool> exitProgram = false; // (set to false by other thread)
-#endif
-    }
-
 
 
 
     //Creation of the Output stream on cout and on the file
-    std::ofstream file("/outLogs/logs.ods", std::ios::out);
+    std::ofstream file((slashToAdd + "outLogs/logs.ods").c_str(), std::ios::out);
 
     // Instantiate the softActorCritic engine
     ArmSacEngine learningAgent(sacParams, &armLearnEnv, file, gegelatiParams.maxNbActionsPerEval, 
@@ -117,7 +85,7 @@ int main() {
     }
 
     // Train for params.nbGenerations generations
-    for (int i = 0; i < gegelatiParams.nbGenerations && !exitProgram; i++) {
+    for (int i = 0; i < gegelatiParams.nbGenerations; i++) {
         armLearnEnv.setgeneration(i);
 
         // Update/Generate the training trajectories
@@ -147,14 +115,6 @@ int main() {
 
     }
 
-
-    if(trainingParams.interactiveMode){
-#ifndef NO_CONSOLE_CONTROL
-    // Exit the thread
-    std::cout << "Exiting program, press a key then [enter] to exit if nothing happens.";
-    threadKeyboard.join();
-#endif
-    }
     return 0;
 }
 

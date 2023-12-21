@@ -1,4 +1,5 @@
 #include <torch/torch.h>
+#include <filesystem>
 #include <iostream>
 
 #include "softActorCritic.h"
@@ -119,20 +120,22 @@ void SoftActorCritic::learn(){
 
 void SoftActorCritic::loadModels(){
     std::cout<<" ----- Loading Models ----- "<<std::endl;
-    actorNet.loadCheckpoint();
-    criticNet1.loadCheckpoint();
-    criticNet2.loadCheckpoint();
-    valueNet.loadCheckpoint();
-    targetValueNet.loadCheckpoint();
+    std::string path = (std::filesystem::exists("/params/trainParams.json")) ? "/models/": "models/";
+    actorNet.loadCheckpoint(path);
+    criticNet1.loadCheckpoint(path);
+    criticNet2.loadCheckpoint(path);
+    valueNet.loadCheckpoint(path);
+    targetValueNet.loadCheckpoint(path);
 }
 
 void SoftActorCritic::saveModels(){
     //std::cout<<" ----- Saving Models ----- "<<std::endl;
-    actorNet.saveCheckpoint();
-    criticNet1.saveCheckpoint();
-    criticNet2.saveCheckpoint();
-    valueNet.saveCheckpoint();
-    targetValueNet.saveCheckpoint();
+    std::string path = (std::filesystem::exists("/params/trainParams.json")) ? "/models/": "models/";
+    actorNet.saveCheckpoint(path);
+    criticNet1.saveCheckpoint(path);
+    criticNet2.saveCheckpoint(path);
+    valueNet.saveCheckpoint(path);
+    targetValueNet.saveCheckpoint(path);
 }
 
     

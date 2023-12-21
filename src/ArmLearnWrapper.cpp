@@ -1,6 +1,7 @@
 #include "ArmLearnWrapper.h"
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <vector>
 #include <utility>
 #include <random>
@@ -403,10 +404,10 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation){
 
     if(!validation){
         // Get random motor coordonates
-        i = (int16_t) std::max(std::min(distribution(gen), 4096.0),0.0);
-        j = (int16_t) std::max(std::min(distribution(gen), 4096.0),0.0);
-        k = (int16_t) std::max(std::min(distribution(gen), 4096.0),0.0);
-        l = (int16_t) std::max(std::min(distribution(gen), 4096.0),0.0);
+        i = (int16_t) std::max(std::min(distribution(gen), 4096.0),1.0);
+        j = (int16_t) std::max(std::min(distribution(gen), 3071.0),1025.0);
+        k = (int16_t) std::max(std::min(distribution(gen), 3071.0),1025.0);
+        l = (int16_t) std::max(std::min(distribution(gen), 3071.0),1025.0);
     }
     else{
         i = (int16_t) (rng.getUnsignedInt64(1, 4094));
@@ -577,7 +578,8 @@ Learn::LearningEnvironment *ArmLearnWrapper::clone() const {
 
 void ArmLearnWrapper::saveValidationTrajectories() {
     // Create file
-    std::ofstream outFile("/params/ValidationTrajectories.txt");
+    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
+    std::ofstream outFile((slashToAdd + "params/ValidationTrajectories.txt").c_str());
 
     if (outFile.is_open()) {
         // For each validation trajectories
@@ -609,7 +611,9 @@ void ArmLearnWrapper::loadValidationTrajectories() {
     validationTrajectories.clear();
 
     // Get file
-    std::ifstream inFile("/params/ValidationTrajectories.txt");
+    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
+    std::ifstream inFile((slashToAdd + "params/ValidationTrajectories.txt").c_str());
+
     if (inFile.is_open()) {
         int value;
         inFile >> value;

@@ -49,10 +49,10 @@ namespace Networks
             torch::optim::Adam* getPtrOptimizer();
 
             /// Load critic model
-            void loadCheckpoint();
+            void loadCheckpoint(std::string path);
 
             /// Save critic model
-            void saveCheckpoint();
+            void saveCheckpoint(std::string path);
     };
 
     class Value: public torch::nn::Module
@@ -96,10 +96,10 @@ namespace Networks
             torch::optim::Adam* getPtrOptimizer();
 
             /// Load value model
-            void loadCheckpoint();
+            void loadCheckpoint(std::string path);
 
             /// Save value model
-            void saveCheckpoint();
+            void saveCheckpoint(std::string path);
     };
 
     class Actor: public torch::nn::Module
@@ -161,10 +161,10 @@ namespace Networks
             torch::optim::Adam* getPtrOptimizer();
 
             /// Load actor model
-            void loadCheckpoint();
+            void loadCheckpoint(std::string path);
 
             /// Save actor model
-            void saveCheckpoint();
+            void saveCheckpoint(std::string path);
     };
 
 }

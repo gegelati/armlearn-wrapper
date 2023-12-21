@@ -25,16 +25,16 @@ torch::optim::Adam* Networks::Critic::getPtrOptimizer(){
     return &optimizer;
 }
 
-void Networks::Critic::loadCheckpoint(){
+void Networks::Critic::loadCheckpoint(std::string path){
     torch::serialize::InputArchive inputArchive;
-    inputArchive.load_from("/models/" + name + ".pt");
+    inputArchive.load_from(path + name + ".pt");
     load(inputArchive);
 }
 
-void Networks::Critic::saveCheckpoint(){
+void Networks::Critic::saveCheckpoint(std::string path){
     torch::serialize::OutputArchive outputArchive;
     save(outputArchive);
-    outputArchive.save_to("/models/" + name + ".pt");
+    outputArchive.save_to(path + name + ".pt");
 }
 
 torch::Tensor Networks::Value::forward(torch::Tensor state){
@@ -53,16 +53,16 @@ torch::optim::Adam* Networks::Value::getPtrOptimizer(){
     return &optimizer;
 }
 
-void Networks::Value::loadCheckpoint(){
+void Networks::Value::loadCheckpoint(std::string path){
     torch::serialize::InputArchive inputArchive;
-    inputArchive.load_from("/models/" + name + ".pt");
+    inputArchive.load_from(path + name + ".pt");
     load(inputArchive);
 }
 
-void Networks::Value::saveCheckpoint(){
+void Networks::Value::saveCheckpoint(std::string path){
     torch::serialize::OutputArchive outputArchive;
     save(outputArchive);
-    outputArchive.save_to("/models/" + name + ".pt");
+    outputArchive.save_to(path + name + ".pt");
 }
 
 
@@ -118,14 +118,14 @@ torch::optim::Adam* Networks::Actor::getPtrOptimizer(){
 }
 
 
-void Networks::Actor::loadCheckpoint(){
+void Networks::Actor::loadCheckpoint(std::string path){
     torch::serialize::InputArchive inputArchive;
-    inputArchive.load_from("/models/" + name + ".pt");
+    inputArchive.load_from(path + name + ".pt");
     load(inputArchive);
 }
 
-void Networks::Actor::saveCheckpoint(){
+void Networks::Actor::saveCheckpoint(std::string path){
     torch::serialize::OutputArchive outputArchive;
     save(outputArchive);
-    outputArchive.save_to("/models/" + name + ".pt");
+    outputArchive.save_to(path + name + ".pt");
 }
