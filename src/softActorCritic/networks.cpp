@@ -27,14 +27,14 @@ torch::optim::Adam* Networks::Critic::getPtrOptimizer(){
 
 void Networks::Critic::loadCheckpoint(){
     torch::serialize::InputArchive inputArchive;
-    inputArchive.load_from(ROOT_DIR "/models/" + name + ".pt");
+    inputArchive.load_from("/models/" + name + ".pt");
     load(inputArchive);
 }
 
 void Networks::Critic::saveCheckpoint(){
     torch::serialize::OutputArchive outputArchive;
     save(outputArchive);
-    outputArchive.save_to(ROOT_DIR "/models/" + name + ".pt");
+    outputArchive.save_to("/models/" + name + ".pt");
 }
 
 torch::Tensor Networks::Value::forward(torch::Tensor state){
@@ -55,14 +55,14 @@ torch::optim::Adam* Networks::Value::getPtrOptimizer(){
 
 void Networks::Value::loadCheckpoint(){
     torch::serialize::InputArchive inputArchive;
-    inputArchive.load_from(ROOT_DIR "/models/" + name + ".pt");
+    inputArchive.load_from("/models/" + name + ".pt");
     load(inputArchive);
 }
 
 void Networks::Value::saveCheckpoint(){
     torch::serialize::OutputArchive outputArchive;
     save(outputArchive);
-    outputArchive.save_to(ROOT_DIR "/models/" + name + ".pt");
+    outputArchive.save_to("/models/" + name + ".pt");
 }
 
 
@@ -120,12 +120,12 @@ torch::optim::Adam* Networks::Actor::getPtrOptimizer(){
 
 void Networks::Actor::loadCheckpoint(){
     torch::serialize::InputArchive inputArchive;
-    inputArchive.load_from(ROOT_DIR "/models/" + name + ".pt");
+    inputArchive.load_from("/models/" + name + ".pt");
     load(inputArchive);
 }
 
 void Networks::Actor::saveCheckpoint(){
     torch::serialize::OutputArchive outputArchive;
     save(outputArchive);
-    outputArchive.save_to(ROOT_DIR "/models/" + name + ".pt");
+    outputArchive.save_to("/models/" + name + ".pt");
 }

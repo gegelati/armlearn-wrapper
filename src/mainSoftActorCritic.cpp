@@ -51,13 +51,13 @@ int main() {
     // Set the parameters from Gegelati.
     // Loads them from "params.json" file
     Learn::LearningParameters gegelatiParams;
-    File::ParametersParser::loadParametersFromJson("params/params.json", gegelatiParams);
+    File::ParametersParser::loadParametersFromJson("/params/params.json", gegelatiParams);
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson("params/trainParams.json");
+    trainingParams.loadParametersFromJson("/params/trainParams.json");
 
     SACParameters sacParams;
-    sacParams.loadParametersFromJson("params/sacParams.json");
+    sacParams.loadParametersFromJson("/params/sacParams.json");
 
     // Set random seed
     torch::manual_seed(trainingParams.seed);
@@ -95,7 +95,7 @@ int main() {
 
 
     //Creation of the Output stream on cout and on the file
-    std::ofstream file("logs.ods", std::ios::out);
+    std::ofstream file("/outLogs/logs.ods", std::ios::out);
 
     // Instantiate the softActorCritic engine
     ArmSacEngine learningAgent(sacParams, &armLearnEnv, file, gegelatiParams.maxNbActionsPerEval, 
