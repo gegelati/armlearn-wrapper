@@ -81,6 +81,9 @@ int main() {
         armLearnEnv.updateTrainingValidationTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
     }
 
+    std::atomic<bool> exitProgram = false; // (set to false by other thread)
+    std::thread threadKeyboard;
+
     if(trainingParams.interactiveMode){
 #ifndef NO_CONSOLE_CONTROL
     std::atomic<bool> exitProgram = true; // (set to false by other thread)
