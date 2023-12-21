@@ -81,7 +81,7 @@ int main() {
         armLearnEnv.updateTrainingValidationTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
     }
 
-
+    if(trainingParams.interactiveMode){
 #ifndef NO_CONSOLE_CONTROL
     std::atomic<bool> exitProgram = true; // (set to false by other thread)
 
@@ -91,6 +91,8 @@ int main() {
 #else
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
 #endif
+    }
+
 
 
 
@@ -143,13 +145,13 @@ int main() {
     }
 
 
-
+    if(trainingParams.interactiveMode){
 #ifndef NO_CONSOLE_CONTROL
     // Exit the thread
     std::cout << "Exiting program, press a key then [enter] to exit if nothing happens.";
     threadKeyboard.join();
 #endif
-
+    }
     return 0;
 }
 
