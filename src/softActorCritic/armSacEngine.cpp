@@ -187,8 +187,12 @@ void ArmSacEngine::logHeader(){
     }
 
     if (doTrainingValidation){
-        std::cout << std::setw(colWidth) << "TrainVal"<<std::setw(colWidth) << "S_StartP"<<std::setw(colWidth)<<"S_Targ";
-        file << std::setw(colWidth) << "TrainVal"<<std::setw(colWidth) << "S_StartP"<<std::setw(colWidth)<<"S_Targ";
+        std::cout << std::setw(colWidth) << "TrainVal";
+        file << std::setw(colWidth) << "TrainVal";
+    }
+    if (doUpdateLimits){
+        std::cout<<std::setw(colWidth) << "S_StartP"<<std::setw(colWidth)<<"S_Targ";
+        file <<std::setw(colWidth) << "S_StartP"<<std::setw(colWidth)<<"S_Targ";
     }
 
 
@@ -211,6 +215,8 @@ void ArmSacEngine::logTraining(double score, double result){
 
     std::cout<<score<<std::setw(colWidth)<<result<<std::setw(colWidth);
     file<<score<<std::setw(colWidth)<<result<<std::setw(colWidth);
+
+    lastTrainingScore = score;
 
     if(score > bestScore && !doValidation){
         bestScore = score;
@@ -276,6 +282,10 @@ void ArmSacEngine::logTimes(){
 
 double ArmSacEngine::getLastTrainingValidationScore(){
     return lastTrainingValidationScore;
+}
+
+double ArmSacEngine::getLastTrainingScore(){
+    return lastTrainingScore;
 }
 
 torch::Tensor ArmSacEngine::getTensorState(){

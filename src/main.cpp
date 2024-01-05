@@ -79,7 +79,7 @@ int main() {
     }
 
     // If a validation target is done
-    bool doValidationTarget = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
+    bool doValidationTarget = (trainingParams.doTrainingValidation && (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos));
 
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLearnEnv, set, params, doValidationTarget);

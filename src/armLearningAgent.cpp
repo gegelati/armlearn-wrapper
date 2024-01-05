@@ -53,6 +53,7 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     }
 
     // Training Validation
+    // TODO Changes for limits update without training validation
     if (doTrainingValidation){
 
         auto trainingValidationResults = this->evaluateAllRoots(generationNumber, LearningMode::TESTING);

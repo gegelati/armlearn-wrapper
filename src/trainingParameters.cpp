@@ -38,6 +38,11 @@ void TrainingParameters::setAllParamsFrom(const Json::Value& root)
 
 void TrainingParameters::setParameterFromString(const std::string& param, Json::Value const& value)
 {
+    if (param == "doTrainingValidation") {
+        doTrainingValidation = (bool)value.asBool();
+        return;
+    }
+
     if (param == "doRandomStartingPosition") {
         doRandomStartingPosition = (bool)value.asBool();
         return;
@@ -63,7 +68,7 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "coefficientUpgrade") {
+    if (param == "coefficientUpgradeMult") {
         coefficientUpgradeMult = (double)value.asDouble();
         return;
     }
@@ -73,7 +78,7 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "nbIterationsUpgradeMult") {
+    if (param == "nbIterationsUpgrade") {
         nbIterationsUpgrade = (int)value.asUInt();
         return;
     }
@@ -100,6 +105,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
 
     if (param == "coefRewardNbIterations"){
         coefRewardNbIterations = (double)value.asDouble();
+        return;
+    }
+
+    if (param == "coefRewardMultiplication"){
+        coefRewardMultiplication = (double)value.asDouble();
         return;
     }
 

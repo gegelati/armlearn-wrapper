@@ -51,7 +51,8 @@ int main() {
 
 
     // If a validation target is done
-    bool doTrainingValidation = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
+    bool doUpdateLimits = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
+    bool doTrainingValidation = (trainingParams.doTrainingValidation && doUpdateLimits);
 
     // Generate validation targets.
     if(gegelatiParams.doValidation){
@@ -74,7 +75,7 @@ int main() {
 
     // Instantiate the softActorCritic engine
     ArmSacEngine learningAgent(sacParams, &armLearnEnv, file, gegelatiParams.maxNbActionsPerEval, 
-                               gegelatiParams.doValidation, doTrainingValidation);
+                               gegelatiParams.doValidation, doTrainingValidation, doUpdateLimits);
 
     // Save the validation trajectories
     if (trainingParams.saveValidationTrajectories){
@@ -105,14 +106,23 @@ int main() {
         // Does a training validation or not according to doTrainingValidation
         if (doTrainingValidation) {
             learningAgent.validateTrainingOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
+        }
 
+        if (doUpdateLimits) {
             // Log the limits
             learningAgent.logLimits();
 
             // Update limits
-            armLearnEnv.updateCurrentLimits(learningAgent.getLastTrainingValidationScore(), gegelatiParams.nbIterationsPerPolicyEvaluation);
-
+            if (doTrainingValidation) {
+                armLearnEnv.updateCurrentLimits(learningAgent.getLastTrainingValidationScore(), gegelatiParams.nbIterationsPerPolicyEvaluation);
+            }
+            else{
+                armLearnEnv.updateCurrentLimits(learningAgent.getLastTrainingScore(), gegelatiParams.nbIterationsPerPolicyEvaluation);
+            }
+            
         }
+
+
         learningAgent.logTimes();
 
     }

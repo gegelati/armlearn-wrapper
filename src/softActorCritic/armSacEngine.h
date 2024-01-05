@@ -32,8 +32,13 @@ class ArmSacEngine{
         /// True if training validation is done
         bool doTrainingValidation;
 
+        /// True if limits are updated
+        bool doUpdateLimits;
+
         /// Best score gotten in a validation cycle, if doValidation is false, it is the one gotten in a training cycle
         double bestScore = -10000;
+
+        double lastTrainingScore;
 
         /// Last score gotten in validation
         double lastValidationScore;
@@ -63,12 +68,13 @@ class ArmSacEngine{
 
     public:
         ArmSacEngine(SACParameters sacParams, ArmLearnWrapper* armLearnEnv, std::ostream& file,
-        uint16_t maxNbActions, bool doValidation=false, bool doTrainingValidation=false)
+        uint16_t maxNbActions, bool doValidation=false, bool doTrainingValidation=false, bool doUpdateLimits=false)
         : sacParams(sacParams), file(file), armLearnEnv(armLearnEnv), learningAgent(sacParams, 10, (sacParams.multipleActions) ? 4:1) {
 
             this->maxNbActions = maxNbActions;
             this->doValidation=doValidation;
             this->doTrainingValidation=doTrainingValidation;
+            this->doUpdateLimits=doUpdateLimits;
             this->logHeader();
             file.flush();
             
@@ -130,6 +136,9 @@ class ArmSacEngine{
 
         /// Convert the state from the environnement to a tensor
         torch::Tensor getTensorState();
+
+        /// Return lastTrainingScore 
+        double getLastTrainingScore();
 
         /// Return lastTrainingValidationScore
         double getLastTrainingValidationScore();

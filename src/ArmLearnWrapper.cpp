@@ -183,30 +183,22 @@ double ArmLearnWrapper::computeReward() {
 
     // Tempory reward to force to stop close to the objective
     if (score > params.thresholdUpgrade){
-
         // Incremente a counter
         nbActionsInThreshold++;
-
-        // If the counter reach 10 or terminal is true (because the arm can stop and set terminal=true with action 8)
-        if(nbActionsInThreshold == 10 || !isMoving){
-            terminal = true;
-            return 1000;
-        }
-        // Else distance divided by 10 times the initCurrentMaxLimitTarget (still better than any reward not close to the objective)
-        return -err/(params.maxLengthTargets*10);
 
     // If not close to the objective
     } else{
         // reset counter
-        nbActionsInThreshold=0;
-
-        if(!isMoving){
-            terminal = true;
-        }
-
-        // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)
-        return  -err/params.maxLengthTargets;
+        nbActionsInThreshold=0;        
     }
+
+    // If the counter reach 10 or terminal is true (because the arm can stop and set terminal=true with action 8)
+    if(nbActionsInThreshold == 10 || !isMoving){
+        terminal = true;
+    }
+
+    // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)
+    return  -err * params.coefRewardMultiplication;
     
 }
 

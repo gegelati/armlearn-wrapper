@@ -63,6 +63,9 @@ private:
                                 Json::Value const& value);
 
 public:
+    /// True if training validation is used for random starting pos and random target pos
+    bool doTrainingValidation = true;
+
     /// True if the starting positions are set randomly
     bool doRandomStartingPosition = true;
 
@@ -101,6 +104,9 @@ public:
 
     /// Proportion of targets reused at each generation
     double coefRewardNbIterations = 0;
+
+    /// Coefficient to multiply the reward with
+    double coefRewardMultiplication = 1;
 
     /// true to load the validation trajectories
     bool loadValidationTrajectories = false;
