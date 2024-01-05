@@ -62,6 +62,7 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
             }
         }
 
+        // Log limits
         if(typeid(learningEnvironment) == typeid(ArmLearnWrapper)){
             for (auto logger : loggers) {
                 if(typeid(logger.get()) == typeid(Log::ArmLearnLogger)){
@@ -71,6 +72,8 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
                     );
                 }
             }
+
+            // Update limits
             auto iter = trainingValidationResults.begin();
             std::advance(iter, trainingValidationResults.size() - 1);
             double bestResult = iter->first->getResult();

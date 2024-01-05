@@ -375,25 +375,6 @@ void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
     validationIterator = validationTrajectories.begin();
 }
 
-/*std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(){
-    uint16_t i, j, k, l;
-    std::vector<uint16_t> newMotorPos, validMotorPos;
-
-    // Get random motor coordonates
-    i = (int16_t) (rng.getUnsignedInt64(1, 4094));
-    j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
-    k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
-    l = (int16_t) (rng.getUnsignedInt64(1025, 3071));
-
-    // Create the vector of motor positions
-    newMotorPos = {i,j,k,l,512,256};
-
-    // Use this function to convert the vector of motor positions into a valid one
-    validMotorPos = device->toValidPosition(newMotorPos);
-
-    return validMotorPos;
-}*/
-
 std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation, bool isTarget){
     uint16_t i, j, k, l;
     std::vector<uint16_t> newMotorPos, validMotorPos;
