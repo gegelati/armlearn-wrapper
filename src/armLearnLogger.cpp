@@ -52,11 +52,13 @@ void Log::ArmLearnLogger::logHeader()
     if (doTrainingValidation) {
         *this << std::setw(colWidth) << "Min" << std::setw(colWidth) << "Avg"
               << std::setw(colWidth) << "Max";
-    
+    }
 
+    if (doUpdateLimits){
         *this << std::setw(colWidth) << "S_Targ"; 
         *this << std::setw(colWidth) << "S_StartP";
     }
+        
 
     *this << std::setw(colWidth) << "T_mutat" << std::setw(colWidth)
           << "T_eval";

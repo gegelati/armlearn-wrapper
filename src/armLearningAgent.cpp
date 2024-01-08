@@ -24,6 +24,10 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     for (auto logger : loggers) {
         logger.get().logAfterEvaluate(results);
     }
+    
+    auto iter = results.begin();
+    std::advance(iter, results.size() - 1);
+    double bestResult = iter->first->getResult();
 
     // Remove worst performing roots
     decimateWorstRoots(results);
@@ -63,6 +67,14 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
             }
         }
 
+        // Update limits
+        auto iter = trainingValidationResults.begin();
+        std::advance(iter, trainingValidationResults.size() - 1);
+        bestResult = iter->first->getResult();
+
+    }
+
+    if (doUpdateLimits){
         // Log limits
         if(typeid(learningEnvironment) == typeid(ArmLearnWrapper)){
             for (auto logger : loggers) {
@@ -74,13 +86,8 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
                 }
             }
 
-            // Update limits
-            auto iter = trainingValidationResults.begin();
-            std::advance(iter, trainingValidationResults.size() - 1);
-            double bestResult = iter->first->getResult();
             ((ArmLearnWrapper&)learningEnvironment).updateCurrentLimits(bestResult, params.nbIterationsPerPolicyEvaluation);
         }
-
     }
     for (auto logger : loggers) {
         logger.get().logEndOfTraining();

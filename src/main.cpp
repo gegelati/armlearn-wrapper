@@ -79,10 +79,11 @@ int main() {
     }
 
     // If a validation target is done
-    bool doValidationTarget = (trainingParams.doTrainingValidation && (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos));
+    bool doUpdateLimits = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
+    bool doValidationTarget = (trainingParams.doTrainingValidation && doUpdateLimits);
 
     // Instantiate and init the learning agent
-    Learn::ArmLearningAgent la(armLearnEnv, set, params, doValidationTarget);
+    Learn::ArmLearningAgent la(armLearnEnv, set, params, doValidationTarget, doUpdateLimits);
 
     la.init(trainingParams.seed);
 
@@ -104,8 +105,8 @@ int main() {
 
     //Creation of the Output stream on cout and on the file
     std::ofstream fichier((slashToAdd + "outLogs/logs.ods").c_str(), std::ios::out);
-    auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,fichier);
-    auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget);
+    auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,fichier);
+    auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits);
 
     /*//Creation of CloudPoint.csv, point that the robotic arm ended to touch
     std::ofstream PointCloud;

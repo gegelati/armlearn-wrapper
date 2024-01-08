@@ -26,6 +26,11 @@ namespace Log {
         /**
          * Boolean that indicate if a training validation is done
          */
+        bool doUpdateLimits;
+
+        /**
+         * Boolean that indicate if a training validation is done
+         */
         bool doTrainingValidation;
 
         /**
@@ -54,9 +59,9 @@ namespace Log {
          * elements to.
          */
         explicit ArmLearnLogger(Learn::LearningAgent& la,
-                                bool doTrainingValidation=false,
+                                bool doTrainingValidation=false, bool doUpdateLimits=false,
                                 std::ostream& out = std::cout)
-            : LALogger(la, out), doTrainingValidation(doTrainingValidation)
+            : LALogger(la, out), doTrainingValidation(doTrainingValidation), doUpdateLimits(doUpdateLimits)
         {
             // fixing float precision
             *this << std::setprecision(2) << std::fixed << std::right;

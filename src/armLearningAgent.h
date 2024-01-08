@@ -24,7 +24,9 @@ namespace Learn {
       private:
         std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> bestTrainingResult;
 
+        bool doUpdateLimits;
         bool doTrainingValidation;
+        
       public:
         /**
          * \brief Constructor for ParallelLearningAgent.
@@ -40,10 +42,11 @@ namespace Learn {
          */
         ArmLearningAgent(
             LearningEnvironment& le, const Instructions::Set& iSet,
-            const LearningParameters& p, bool doTrainingValidation,
+            const LearningParameters& p, bool doTrainingValidation, bool doUpdateLimits,
             const TPG::TPGFactory& factory = TPG::TPGFactory())
             : ParallelLearningAgent(le, iSet, p, factory) {
               this->doTrainingValidation = doTrainingValidation;
+              this->doUpdateLimits = doUpdateLimits;
             };
 
         /**
