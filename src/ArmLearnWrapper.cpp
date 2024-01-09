@@ -198,7 +198,7 @@ double ArmLearnWrapper::computeReward() {
     }
 
     // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)
-    return  -err * params.coefRewardMultiplication;
+    return -err * params.coefRewardMultiplication;
     
 }
 
@@ -235,9 +235,20 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
     computeInput();
 
     // Incremente the iterator
-    ++iterator;
-    // If iterator is at the end, reset it
-    if (iterator == trajectories->end()) iterator = trajectories->begin();
+    switch (mode) {
+        case Learn::LearningMode::TRAINING:
+            trainingIterator++;
+            if (trainingIterator == trajectories->end()) trainingIterator = trajectories->begin();
+            break;
+        case Learn::LearningMode::VALIDATION:
+            validationIterator++;
+            if (validationIterator == trajectories->end()) validationIterator = trajectories->begin();
+            break;
+        case Learn::LearningMode::TESTING:
+            trainingValidationIterator++;
+            if (trainingValidationIterator == trajectories->end()) trainingValidationIterator = trajectories->begin();
+            break;
+    }
 
     // Init environnement parameters
     score = 0;
@@ -309,8 +320,11 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
         // Get a new random Goal
         auto newTarget = randomGoal(*newStartingPos, false);
 
+
+
         // add the pair startingPos and target to the vector
         trainingTrajectories.push_back(std::make_pair(newStartingPos, newTarget));
+
     }
 
     // Initiate the iterator of the trainingTrajectories
@@ -487,14 +501,14 @@ void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPer
             // Upgrade the limit of tagets
             if (params.progressiveModeTargets){
                 currentMaxLimitTarget = std::min(currentMaxLimitTarget * params.coefficientUpgradeMult, currentMaxLimitTarget + params.coefficientUpgradeAdd);
-                currentMaxLimitTarget = std::min(currentMaxLimitTarget, 1000.0d);
+                currentMaxLimitTarget = std::min(currentMaxLimitTarget, 750.0d);
             }
 
 
             // Upgrade the limit of starting positions
             if (params.progressiveModeStartingPos){
                 currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos * params.coefficientUpgradeMult, currentMaxLimitStartingPos + params.coefficientUpgradeAdd);
-                currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos, 1000.0d);
+                currentMaxLimitStartingPos = std::min(currentMaxLimitStartingPos, 750.0d);
             }
 
 
@@ -502,6 +516,7 @@ void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPer
 
             // Update the training validation trajectories
             updateTrainingValidationTrajectories(nbIterationsPerPolicyEvaluation);
+            
         }
     }
     // Reset the counter
