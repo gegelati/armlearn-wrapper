@@ -5,7 +5,7 @@
 #include "armSacEngine.h"
 
 
-double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode){
+double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint16_t iterationNumber){
 
     // Create variables
     torch::Tensor newState;
@@ -17,7 +17,7 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode){
     uint64_t nbActions = 0;
         
     // Reset the environnement
-    armLearnEnv->reset(seed, mode);
+    armLearnEnv->reset(seed, mode, iterationNumber);
 
     // Set terminated to false and get the state
     bool terminated = false;
@@ -101,7 +101,6 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode){
 
 void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
 
-
     // Log generation
     logNewGeneration();
 
@@ -113,7 +112,7 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
 
         uint64_t seed = generation * 100000 + j;
         // Add result
-        result += runOneEpisode(seed, Learn::LearningMode::TRAINING);
+        result += runOneEpisode(seed, Learn::LearningMode::TRAINING, j);
         
         // add score
         score += armLearnEnv->getScore();
@@ -140,7 +139,7 @@ void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
     for(int j = 0; j < nbIterationValidation; j++){
 
         uint64_t seed = generation * 43000000000 + j;
-        runOneEpisode(seed, Learn::LearningMode::VALIDATION);
+        runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
         // Get score
         score += armLearnEnv->getScore();
     }
@@ -159,7 +158,7 @@ void ArmSacEngine::validateTrainingOneGeneration(uint16_t nbIterationTrainingVal
     for(int j = 0; j < nbIterationTrainingValidation; j++){
 
         uint64_t seed = generation * 5000000 + j;
-        runOneEpisode(seed, Learn::LearningMode::TESTING);
+        runOneEpisode(seed, Learn::LearningMode::TESTING, j);
         // Get score
         score += armLearnEnv->getScore();
     }

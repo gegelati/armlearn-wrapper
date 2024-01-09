@@ -91,22 +91,11 @@ protected:
     /// Current Starting position of the arm
     std::vector<uint16_t> *currentStartingPos;
 
-    /// Iterator of the vactor of training trajectories
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator trainingIterator;
-
     /// Vector with Starting positions in keys and Targets positions in values used for the training
     std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> trainingTrajectories;
 
-
-    /// Iterator of the vactor of training validation trajectories
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator trainingValidationIterator;
-
     /// Vector with Starting positions in keys and Targets positions in values used for the training validation
     std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> trainingValidationTrajectories;
-
-
-    /// Iterator of the vactor of validation trajectories
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator validationIterator;
 
     /// Vector with Starting positions in keys and Targets positions in values used for the validation
     std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> validationTrajectories;
@@ -150,8 +139,8 @@ public:
      */
     ArmLearnWrapper(int nbMaxActions, TrainingParameters params, bool handServosTrained = false)
             : LearningEnvironment((handServosTrained) ? 13 : 9), handServosTrained(handServosTrained),
-              trainingIterator(), validationIterator(), trainingValidationIterator(),
               nbMaxActions(nbMaxActions), motorPos(6), cartesianPos(3), cartesianDif(3),
+              trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params), gen(params.seed) {
         if (params.progressiveModeStartingPos) this->currentMaxLimitStartingPos=params.maxLengthStartingPos;
         if (params.progressiveModeTargets) this->currentMaxLimitTarget=params.maxLengthTargets;
@@ -162,14 +151,14 @@ public:
     * \brief Copy constructor for the armLearnWrapper.
     */
     ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions),
-                                                    trainingIterator(other.trainingIterator),
-                                                    validationIterator(other.validationIterator), 
-                                                    trainingValidationIterator(other.trainingValidationIterator),
                                                     nbMaxActions(other.nbMaxActions), motorPos(other.motorPos),
                                                     cartesianPos(other.cartesianPos), cartesianDif(other.cartesianDif),
+                                                    trainingTrajectories(other.trainingTrajectories),
+                                                    validationTrajectories(other.validationTrajectories),
+                                                    trainingValidationTrajectories(other.trainingValidationTrajectories),
                                                     DeviceLearner(iniController()), params(other.params), gen(params.seed) {
-        this->reset(0);
-        computeInput();
+        //this->reset(0);
+        //computeInput();
     }
 
     /// @brief Destructor
@@ -186,7 +175,7 @@ public:
     void doActionContinuous(std::vector<float> actions);
 
     /// @brief Inherited via LearningEnvironment
-    void reset(size_t seed = 0, Learn::LearningMode mode = Learn::LearningMode::TRAINING) override;
+    void reset(size_t seed = 0, Learn::LearningMode mode = Learn::LearningMode::TRAINING, uint16_t iterationNumber = 0, uint64_t generationNumber = 0) override;
 
     /**
      * @brief Inherited via LearningEnvironment, create the state vector

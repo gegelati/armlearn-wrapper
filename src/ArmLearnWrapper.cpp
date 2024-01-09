@@ -203,52 +203,32 @@ double ArmLearnWrapper::computeReward() {
 }
 
 
-void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode) {
+void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iterationNumber, uint64_t generationNumber) {
 
-    // Get the right iterator and trajectories' map
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator iterator;
+    // Get the right trajectories' map
     std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>* trajectories;
     
     switch (mode) {
         case Learn::LearningMode::TRAINING:
-            iterator = trainingIterator;
             trajectories = &trainingTrajectories;
             break;
         case Learn::LearningMode::VALIDATION:
-            iterator = validationIterator;
             trajectories = &validationTrajectories;
             break;
         case Learn::LearningMode::TESTING:
-            iterator = trainingValidationIterator;
             trajectories = &trainingValidationTrajectories;
             break;
     }
 
     // Change the starting position
-    this->currentStartingPos = iterator->first;
+    this->currentStartingPos = trajectories->at(iterationNumber).first;
 
     device->setPosition(*currentStartingPos); // Reset position
     device->waitFeedback();
 
     // Change the target
-    this->currentTarget = iterator->second;
+    this->currentTarget = trajectories->at(iterationNumber).second;
     computeInput();
-
-    // Incremente the iterator
-    switch (mode) {
-        case Learn::LearningMode::TRAINING:
-            trainingIterator++;
-            if (trainingIterator == trajectories->end()) trainingIterator = trajectories->begin();
-            break;
-        case Learn::LearningMode::VALIDATION:
-            validationIterator++;
-            if (validationIterator == trajectories->end()) validationIterator = trajectories->begin();
-            break;
-        case Learn::LearningMode::TESTING:
-            trainingValidationIterator++;
-            if (trainingValidationIterator == trajectories->end()) trainingValidationIterator = trajectories->begin();
-            break;
-    }
 
     // Init environnement parameters
     score = 0;
@@ -312,7 +292,7 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
     // Clear a define prortion of the training targets by giving the proportion of targets reused
     clearPropTrainingTrajectories();
 
-    for (int i=0; i<nbTrajectories; i++){
+    while (trainingTrajectories.size() < nbTrajectories){
 
         // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
         auto newStartingPos = (params.doRandomStartingPosition) ? randomStartingPos(false) : &initStartingPos;
@@ -326,9 +306,6 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
         trainingTrajectories.push_back(std::make_pair(newStartingPos, newTarget));
 
     }
-
-    // Initiate the iterator of the trainingTrajectories
-    trainingIterator = trainingTrajectories.begin();
 }
 
 void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories){
@@ -352,9 +329,6 @@ void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories){
         // add the pair startingPos and target to the vector
         trainingValidationTrajectories.push_back(std::make_pair(newStartingPos, newTarget));
     }
-
-    // Initiate the iterator of the trainingValidationTrajectories
-    trainingValidationIterator = trainingValidationTrajectories.begin();
 }
 
 void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
@@ -376,9 +350,6 @@ void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
         // add the pair startingPos and target to the vector
         validationTrajectories.push_back(std::make_pair(newStartingPos, newTarget));
     }
-
-    // Initiate the iterator of the validationTrajectories
-    validationIterator = validationTrajectories.begin();
 }
 
 std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation, bool isTarget){
@@ -529,9 +500,9 @@ std::string ArmLearnWrapper::newGoalToString() const {
     // Log the current coordonate of the target
     std::stringstream toLog;
     toLog << " - (new goal : ";
-    toLog << trainingIterator->second->getInput()[0] << " ; ";
-    toLog << trainingIterator->second->getInput()[1] << " ; ";
-    toLog << trainingIterator->second->getInput()[2] << " ; ";
+    toLog << this->currentTarget->getInput()[0] << " ; ";
+    toLog << this->currentTarget->getInput()[1] << " ; ";
+    toLog << this->currentTarget->getInput()[2] << " ; ";
     toLog << ")" << std::endl;
     return toLog.str();
 }
@@ -554,9 +525,9 @@ std::string ArmLearnWrapper::toString() const {
 
     // Log the target coordonate in cartesian coords
     res << " - (goal : ";
-    res << trainingIterator->second->getInput()[0] << " ; ";
-    res << trainingIterator->second->getInput()[1] << " ; ";
-    res << trainingIterator->second->getInput()[2] << " ; ";
+    res << this->currentTarget->getInput()[0] << " ; ";
+    res << this->currentTarget->getInput()[1] << " ; ";
+    res << this->currentTarget->getInput()[2] << " ; ";
     res << ")";
 
     return res.str();
@@ -633,8 +604,6 @@ void ArmLearnWrapper::loadValidationTrajectories() {
         // Close the file
         inFile.close();
 
-        // Initiate the iterator of the validationTrajectories
-        validationIterator = validationTrajectories.begin();
     } else {
         std::cerr << "Error while openning file for loading validation trajectories" << std::endl;
     }

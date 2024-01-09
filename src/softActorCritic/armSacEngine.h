@@ -87,8 +87,9 @@ class ArmSacEngine{
          * 
          * @param[in] seed Seed of the instance
          * @param[in] mode current mode (training, validation or testing)
+         * @param[in] iterationNumber current iteration Number
          */
-        double runOneEpisode(uint16_t seed, Learn::LearningMode mode);
+        double runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint16_t iterationNumber);
 
         /**
          * @brief Train one generation
