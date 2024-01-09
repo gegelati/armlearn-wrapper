@@ -8,7 +8,6 @@
 #include <iostream>
 
 #include <gegelati.h>
-#include <torch/torch.h>
 #include "instructions.h"
 #include "trainingParameters.h"
 #include "armLearnLogger.h"
@@ -16,6 +15,7 @@
 #include "ArmLearnWrapper.h"
 #include "softActorCritic/armSacEngine.h"
 #include "softActorCritic/sacParameters.h"
+#include <torch/torch.h>
 
 int main() {
     std::cout << "Start ArmLearner application." << std::endl;
@@ -92,8 +92,7 @@ int main() {
         armLearnEnv.setgeneration(i);
 
         // Update/Generate the training trajectories
-        armLearnEnv.updateTrainingTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
-
+        armLearnEnv.updateTrainingTrajectories(sacParams.nbEpisodeTraining);
 
         // Train
         learningAgent.trainOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
@@ -109,6 +108,7 @@ int main() {
         }
 
         if (doUpdateLimits) {
+
             // Log the limits
             learningAgent.logLimits();
 

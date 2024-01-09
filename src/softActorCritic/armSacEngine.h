@@ -3,11 +3,11 @@
 #ifndef ARM_SAC_ENGINE_H
 #define ARM_SAC_ENGINE_H
 
-#include <torch/torch.h>
 
 #include "softActorCritic.h"
 #include "sacParameters.h"
 #include "../ArmLearnWrapper.h"
+#include <torch/torch.h>
 
 class ArmSacEngine{
     private:
@@ -25,6 +25,7 @@ class ArmSacEngine{
 
         /// Max number of actions doable in one episode
         uint16_t maxNbActions;
+
 
         /// True if validation is done
         bool doValidation;

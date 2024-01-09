@@ -23,6 +23,7 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode){
     bool terminated = false;
     torch::Tensor state = getTensorState();
 
+
     // Do iterations while the episode is not terminated
     while (!terminated && nbActions < maxNbActions) {
 
@@ -96,7 +97,10 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode){
     return result;
 }
 
+
+
 void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
+
 
     // Log generation
     logNewGeneration();
@@ -123,6 +127,8 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
 
     // Incremente generation
     generation++;
+
+    
 }
 
 

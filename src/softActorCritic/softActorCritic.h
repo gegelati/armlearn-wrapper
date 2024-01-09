@@ -2,10 +2,10 @@
 #ifndef SOFT_ACTOR_CRITIC_H
 #define SOFT_ACTOR_CRITIC_H
 
-#include <torch/torch.h>
 #include "replayBuffer.h"
 #include "networks.h"
 #include "sacParameters.h"
+#include <torch/torch.h>
 
 class SoftActorCritic{
     private:

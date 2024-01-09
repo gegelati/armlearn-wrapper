@@ -13,9 +13,9 @@ torch::Tensor Networks::Critic::forward(torch::Tensor state, torch::Tensor actio
 
     // Calcul and return the qvalue
     auto q_value = hiddenLayer1(input);
-    q_value = torch::nn::functional::relu(q_value);
+    q_value = norm1(torch::nn::functional::relu(q_value));
     q_value = hiddenLayer2(q_value);
-    q_value = torch::nn::functional::relu(q_value);
+    q_value = norm2(torch::nn::functional::relu(q_value));
     q_value = outputLayer(q_value);
 
     return q_value;
@@ -41,9 +41,9 @@ torch::Tensor Networks::Value::forward(torch::Tensor state){
 
     // Calcul and return the value
     auto value = hiddenLayer1(state);
-    value = torch::nn::functional::relu(value);
+    value = norm1(torch::nn::functional::relu(value));
     value = hiddenLayer2(value);
-    value = torch::nn::functional::relu(value);
+    value = norm2(torch::nn::functional::relu(value));
     value = outputLayer(value);
 
     return value;
@@ -71,9 +71,9 @@ std::pair<torch::Tensor, torch::Tensor> Networks::Actor::forward(torch::Tensor s
 
     // Calcul mu and sigma
     auto prob = hiddenLayer1(state);
-    prob = torch::nn::functional::relu(prob);
+    prob = norm1(torch::nn::functional::relu(prob));
     prob = hiddenLayer2(prob);
-    prob = torch::nn::functional::relu(prob);
+    prob = norm2(torch::nn::functional::relu(prob));
     auto mu = muOutputLayer(prob);
     auto sigma = sigmaOutputLayer(prob);
 

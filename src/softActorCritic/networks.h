@@ -15,6 +15,10 @@ namespace Networks
             torch::nn::Linear hiddenLayer1;
             /// Second hidden layer
             torch::nn::Linear hiddenLayer2;
+
+            torch::nn::LayerNorm norm1;
+            torch::nn::LayerNorm norm2;
+
             /// Output layer
             torch::nn::Linear outputLayer;
 
@@ -33,6 +37,8 @@ namespace Networks
             : hiddenLayer1(register_module(name+"linear"+std::to_string(1), torch::nn::Linear(stateSize+actionSize, sizeHL1))),
             hiddenLayer2(register_module(name+"linear"+std::to_string(2), torch::nn::Linear(sizeHL1, sizeHL2))),
             outputLayer(register_module(name+"linear"+std::to_string(3), torch::nn::Linear(sizeHL2, 1))),
+            norm1(register_module(name+"norm"+std::to_string(1), torch::nn::LayerNorm(torch::nn::LayerNormOptions({sizeHL1})))),
+            norm2(register_module(name+"norm"+std::to_string(2), torch::nn::LayerNorm(torch::nn::LayerNormOptions({sizeHL2})))),
             optimizer(this->parameters(), torch::optim::AdamOptions(lr)),
             device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU){
                 this->name=name;
@@ -63,6 +69,9 @@ namespace Networks
             torch::nn::Linear hiddenLayer1;
             /// Second hidden layer
             torch::nn::Linear hiddenLayer2;
+
+            torch::nn::LayerNorm norm1;
+            torch::nn::LayerNorm norm2;
             /// Output layer
             torch::nn::Linear outputLayer;
 
@@ -81,6 +90,8 @@ namespace Networks
             : hiddenLayer1(register_module(name+"linear"+std::to_string(1), torch::nn::Linear(stateSize, sizeHL1))),
             hiddenLayer2(register_module(name+"linear"+std::to_string(2), torch::nn::Linear(sizeHL1, sizeHL2))),
             outputLayer(register_module(name+"linear"+std::to_string(3), torch::nn::Linear(sizeHL2, 1))),
+            norm1(register_module(name+"norm"+std::to_string(1), torch::nn::LayerNorm(torch::nn::LayerNormOptions({sizeHL1})))),
+            norm2(register_module(name+"norm"+std::to_string(2), torch::nn::LayerNorm(torch::nn::LayerNormOptions({sizeHL2})))),
             optimizer(this->parameters(), torch::optim::AdamOptions(lr)),
             device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU){
                 this->name=name;
@@ -110,6 +121,10 @@ namespace Networks
             torch::nn::Linear hiddenLayer1;
             /// Second hidden layer
             torch::nn::Linear hiddenLayer2;
+
+            torch::nn::LayerNorm norm1;
+            torch::nn::LayerNorm norm2;
+
             /// Mu output layer
             torch::nn::Linear muOutputLayer;
             /// Sigma output layer
@@ -139,6 +154,8 @@ namespace Networks
             hiddenLayer2(register_module(name+"linear"+std::to_string(2), torch::nn::Linear(sizeHL1, sizeHL2))),
             muOutputLayer(register_module(name+"linear"+std::to_string(3), torch::nn::Linear(sizeHL2, actionSize))),
             sigmaOutputLayer(register_module(name+"linear"+std::to_string(4), torch::nn::Linear(sizeHL2, actionSize))),
+            norm1(register_module(name+"norm"+std::to_string(1), torch::nn::LayerNorm(torch::nn::LayerNormOptions({sizeHL1})))),
+            norm2(register_module(name+"norm"+std::to_string(2), torch::nn::LayerNorm(torch::nn::LayerNormOptions({sizeHL2})))),
             optimizer(this->parameters(), torch::optim::AdamOptions(lr)),
             device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU){
                 this->name=name;
