@@ -2,7 +2,7 @@
 	// Learning rate of the models
 	"lr": 0.0005,
 	/// Gamma for bellman equation
-	"gamma": 0.99,
+	"gamma": 0.9,
 	// Reward scale 
 	"rewardScale": 2,
 	// Size of the buffer
@@ -18,7 +18,9 @@
 	// True to load the models
 	"loadModels": false,
 	// True to unable multiple actions
-	"multipleActions": false,
+	"multipleActions": true,
 	// True to unable continuous actions. Note : actions can only be continuous if multiple actions is unable
-	"continuousActions": false
+	"continuousActions": true,
+    // Number of episodes to train on between each log and validation
+    "nbEpisodeTraining": 5
 }

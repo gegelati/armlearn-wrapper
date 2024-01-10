@@ -26,7 +26,6 @@ class ArmSacEngine{
         /// Max number of actions doable in one episode
         uint16_t maxNbActions;
 
-
         /// True if validation is done
         bool doValidation;
 

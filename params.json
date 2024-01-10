@@ -8,11 +8,11 @@
 	// Boolean used to activate an evaluation of the surviving roots in validation
 	// mode after the training at each generation.
 	// "doValidation" : false, // Default value
-	"doValidation" : false,
+	"doValidation" : true,
 	// Maximum number of actions performed on the learning environment during the
 	// each evaluation of a root.
 	// "maxNbActionsPerEval" : 1000, // Default value
-	"maxNbActionsPerEval" : 50,
+	"maxNbActionsPerEval" : 1500,
 	// Maximum number of times a given root is evaluated.After this number is
 	// reached, possibly after several generations, the score of the root will be
 	// fixed, and no further evaluation will be done.
@@ -101,7 +101,7 @@
 	// Number of evaluation of each root per generation.
 	// "nbIterationsPerPolicyEvaluation" : 5, // Default value
 
-	"nbIterationsPerPolicyEvaluation" : 2,
+	"nbIterationsPerPolicyEvaluation" : 10,
 
 	// Number of Constant available in each Program.
 	// "nbProgramConstant" : 0, // Default value
@@ -113,7 +113,7 @@
 	// Number of threads used for the training process.
 	// When undefined in the json file, this parameter is automatically set to the
 	// number of cores of the CPU.
-	// /* "nbThreads" : 0,*/ // Commented by default
+	//"nbThreads" : 2,// Commented by default
 	// Percentage of deleted (and regenerated) root TPGVertex at each generation.
 	// "ratioDeletedRoots" : 0.5, // Default value
 	"ratioDeletedRoots" : 0.5

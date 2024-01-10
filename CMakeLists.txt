@@ -64,6 +64,8 @@ if (WIN32)
     endif()
 endif()
 
+
+
 # *******************************************
 # ************** Executables ****************
 # *******************************************
@@ -146,3 +148,33 @@ add_executable(armSoftActorCritic ${armgegelati_files})
 
 target_link_libraries(armSoftActorCritic ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
 target_compile_definitions(armSoftActorCritic PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+
+
+
+# *******************************************
+# *********** Directory creation ************
+# *******************************************
+
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/params)
+        add_custom_command(
+                TARGET ${PROJECT_NAME}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/params
+                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/params.json ${CMAKE_BINARY_DIR}/params/params.json
+                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/trainParams.json ${CMAKE_BINARY_DIR}/params/trainParams.json
+                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/sacParams.json ${CMAKE_BINARY_DIR}/params/sacParams.json
+                COMMENT "Creating params directory and copying parameters' files")
+endif()
+
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/outLogs)
+        add_custom_command(
+                TARGET ${PROJECT_NAME}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/outLogs
+                COMMENT "Creating outLogs directory")
+endif()
+
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/outLogs/models)
+        add_custom_command(
+                TARGET ${PROJECT_NAME}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/outLogs/models
+                COMMENT "Creating outLogs/models directory")
+endif()

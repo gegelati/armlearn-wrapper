@@ -87,8 +87,13 @@ class SoftActorCritic{
         /// @brief Load saved models, throw exception if models have not been saved before
         void loadModels();
 
-        /// @brief save models
-        void saveModels();
+        /** 
+         * @brief save models
+         * 
+         * @param generationNumber the integer corresponding to the generation
+         * @param bestModel boolean that indicate if this is the best model
+         */
+        void saveModels(uint64_t genenrationNumber, bool bestModel=false);
 
 };
 

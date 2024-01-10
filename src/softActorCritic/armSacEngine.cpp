@@ -223,9 +223,10 @@ void ArmSacEngine::logTraining(double score, double result){
 
     lastTrainingScore = score;
 
+    learningAgent.saveModels(generation, false);
     if(score > bestScore && !doValidation){
         bestScore = score;
-        learningAgent.saveModels();
+        learningAgent.saveModels(generation, true);
     }
 
     trainingTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
@@ -240,7 +241,7 @@ void ArmSacEngine::logValidation(double score){
 
     if(lastValidationScore > bestScore){
         bestScore = lastValidationScore;
-        learningAgent.saveModels();
+        learningAgent.saveModels(generation, true);
     }
     validationTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
     chronoFromNow();
