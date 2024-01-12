@@ -11,6 +11,9 @@ void fillInstructionSet(Instructions::Set& set) {
     auto cond = [](double a, double b) -> double { return a < b ? -a : a; };
     auto cos = [](double a) -> double { return std::cos(a); };
     auto sin = [](double a) -> double { return std::sin(a); };
+    
+    auto ln = [](double a)->double {return std::log(a); };
+	auto exp = [](double a)->double {return std::exp(a); };
 
     set.add(*(new Instructions::LambdaInstruction<double, double>(minus)));
     set.add(*(new Instructions::LambdaInstruction<double, double>(add)));
@@ -20,4 +23,6 @@ void fillInstructionSet(Instructions::Set& set) {
     set.add(*(new Instructions::LambdaInstruction<double>(cos)));
     set.add(*(new Instructions::LambdaInstruction<double>(sin)));
 
+    set.add(*(new Instructions::LambdaInstruction<double>(ln)));
+    set.add(*(new Instructions::LambdaInstruction<double>(exp)));
 }
