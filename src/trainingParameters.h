@@ -66,6 +66,9 @@ public:
     /// True if training validation is used for random starting pos and random target pos
     bool doTrainingValidation = true;
 
+    /// If True, progressive mode is done by increasing motor position, instead it is the euclidian distance that increase
+    bool progressiveModeMotor = true;
+
     /// True if the starting positions are set randomly
     bool doRandomStartingPosition = true;
 
@@ -119,6 +122,9 @@ public:
 
     /// Set interactive mode or not (usefull for calcul machine)
     bool interactiveMode = false;
+
+    /// Size in degree of a discrete action, and max size of a continuous action
+    double sizeAction = 1;
 
     /**
      * \brief Loads a given json file and fills the parameters it contains

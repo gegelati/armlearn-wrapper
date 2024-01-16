@@ -43,6 +43,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "progressiveModeMotor") {
+        progressiveModeMotor = (bool)value.asBool();
+        return;
+    }
+
     if (param == "doRandomStartingPosition") {
         doRandomStartingPosition = (bool)value.asBool();
         return;
@@ -130,6 +135,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
 
     if (param == "interactiveMode"){
         interactiveMode = (bool)value.asBool();
+        return;
+    }
+
+    if (param == "sizeAction"){
+        sizeAction = (double)value.asDouble();
         return;
     }
 

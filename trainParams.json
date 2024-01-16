@@ -1,6 +1,8 @@
 {
 	// True if training validation is used for random starting pos and random target pos
 	"doTrainingValidation": false,
+	// If True, progressive mode is done by increasing motor position, instead it is the euclidian distance that increase
+	"progressiveModeMotor": false,
 	// Use the progressive mode for choosing randomly the targets
 	"progressiveModeTargets": false,
 	// Initial maximum distance between the target and the starting position
@@ -10,9 +12,9 @@
 	// Use the progressive mode for choosing randomly the starting position (no effect if doRandomStartingPosition is false)
 	"progressiveModeStartingPos": false,
 	// Initial maximum distance between the random starting position and the BACKHOE one
-	"maxLengthStartingPos": 10,
+	"maxLengthStartingPos": 30,
 	// Coefficient to upgrade the maxLengthStartingPos and MaxLengthTargets
-	"coefficientUpgradeAdd": 30,
+	"coefficientUpgradeAdd": 20,
 	// Coefficient to upgrade the maxLengthStartingPos and MaxLengthTargets
 	"coefficientUpgradeMult": 1.2,
 	// Number of iterations to cumulate to upgrade the maxLengthStartingPos and MaxLengthTargets
@@ -35,7 +37,9 @@
 	// true to save the validation trajectories
 	"saveValidationTrajectories": false,
 	// Seed to init the algorithm (gegelati or SAC)
-	"seed": 1484556,
+	"seed": 98432138,
 	// Set interactive mode or not (usefull for calcul machine)
-	"interactiveMode": false
+	"interactiveMode": false,
+	// Size in degree of a discrete action, and max size of a continuous action
+	"sizeAction": 1
 }

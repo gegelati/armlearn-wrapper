@@ -47,7 +47,7 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
 void ArmLearnWrapper::doAction(uint64_t actionID) {
 
     std::vector<double> out;
-    double step = M_PI / 180; // discrete rotations of 1°
+    double step = M_PI / 180 * params.sizeAction; // discrete rotations of 1°
     // -> move step size in training parameters
 
     // Get the action
@@ -128,7 +128,7 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 
     std::vector<double> out;
     for (float &action : actions) {
-        out.push_back(1.0 * action * M_PI / 180);
+        out.push_back(params.sizeAction * action * M_PI / 180);
     }
     out.push_back(0.0);
     out.push_back(0.0);
@@ -229,7 +229,17 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     // Change the target
     this->currentTarget = trajectories->at(iterationNumber).second;
     computeInput();
+/*
+    std::vector<int16_t> vectorValue;
+    for(auto val: *trajectories->at(iterationNumber).first){
+        vectorValue.push_back(val);
+    }
+    vectorValue.push_back(trajectories->at(iterationNumber).second->getInput()[0]);
+    vectorValue.push_back(trajectories->at(iterationNumber).second->getInput()[1]);
+    vectorValue.push_back(trajectories->at(iterationNumber).second->getInput()[2]);
 
+    returnedVectorValue = vectorValue;
+*/
     // Init environnement parameters
     score = 0;
     nbActions = 0;
@@ -359,7 +369,7 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation, bool isTa
     auto limit = (isTarget) ? currentMaxLimitTarget: currentMaxLimitStartingPos;
 
 
-    if(!validation && limit < 750){
+    if(!validation && limit < 750 && params.progressiveModeMotor){
         // Create distribution
         std::normal_distribution<double> distribution(2048, limit);
         
@@ -404,7 +414,7 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
         // Compute the distance the new starting position and the initial one
         distance = computeSquaredError(converter->computeServoToCoord(initStartingPos)->getCoord(), newStartingPos);
 
-    } while (!validation && distance > currentMaxLimitStartingPos);
+    } while (!validation && distance > currentMaxLimitStartingPos && !params.progressiveModeMotor);
 
     return new std::vector<uint16_t>(motorPos);
 
@@ -418,8 +428,6 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> star
     // Init the distance at -1 to be sure that the while condition never return true during validation
     double distance = -1;
 
-    int i =0;
-
     // Do one time then only while the distance is above the distance to browse
     do {
         // Get a random motor positions
@@ -431,7 +439,7 @@ armlearn::Input<int16_t> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> star
         // Compute the distance to browse
         distance = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
         
-    } while (!validation && distance > 100000);
+    } while (!validation && distance > currentMaxLimitTarget && !params.progressiveModeMotor);
 
     // Create the input to return
     return new armlearn::Input<int16_t>(

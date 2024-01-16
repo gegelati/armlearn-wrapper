@@ -324,6 +324,9 @@ public:
 
     /// Get currentMaxLimitStartingPos
     double getCurrentMaxLimitStartingPos();
+
+    //std::vector<int16_t> returnedVectorValue;
+
 };
 
 #endif
