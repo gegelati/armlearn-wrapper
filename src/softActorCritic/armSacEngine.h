@@ -66,6 +66,8 @@ class ArmSacEngine{
         /// Checkpoint of time
         std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
 
+        //std::vector<std::vector<int16_t>> vectorValue;
+
     public:
         ArmSacEngine(SACParameters sacParams, ArmLearnWrapper* armLearnEnv, std::ostream& file,
         uint16_t maxNbActions, bool doValidation=false, bool doTrainingValidation=false, bool doUpdateLimits=false)
@@ -124,7 +126,7 @@ class ArmSacEngine{
         void logTraining(double score, double result);
 
         /// Log the validation score, potentially save the models
-        void logValidation(double score);
+        void logValidation(double score, double success);
 
         /// Log the training validation score
         void logTrainingValidation(double score);

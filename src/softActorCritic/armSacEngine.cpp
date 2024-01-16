@@ -19,6 +19,8 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
     // Reset the environnement
     armLearnEnv->reset(seed, mode, iterationNumber);
 
+    
+
     // Set terminated to false and get the state
     bool terminated = false;
     torch::Tensor state = getTensorState();
@@ -93,7 +95,11 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
         // Add the reward to the result
         result += singleReward;
     }
-    
+
+    //armLearnEnv->returnedVectorValue.push_back(nbActions);
+    //vectorValue.push_back(armLearnEnv->returnedVectorValue);
+
+
     return result;
 }
 
@@ -127,6 +133,34 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
     // Incremente generation
     generation++;
 
+/*
+    // Nom du fichier CSV
+    std::string fileName = "output.csv";
+
+    // Ouverture du fichier en mode écriture
+    std::ofstream outputFile(fileName);
+
+    // Vérification si le fichier est correctement ouvert
+    if (outputFile.is_open()) {
+        // Écriture des données dans le fichier CSV
+        for (const auto &row : vectorValue) {
+            for (size_t i = 0; i < row.size(); ++i) {
+                outputFile << row[i];
+
+                // Ajout d'une virgule sauf pour le dernier élément
+                if (i < row.size() - 1) {
+                    outputFile << ",";
+                }
+            }
+
+            // Ajout d'un saut de ligne après chaque ligne de la matrice
+            outputFile << std::endl;
+        }
+
+        // Fermeture du fichier
+        outputFile.close();
+
+    }*/
     
 }
 
@@ -134,6 +168,7 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
 void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
 
     double score = 0;
+    double success = 0;
 
     // Validate for nbIterationTraining episode(s)
     for(int j = 0; j < nbIterationValidation; j++){
@@ -142,12 +177,17 @@ void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
         runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
         // Get score
         score += armLearnEnv->getScore();
+
+        if (armLearnEnv->getScore() > -5){
+            success++;
+        }
     }
-    // get the mean score
+    // get the mean score and mean success
     score /= nbIterationValidation;
+    success /= nbIterationValidation;
 
     // Log the validation
-    logValidation(score);
+    logValidation(score, success);
 };
 
 void ArmSacEngine::validateTrainingOneGeneration(uint16_t nbIterationTrainingValidation){
@@ -187,8 +227,8 @@ void ArmSacEngine::logHeader(){
     file << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Train"<< std::setw(colWidth)<<"Reward";
 
     if (doValidation) {
-        std::cout << std::setw(colWidth) << "Valid" ;
-        file << std::setw(colWidth) << "Valid" ;
+        std::cout << std::setw(colWidth) << "Valid"<< std::setw(colWidth) << "Success" ;
+        file << std::setw(colWidth) << "Valid" << std::setw(colWidth) << "Success" ;
     }
 
     if (doTrainingValidation){
@@ -233,10 +273,10 @@ void ArmSacEngine::logTraining(double score, double result){
     chronoFromNow();
 }
 
-void ArmSacEngine::logValidation(double score){
+void ArmSacEngine::logValidation(double score, double success){
 
-    std::cout<<score<<std::setw(colWidth);
-    file<<score<<std::setw(colWidth);
+    std::cout<<score<<std::setw(colWidth)<<success<<std::setw(colWidth);
+    file<<score<<std::setw(colWidth)<<success<<std::setw(colWidth);
     lastValidationScore = score;
 
     if(lastValidationScore > bestScore){
