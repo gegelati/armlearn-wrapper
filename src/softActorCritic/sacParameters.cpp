@@ -53,6 +53,11 @@ void SACParameters::setParameterFromString(const std::string& param, Json::Value
         return;
     }
 
+    if (param == "gradientStep"){
+        gradientStep = (int)value.asUInt();
+        return;
+    }
+
     if (param == "sizeBuffer") {
         sizeBuffer = (int)value.asUInt();
         return;

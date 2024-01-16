@@ -37,8 +37,10 @@ void SoftActorCritic::updateNetworkParameter(double currentTau){
 
 void SoftActorCritic::learn(){
     // Do not learn if memoryIndex is under the batch size
-    if (memory.getMemoryIndex() < params.batchSize)
+    if (memory.getMemoryIndex() < params.batchSize || memory.getMemoryIndex() % params.gradientStep != 0)
         return;
+
+    
 
     // Get random data
     auto indexes = memory.sampleBufferIndex(params.batchSize);

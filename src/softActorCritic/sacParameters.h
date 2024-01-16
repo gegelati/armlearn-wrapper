@@ -72,6 +72,9 @@ public:
     /// Reward scale 
     double rewardScale = 2.0;
 
+    /// Gradient Step
+    int gradientStep = 1;
+
     /// Size of the buffer
     int sizeBuffer = 100000;
 
