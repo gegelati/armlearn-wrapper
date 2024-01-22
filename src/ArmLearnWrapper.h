@@ -325,7 +325,7 @@ public:
     /// Get currentMaxLimitStartingPos
     double getCurrentMaxLimitStartingPos();
 
-    //std::vector<int16_t> returnedVectorValue;
+    //std::vector<int32_t> returnedVectorValue;
 
 };
 

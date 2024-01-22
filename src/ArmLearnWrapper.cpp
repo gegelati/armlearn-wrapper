@@ -126,14 +126,22 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
 
 void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 
+    int test_moving = 0;
+
     std::vector<double> out;
     for (float &action : actions) {
         out.push_back(params.sizeAction * action * M_PI / 180);
+
+        // We condider that below 0.1, the motor is not moving
+        if(abs(action) < 0.1){
+            test_moving++;
+        }
     }
     out.push_back(0.0);
     out.push_back(0.0);
 
-
+    
+    isMoving = (test_moving < 4);
 
     // Scale the positions
     auto scaledOutput = device->scalePosition(out, -M_PI, M_PI);
@@ -164,11 +172,8 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 double ArmLearnWrapper::computeReward() {
 
     // Get the cartiesion coordonates of the arm
-    std::vector<double> cartesianCoords;
-    for (int i = 0; i < cartesianPos.getLargestAddressSpace(); i++) {
-        cartesianCoords.emplace_back(
-                (double) *cartesianPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
-    }
+    std::vector<double> cartesianCoords = converter->computeServoToCoord(getMotorsPos())->getCoord();
+
     auto target = this->currentTarget->getInput();
 
     // Compute que Distance with the target
@@ -176,7 +181,7 @@ double ArmLearnWrapper::computeReward() {
 
     /// Compute the number of actions taken in the episode divide by the maximum number of actions takeable in an episode
     /// This ratio is multiplied by a coefficient that allow to choose the impact of this ratio on the reward
-    double valNbIterations = params.coefRewardNbIterations * (static_cast<double>(nbActions) / nbMaxActions);
+    //double valNbIterations = params.coefRewardNbIterations * (static_cast<double>(nbActions) / nbMaxActions);
 
     // set Score
     score = -1 * err;
@@ -193,8 +198,20 @@ double ArmLearnWrapper::computeReward() {
     }
 
     // If the counter reach 10 or terminal is true (because the arm can stop and set terminal=true with action 8)
-    if(nbActionsInThreshold == 10 || !isMoving){
+    /*if(nbActionsInThreshold == 10 || !isMoving){
         terminal = true;
+    }*/
+
+    if(params.reachingObjectives){
+        if(score > params.thresholdUpgrade){
+            terminal = true;
+            return 1000;
+        }
+    } else if(nbActionsInThreshold == 10 || !isMoving){
+        terminal = true;
+        if(score > params.thresholdUpgrade){
+            return 1000;
+        }
     }
 
     // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)
@@ -229,8 +246,9 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     // Change the target
     this->currentTarget = trajectories->at(iterationNumber).second;
     computeInput();
-/*
-    std::vector<int16_t> vectorValue;
+
+    /*
+    std::vector<int32_t> vectorValue;
     for(auto val: *trajectories->at(iterationNumber).first){
         vectorValue.push_back(val);
     }
@@ -239,7 +257,8 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     vectorValue.push_back(trajectories->at(iterationNumber).second->getInput()[2]);
 
     returnedVectorValue = vectorValue;
-*/
+    */
+
     // Init environnement parameters
     score = 0;
     nbActions = 0;

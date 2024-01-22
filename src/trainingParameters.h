@@ -63,6 +63,9 @@ private:
                                 Json::Value const& value);
 
 public:
+    /// Choose between stopping in or reaching the objectives
+    bool reachingObjectives = true;
+
     /// True if training validation is used for random starting pos and random target pos
     bool doTrainingValidation = true;
 

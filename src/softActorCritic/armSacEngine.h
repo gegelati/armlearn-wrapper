@@ -66,7 +66,7 @@ class ArmSacEngine{
         /// Checkpoint of time
         std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
 
-        //std::vector<std::vector<int16_t>> vectorValue;
+        //std::vector<std::vector<int32_t>> vectorValue;
 
     public:
         ArmSacEngine(SACParameters sacParams, ArmLearnWrapper* armLearnEnv, std::ostream& file,

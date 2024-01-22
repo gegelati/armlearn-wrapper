@@ -19,7 +19,7 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
     // Reset the environnement
     armLearnEnv->reset(seed, mode, iterationNumber);
 
-    
+    //std::vector<std::vector<uint16_t>> motor_pos;
 
     // Set terminated to false and get the state
     bool terminated = false;
@@ -61,6 +61,8 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
         }
 
 
+        //motor_pos.push_back(armLearnEnv->getMotorsPos());
+
         // Get the new state
         newState = getTensorState();
         
@@ -96,8 +98,18 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
         result += singleReward;
     }
 
-    //armLearnEnv->returnedVectorValue.push_back(nbActions);
-    //vectorValue.push_back(armLearnEnv->returnedVectorValue);
+    /*armLearnEnv->returnedVectorValue.push_back(nbActions);
+    armLearnEnv->returnedVectorValue.push_back(static_cast<int32_t>(armLearnEnv->getScore()));
+    armLearnEnv->returnedVectorValue.push_back(static_cast<int32_t>(result));
+    for(auto motor_value: motor_pos){
+        armLearnEnv->returnedVectorValue.push_back(motor_value[0]);
+        armLearnEnv->returnedVectorValue.push_back(motor_value[1]);
+        armLearnEnv->returnedVectorValue.push_back(motor_value[2]);
+        armLearnEnv->returnedVectorValue.push_back(motor_value[3]);
+    }
+
+    vectorValue.push_back(armLearnEnv->returnedVectorValue);
+    */
 
 
     return result;
@@ -174,11 +186,11 @@ void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
     for(int j = 0; j < nbIterationValidation; j++){
 
         uint64_t seed = generation * 43000000000 + j;
-        runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
+        score += runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
         // Get score
-        score += armLearnEnv->getScore();
+        //score += armLearnEnv->getScore();
 
-        if (armLearnEnv->getScore() > -5){
+        if (armLearnEnv->getReward() > 0){
             success++;
         }
     }

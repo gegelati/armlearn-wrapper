@@ -38,6 +38,10 @@ void TrainingParameters::setAllParamsFrom(const Json::Value& root)
 
 void TrainingParameters::setParameterFromString(const std::string& param, Json::Value const& value)
 {
+    if (param == "reachingObjectives"){
+        reachingObjectives = (bool)value.asBool();
+        return; 
+    }
     if (param == "doTrainingValidation") {
         doTrainingValidation = (bool)value.asBool();
         return;

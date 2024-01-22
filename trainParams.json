@@ -1,4 +1,6 @@
 {
+	// Choose between stopping in or reaching the objectives
+	"reachingObjectives": true,
 	// True if training validation is used for random starting pos and random target pos
 	"doTrainingValidation": false,
 	// If True, progressive mode is done by increasing motor position, instead it is the euclidian distance that increase
