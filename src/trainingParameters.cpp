@@ -147,6 +147,16 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "testing"){
+        testing = (bool)value.asBool();
+        return;
+    }
+    if (param == "logValidationInfo"){
+        logValidationInfo = (bool)value.asBool();
+        return;
+    }
+
+
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }

@@ -96,6 +96,63 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     
 }
 
+std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
+    TPG::TPGExecutionEngine& tee, const Job& job, uint64_t generationNumber,
+    Learn::LearningMode mode, LearningEnvironment& le) const
+{
+    // Only consider the first root of jobs as we are not in adversarial mode
+    const TPG::TPGVertex* root = job.getRoot();
+
+    // Skip the root evaluation process if enough evaluations were already
+    // performed. In the evaluation mode only.
+    std::shared_ptr<Learn::EvaluationResult> previousEval;
+    if (mode == LearningMode::TRAINING &&
+        this->isRootEvalSkipped(*root, previousEval)) {
+        return previousEval;
+    }
+
+    // Init results
+    double result = 0.0;
+
+    // Evaluate nbIteration times
+    for (auto iterationNumber = 0; iterationNumber < this->params.nbIterationsPerPolicyEvaluation; iterationNumber++) {
+        // Compute a Hash
+        Data::Hash<uint64_t> hasher;
+        uint64_t hash = hasher(generationNumber) ^ hasher(iterationNumber);
+
+        // Reset the learning Environment
+        le.reset(hash, mode, iterationNumber, generationNumber);
+
+        uint64_t nbActions = 0;
+        while (!le.isTerminal() &&
+               nbActions < this->params.maxNbActionsPerEval) {
+            // Get the action
+            uint64_t actionID =
+                ((const TPG::TPGAction*)tee.executeFromRoot(*root).back())
+                    ->getActionID();
+            // Do it
+            le.doAction(actionID);
+            // Count actions
+            nbActions++;
+        }
+
+        // Update results
+        result += le.getScore();
+    }
+
+    // Create the EvaluationResult
+    auto evaluationResult =
+        std::shared_ptr<EvaluationResult>(new EvaluationResult(
+            result / (double)params.nbIterationsPerPolicyEvaluation,
+            params.nbIterationsPerPolicyEvaluation));
+
+    // Combine it with previous one if any
+    if (previousEval != nullptr) {
+        *evaluationResult += *previousEval;
+    }
+    return evaluationResult;
+}
+
 std::queue<std::shared_ptr<Learn::Job>> Learn::ArmLearningAgent::makeJobs(
     Learn::LearningMode mode, TPG::TPGGraph* tpgGraph)
 {

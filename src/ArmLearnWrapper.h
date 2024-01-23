@@ -107,6 +107,15 @@ protected:
     armlearn::Input<int16_t> *currentTarget;
 
 
+    
+    bool logValidationInfo = false;
+    std::vector<std::vector<uint16_t>> allMotorPos;
+    std::vector<int32_t> vectorValidationInfos;
+    std::vector<std::vector<int32_t>> allValidationInfos;
+
+    std::vector<int> trajToDelete;
+
+
 public:
 
     /// @brief Do not know
@@ -185,7 +194,8 @@ public:
     /// @brief Clear a given proportion of the current set of training targets 
     void clearPropTrainingTrajectories();
 
-
+    void deleteTrajectory();
+    void addToDeleteTraj(int j);
 
     /**
      * @brief Inherited from LearningEnvironment.
@@ -292,6 +302,8 @@ public:
     /// Load the validation trajectories from a ValidationTrajectories.txt file
     void loadValidationTrajectories();
 
+    void logValidationTrajectories();
+
     /**
      * @brief Inherited via DeviceLearner
      */ 
@@ -325,7 +337,6 @@ public:
     /// Get currentMaxLimitStartingPos
     double getCurrentMaxLimitStartingPos();
 
-    //std::vector<int32_t> returnedVectorValue;
 
 };
 

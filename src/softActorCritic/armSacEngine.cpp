@@ -19,8 +19,6 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
     // Reset the environnement
     armLearnEnv->reset(seed, mode, iterationNumber);
 
-    //std::vector<std::vector<uint16_t>> motor_pos;
-
     // Set terminated to false and get the state
     bool terminated = false;
     torch::Tensor state = getTensorState();
@@ -61,7 +59,6 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
         }
 
 
-        //motor_pos.push_back(armLearnEnv->getMotorsPos());
 
         // Get the new state
         newState = getTensorState();
@@ -98,19 +95,6 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
         result += singleReward;
     }
 
-    /*armLearnEnv->returnedVectorValue.push_back(nbActions);
-    armLearnEnv->returnedVectorValue.push_back(static_cast<int32_t>(armLearnEnv->getScore()));
-    armLearnEnv->returnedVectorValue.push_back(static_cast<int32_t>(result));
-    for(auto motor_value: motor_pos){
-        armLearnEnv->returnedVectorValue.push_back(motor_value[0]);
-        armLearnEnv->returnedVectorValue.push_back(motor_value[1]);
-        armLearnEnv->returnedVectorValue.push_back(motor_value[2]);
-        armLearnEnv->returnedVectorValue.push_back(motor_value[3]);
-    }
-
-    vectorValue.push_back(armLearnEnv->returnedVectorValue);
-    */
-
 
     return result;
 }
@@ -134,6 +118,11 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
         
         // add score
         score += armLearnEnv->getScore();
+
+        if(armLearnEnv->getScore() > -5){
+            armLearnEnv->addToDeleteTraj(j);
+        }
+
     }
     // Get the mean score and result
     result /= sacParams.nbEpisodeTraining;
@@ -145,35 +134,6 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
     // Incremente generation
     generation++;
 
-/*
-    // Nom du fichier CSV
-    std::string fileName = "output.csv";
-
-    // Ouverture du fichier en mode écriture
-    std::ofstream outputFile(fileName);
-
-    // Vérification si le fichier est correctement ouvert
-    if (outputFile.is_open()) {
-        // Écriture des données dans le fichier CSV
-        for (const auto &row : vectorValue) {
-            for (size_t i = 0; i < row.size(); ++i) {
-                outputFile << row[i];
-
-                // Ajout d'une virgule sauf pour le dernier élément
-                if (i < row.size() - 1) {
-                    outputFile << ",";
-                }
-            }
-
-            // Ajout d'un saut de ligne après chaque ligne de la matrice
-            outputFile << std::endl;
-        }
-
-        // Fermeture du fichier
-        outputFile.close();
-
-    }*/
-    
 }
 
 

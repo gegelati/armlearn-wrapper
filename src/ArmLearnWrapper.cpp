@@ -122,6 +122,22 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
     nbActions++;
     reward = computeReward(); // Computation of reward
 
+    /*
+    if(logValidationInfo){
+        allMotorPos.push_back(getMotorsPos());
+        if(terminal){
+            vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
+            vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
+            for(auto motor_value: allMotorPos){
+                vectorValidationInfos.push_back(motor_value[0]);
+                vectorValidationInfos.push_back(motor_value[1]);
+                vectorValidationInfos.push_back(motor_value[2]);
+                vectorValidationInfos.push_back(motor_value[3]);
+            }
+        }
+        allValidationInfos.push_back(vectorValidationInfos);
+    }*/
+
 }
 
 void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
@@ -167,6 +183,9 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 
     nbActions++;
     reward = computeReward(); // Computation of reward
+
+
+
 }
 
 double ArmLearnWrapper::computeReward() {
@@ -237,6 +256,24 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
             break;
     }
 
+    if(params.logValidationInfo && mode == Learn::LearningMode::VALIDATION){
+        
+        allMotorPos.clear();
+        vectorValidationInfos.clear();
+        
+        logValidationInfo = true;
+
+        for(auto val: *trajectories->at(iterationNumber).first){
+            vectorValidationInfos.push_back(val);
+        }
+        vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[0]);
+        vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[1]);
+        vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[2]);
+
+    } else {
+        logValidationInfo = false;
+    }
+
     // Change the starting position
     this->currentStartingPos = trajectories->at(iterationNumber).first;
 
@@ -247,18 +284,6 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     this->currentTarget = trajectories->at(iterationNumber).second;
     computeInput();
 
-    /*
-    std::vector<int32_t> vectorValue;
-    for(auto val: *trajectories->at(iterationNumber).first){
-        vectorValue.push_back(val);
-    }
-    vectorValue.push_back(trajectories->at(iterationNumber).second->getInput()[0]);
-    vectorValue.push_back(trajectories->at(iterationNumber).second->getInput()[1]);
-    vectorValue.push_back(trajectories->at(iterationNumber).second->getInput()[2]);
-
-    returnedVectorValue = vectorValue;
-    */
-
     // Init environnement parameters
     score = 0;
     nbActions = 0;
@@ -267,6 +292,32 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     isMoving = true;
 }
 
+void ArmLearnWrapper::addToDeleteTraj(int index){
+    trajToDelete.push_back(index);
+}
+
+void ArmLearnWrapper::deleteTrajectory(){
+
+
+    for(int i = trainingTrajectories.size() - 1; i >= 0; --i) {
+
+        auto testFind = std::find(trajToDelete.begin(), trajToDelete.end(), i);
+
+        if (testFind != trajToDelete.end()){
+            auto iterToDelete = trainingTrajectories.begin();
+            std::advance(iterToDelete, i);
+
+            if (params.doRandomStartingPosition) delete iterToDelete->first;
+            delete iterToDelete->second;
+
+            trainingTrajectories.erase(iterToDelete);
+        }
+
+
+    }
+
+    trajToDelete.clear();
+}
 
 void ArmLearnWrapper::clearPropTrainingTrajectories(){
 
@@ -316,10 +367,10 @@ bool ArmLearnWrapper::isCopyable() const {
 
 void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
 
-
+    deleteTrajectory();
 
     // Clear a define prortion of the training targets by giving the proportion of targets reused
-    clearPropTrainingTrajectories();
+    //clearPropTrainingTrajectories();
 
     while (trainingTrajectories.size() < nbTrajectories){
 
@@ -635,6 +686,37 @@ void ArmLearnWrapper::loadValidationTrajectories() {
         std::cerr << "Error while openning file for loading validation trajectories" << std::endl;
     }
 }
+
+void ArmLearnWrapper::logValidationTrajectories(){
+    
+    // Nom du fichier CSV
+    std::string fileName = "output.csv";
+
+    // Ouverture du fichier en mode écriture
+    std::ofstream outputFile(fileName);
+
+    // Vérification si le fichier est correctement ouvert
+    if (outputFile.is_open()) {
+        // Écriture des données dans le fichier CSV
+        for (const auto &row : allValidationInfos) {
+            for (size_t i = 0; i < row.size(); ++i) {
+                outputFile << row[i];
+
+                // Ajout d'une virgule sauf pour le dernier élément
+                if (i < row.size() - 1) {
+                    outputFile << ",";
+                }
+            }
+
+            // Ajout d'un saut de ligne après chaque ligne de la matrice
+            outputFile << std::endl;
+        }
+
+        // Fermeture du fichier
+        outputFile.close();
+
+    }
+    allValidationInfos.clear();}
 
 std::vector<uint16_t> ArmLearnWrapper::getMotorsPos() {
 
