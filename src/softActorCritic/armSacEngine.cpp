@@ -95,7 +95,6 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
         result += singleReward;
     }
 
-
     return result;
 }
 
@@ -179,6 +178,32 @@ void ArmSacEngine::validateTrainingOneGeneration(uint16_t nbIterationTrainingVal
 
     // Log the training validation
     logTrainingValidation(score);
+}
+
+void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
+    double score = 0;
+    double success = 0;
+
+    // Validate for nbIterationTraining episode(s)
+    for(int j = 0; j < nbIterationTesting; j++){
+
+        uint64_t seed = generation * 43000465132000 + j;
+        score += runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
+        // Get score
+        //score += armLearnEnv->getScore();
+
+        if (armLearnEnv->getReward() > 0){
+            success++;
+        }
+    }
+    // get the mean score and mean success
+    score /= nbIterationTesting;
+    success /= nbIterationTesting;
+
+    armLearnEnv->logTestingTrajectories();
+    
+
+    std::cout<<"Testing score : "<<score<<" -- Testing success rate "<<success<<std::endl;
 }
 
 void ArmSacEngine::chronoFromNow(){

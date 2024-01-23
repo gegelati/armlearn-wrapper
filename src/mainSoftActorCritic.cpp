@@ -74,8 +74,8 @@ int main() {
     std::ofstream file((slashToAdd + "outLogs/logs.ods").c_str(), std::ios::out);
 
     // Instantiate the softActorCritic engine
-    ArmSacEngine learningAgent(sacParams, &armLearnEnv, file, gegelatiParams.maxNbActionsPerEval, 
-                               gegelatiParams.doValidation, doTrainingValidation, doUpdateLimits);
+    ArmSacEngine learningAgent(sacParams, &armLearnEnv, file, trainingParams, gegelatiParams.maxNbActionsPerEval, 
+                               gegelatiParams.doValidation);
 
     // Save the validation trajectories
     if (trainingParams.saveValidationTrajectories){
@@ -87,43 +87,48 @@ int main() {
         armLearnEnv.loadValidationTrajectories();
     }
 
-    // Train for params.nbGenerations generations
-    for (int i = 0; i < gegelatiParams.nbGenerations; i++) {
-        armLearnEnv.setgeneration(i);
+    if(trainingParams.testing){
+        learningAgent.testingModel(gegelatiParams.nbIterationsPerPolicyEvaluation);
+    } else {
+        // Train for params.nbGenerations generations
+        for (int i = 0; i < gegelatiParams.nbGenerations; i++) {
+            armLearnEnv.setgeneration(i);
 
-        // Update/Generate the training trajectories
-        armLearnEnv.updateTrainingTrajectories(sacParams.nbEpisodeTraining);
+            // Update/Generate the training trajectories
+            armLearnEnv.updateTrainingTrajectories(sacParams.nbEpisodeTraining);
 
-        // Train
-        learningAgent.trainOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
+            // Train
+            learningAgent.trainOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
 
-        // Does a validation or not according to the parameter doValidation
-        if (gegelatiParams.doValidation){
-            learningAgent.validateOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
-        }
+            // Does a validation or not according to the parameter doValidation
+            if (gegelatiParams.doValidation){
+                learningAgent.validateOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
+            }
 
-        // Does a training validation or not according to doTrainingValidation
-        if (doTrainingValidation) {
-            learningAgent.validateTrainingOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
-        }
-
-        if (doUpdateLimits) {
-
-            // Log the limits
-            learningAgent.logLimits();
-
-            // Update limits
+            // Does a training validation or not according to doTrainingValidation
             if (doTrainingValidation) {
-                armLearnEnv.updateCurrentLimits(learningAgent.getLastTrainingValidationScore(), gegelatiParams.nbIterationsPerPolicyEvaluation);
+                learningAgent.validateTrainingOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
             }
-            else{
-                armLearnEnv.updateCurrentLimits(learningAgent.getLastTrainingScore(), gegelatiParams.nbIterationsPerPolicyEvaluation);
+
+            if (doUpdateLimits) {
+
+                // Log the limits
+                learningAgent.logLimits();
+
+                // Update limits
+                if (doTrainingValidation) {
+                    armLearnEnv.updateCurrentLimits(learningAgent.getLastTrainingValidationScore(), gegelatiParams.nbIterationsPerPolicyEvaluation);
+                }
+                else{
+                    armLearnEnv.updateCurrentLimits(learningAgent.getLastTrainingScore(), gegelatiParams.nbIterationsPerPolicyEvaluation);
+                }
+                
             }
-            
-        }
 
 
-        learningAgent.logTimes();
+            learningAgent.logTimes();
+    }
+
 
     }
 

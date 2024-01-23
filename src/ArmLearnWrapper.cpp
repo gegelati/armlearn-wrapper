@@ -122,10 +122,10 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
     nbActions++;
     reward = computeReward(); // Computation of reward
 
-    /*
-    if(logValidationInfo){
+    
+    if(params.testing){
         allMotorPos.push_back(getMotorsPos());
-        if(terminal){
+        if(terminal || nbActions == 1500){
             vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
             vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
             for(auto motor_value: allMotorPos){
@@ -134,9 +134,9 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
                 vectorValidationInfos.push_back(motor_value[2]);
                 vectorValidationInfos.push_back(motor_value[3]);
             }
+            allValidationInfos.push_back(vectorValidationInfos);
         }
-        allValidationInfos.push_back(vectorValidationInfos);
-    }*/
+    }
 
 }
 
@@ -184,6 +184,21 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
     nbActions++;
     reward = computeReward(); // Computation of reward
 
+    
+    if(params.testing){
+        allMotorPos.push_back(getMotorsPos());
+        if(terminal || nbActions == 1500){
+            vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
+            vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
+            for(auto motor_value: allMotorPos){
+                vectorValidationInfos.push_back(motor_value[0]);
+                vectorValidationInfos.push_back(motor_value[1]);
+                vectorValidationInfos.push_back(motor_value[2]);
+                vectorValidationInfos.push_back(motor_value[3]);
+            }
+            allValidationInfos.push_back(vectorValidationInfos);
+        }
+    }
 
 
 }
@@ -256,12 +271,10 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
             break;
     }
 
-    if(params.logValidationInfo && mode == Learn::LearningMode::VALIDATION){
-        
+    if(params.testing){
         allMotorPos.clear();
         vectorValidationInfos.clear();
         
-        logValidationInfo = true;
 
         for(auto val: *trajectories->at(iterationNumber).first){
             vectorValidationInfos.push_back(val);
@@ -269,9 +282,6 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
         vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[0]);
         vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[1]);
         vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[2]);
-
-    } else {
-        logValidationInfo = false;
     }
 
     // Change the starting position
@@ -687,10 +697,10 @@ void ArmLearnWrapper::loadValidationTrajectories() {
     }
 }
 
-void ArmLearnWrapper::logValidationTrajectories(){
-    
+void ArmLearnWrapper::logTestingTrajectories(){
+
     // Nom du fichier CSV
-    std::string fileName = "output.csv";
+    std::string fileName = "outLogs/output.csv";
 
     // Ouverture du fichier en mode écriture
     std::ofstream outputFile(fileName);

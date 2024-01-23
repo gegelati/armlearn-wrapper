@@ -132,9 +132,6 @@ public:
     /// if true, deactivate the training and only logs results
 	bool testing = false;
 
-    /// True to save the validation informations (position etc)
-    bool logValidationInfo = true;
-
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.

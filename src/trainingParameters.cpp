@@ -151,10 +151,7 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         testing = (bool)value.asBool();
         return;
     }
-    if (param == "logValidationInfo"){
-        logValidationInfo = (bool)value.asBool();
-        return;
-    }
+
 
 
     // we didn't recognize the symbol

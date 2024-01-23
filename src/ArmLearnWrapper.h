@@ -108,7 +108,7 @@ protected:
 
 
     
-    bool logValidationInfo = false;
+    bool logTestInfo = false;
     std::vector<std::vector<uint16_t>> allMotorPos;
     std::vector<int32_t> vectorValidationInfos;
     std::vector<std::vector<int32_t>> allValidationInfos;
@@ -302,7 +302,7 @@ public:
     /// Load the validation trajectories from a ValidationTrajectories.txt file
     void loadValidationTrajectories();
 
-    void logValidationTrajectories();
+    void logTestingTrajectories();
 
     /**
      * @brief Inherited via DeviceLearner

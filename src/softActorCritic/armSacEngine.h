@@ -6,6 +6,7 @@
 
 #include "softActorCritic.h"
 #include "sacParameters.h"
+#include "../trainingParameters.h"
 #include "../ArmLearnWrapper.h"
 #include <torch/torch.h>
 
@@ -16,6 +17,9 @@ class ArmSacEngine{
 
         /// Parameters for the soft actor critic
         SACParameters sacParams;
+
+        /// Parameters for the trianing
+        TrainingParameters trainingParams;
 
         /// ArmLearn Environnement
         ArmLearnWrapper* armLearnEnv;
@@ -69,18 +73,16 @@ class ArmSacEngine{
         //std::vector<std::vector<int32_t>> vectorValue;
 
     public:
-        ArmSacEngine(SACParameters sacParams, ArmLearnWrapper* armLearnEnv, std::ostream& file,
-        uint16_t maxNbActions, bool doValidation=false, bool doTrainingValidation=false, bool doUpdateLimits=false)
-        : sacParams(sacParams), file(file), armLearnEnv(armLearnEnv), learningAgent(sacParams, 10, (sacParams.multipleActions) ? 4:1) {
-
+        ArmSacEngine(SACParameters sacParams, ArmLearnWrapper* armLearnEnv, std::ostream& file, TrainingParameters trainingParams,
+        uint16_t maxNbActions, bool doValidation=false)
+        : sacParams(sacParams), file(file), armLearnEnv(armLearnEnv), trainingParams(trainingParams),
+        learningAgent(sacParams, 10, (sacParams.multipleActions) ? 4:1) {
             this->maxNbActions = maxNbActions;
             this->doValidation=doValidation;
-            this->doTrainingValidation=doTrainingValidation;
-            this->doUpdateLimits=doUpdateLimits;
+            this->doUpdateLimits = (this->trainingParams.progressiveModeTargets || this->trainingParams.progressiveModeStartingPos);
+            this->doTrainingValidation = (this->trainingParams.doTrainingValidation && this->doUpdateLimits);
             this->logHeader();
             file.flush();
-            
-            
         }
 
         /**
@@ -112,6 +114,8 @@ class ArmSacEngine{
          * @param[in] nbIterationTraining Number of episode to validate training on
          */
         void validateTrainingOneGeneration(uint16_t nbIterationTrainingValidation);
+
+        void testingModel(uint16_t nbIterationTesting);
 
         /// Save current time
         void chronoFromNow();
