@@ -78,19 +78,16 @@ int main() {
         armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
     }
 
-    // If a validation target is done
-    bool doUpdateLimits = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
-    bool doValidationTarget = (trainingParams.doTrainingValidation && doUpdateLimits);
 
     // Instantiate and init the learning agent
-    Learn::ArmLearningAgent la(armLearnEnv, set, params, doValidationTarget, doUpdateLimits);
+    Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
 
     la.init(trainingParams.seed);
 
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
     std::thread threadKeyboard;
 
-    if (trainingParams.interactiveMode){
+    if (trainingParams.interactiveMode && !trainingParams.testing){
 #ifndef NO_CONSOLE_CONTROL
 
     threadKeyboard = std::thread(getKey, std::ref(exitProgram));
@@ -103,8 +100,12 @@ int main() {
 
 
 
+    // If a validation target is done
+    bool doUpdateLimits = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
+    bool doValidationTarget = (trainingParams.doTrainingValidation && doUpdateLimits);
+
     //Creation of the Output stream on cout and on the file
-    std::ofstream fichier((slashToAdd + "outLogs/logs.ods").c_str(), std::ios::out);
+    std::ofstream fichier((slashToAdd + "outLogs/logsGegelati.ods").c_str(), std::ios::out);
     auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,fichier);
     auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits);
 
@@ -141,29 +142,37 @@ int main() {
         armLearnEnv.loadValidationTrajectories();
     }
 
-    // Train for params.nbGenerations generations
-    for (uint64_t i = 0; i < params.nbGenerations && !exitProgram; i++) {
-        armLearnEnv.setgeneration(i);
+    if(trainingParams.testing){
+        auto &tpg = *la.getTPGGraph();
+        Environment env(set, armLearnEnv.getDataSources(), 8);
+        File::TPGGraphDotImporter dotImporter((slashToAdd + "outLogs/out_best.dot").c_str(), env, tpg);
+        la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
+    } else {
+
+        // Train for params.nbGenerations generations
+        for (uint64_t i = 0; i < params.nbGenerations && !exitProgram; i++) {
+            armLearnEnv.setgeneration(i);
 
 
-        // Update/Generate the training trajectories
-        armLearnEnv.updateTrainingTrajectories(params.nbIterationsPerPolicyEvaluation);
+            // Update/Generate the training trajectories
+            armLearnEnv.updateTrainingTrajectories(params.nbIterationsPerPolicyEvaluation);
 
-	    //print the previous graphs
-        char buff[16];
-        sprintf(buff, (slashToAdd + "outLogs/out_%04d.dot").c_str(), static_cast<uint16_t>(i));
-        dotExporter.setNewFilePath(buff);
+            //print the previous graphs
+            char buff[16];
+            sprintf(buff, (slashToAdd + "outLogs/out_%04d.dot").c_str(), static_cast<uint16_t>(i));
+            dotExporter.setNewFilePath(buff);
+            dotExporter.print();
+
+            la.trainOneGeneration(i);
+
+        }
+
+
+        // Keep best policy
+        la.keepBestPolicy();
+        dotExporter.setNewFilePath((slashToAdd + "outLogs/out_best.dot").c_str());
         dotExporter.print();
-
-        la.trainOneGeneration(i);
-
     }
-
-
-    // Keep best policy
-    la.keepBestPolicy();
-    dotExporter.setNewFilePath((slashToAdd + "outLogs/out_best.dot").c_str());
-    dotExporter.print();
 
 
     // Export best policy statistics.
@@ -183,7 +192,7 @@ int main() {
         delete (&set.getInstruction(i));
     }
 
-    if (trainingParams.interactiveMode) {
+    if (trainingParams.interactiveMode && !trainingParams.testing) {
 #ifndef NO_CONSOLE_CONTROL
     // Exit the thread
     std::cout << "Exiting program, press a key then [enter] to exit if nothing happens.";

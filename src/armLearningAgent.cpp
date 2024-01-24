@@ -9,6 +9,7 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
         logger.get().logNewGeneration(generationNumber);
     }
 
+    
     // Populate Sequentially
     Mutator::TPGMutator::populateTPG(*this->tpg, this->archive,
                                      this->params.mutation, this->rng,
@@ -51,6 +52,8 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     // Does a validation or not according to the parameter doValidation
     if (params.doValidation) {
         auto validationResults  = this->evaluateAllRoots(generationNumber, LearningMode::VALIDATION);
+
+        
         for (auto logger : loggers) {
             logger.get().logAfterValidate(validationResults);
         }
@@ -96,6 +99,33 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     
 }
 
+void Learn::ArmLearningAgent::testingBestRoot(uint64_t generationNumber){
+
+    /*
+
+    std::unique_ptr<TPG::TPGExecutionEngine> tee =
+    this->tpg->getFactory().createTPGExecutionEngine(
+        this->env,
+        (mode == LearningMode::TRAINING) ? &this->archive : NULL);*/
+
+    auto mode = Learn::LearningMode::VALIDATION;
+
+    // Create the TPGExecutionEngine for this evaluation.
+    // The engine uses the Archive only in training mode.
+    std::unique_ptr<TPG::TPGExecutionEngine> tee =
+        this->tpg->getFactory().createTPGExecutionEngine(
+            this->env, NULL);
+
+    auto roots = tpg->getRootVertices();
+
+    auto job = makeJob(roots.at(0), mode);
+    this->archive.setRandomSeed(job->getArchiveSeed());
+    std::shared_ptr<EvaluationResult> avgScore = this->evaluateJob(
+        *tee, *job, generationNumber, mode, this->learningEnvironment);
+
+    
+}
+
 std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     TPG::TPGExecutionEngine& tee, const Job& job, uint64_t generationNumber,
     Learn::LearningMode mode, LearningEnvironment& le) const
@@ -111,11 +141,20 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
         return previousEval;
     }
 
+    double success = 0.0;
+
     // Init results
     double result = 0.0;
 
     // Evaluate nbIteration times
     for (auto iterationNumber = 0; iterationNumber < this->params.nbIterationsPerPolicyEvaluation; iterationNumber++) {
+
+        if(trainingParams.testing){
+            std::cout<<"Episode "<<iterationNumber+1<<"/"<<this->params.nbIterationsPerPolicyEvaluation<<"      "<<std::flush;
+            std::cout << '\r';
+        }
+
+
         // Compute a Hash
         Data::Hash<uint64_t> hasher;
         uint64_t hash = hasher(generationNumber) ^ hasher(iterationNumber);
@@ -138,7 +177,18 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
         // Update results
         result += le.getScore();
+
+        if(le.getScore() > trainingParams.thresholdUpgrade){
+            success += 1;
+        }
     }
+
+    // For testing
+    if(trainingParams.testing){
+        std::cout<<"Testing score : "<<result/(double)params.nbIterationsPerPolicyEvaluation;
+        std::cout<<" -- Testing success rate "<<success/(double)params.nbIterationsPerPolicyEvaluation<<std::endl;
+        ((ArmLearnWrapper&)le).logTestingTrajectories(true);
+    }  
 
     // Create the EvaluationResult
     auto evaluationResult =

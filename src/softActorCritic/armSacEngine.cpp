@@ -138,6 +138,7 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
 
 void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
 
+    double result = 0;
     double score = 0;
     double success = 0;
 
@@ -145,20 +146,21 @@ void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
     for(int j = 0; j < nbIterationValidation; j++){
 
         uint64_t seed = generation * 43000000000 + j;
-        score += runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
+        result += runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
         // Get score
-        //score += armLearnEnv->getScore();
+        score += armLearnEnv->getScore();
 
         if (armLearnEnv->getReward() > 0){
             success++;
         }
     }
-    // get the mean score and mean success
+    // get the mean result, mean score and mean success
+    result /= nbIterationValidation;
     score /= nbIterationValidation;
     success /= nbIterationValidation;
 
     // Log the validation
-    logValidation(score, success);
+    logValidation(score, result, success);
 };
 
 void ArmSacEngine::validateTrainingOneGeneration(uint16_t nbIterationTrainingValidation){
@@ -187,6 +189,9 @@ void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
     // Validate for nbIterationTraining episode(s)
     for(int j = 0; j < nbIterationTesting; j++){
 
+        std::cout<<"Episode "<<j+1<<"/"<<nbIterationTesting<<"      "<<std::flush;
+        std::cout << '\r';
+
         uint64_t seed = generation * 43000465132000 + j;
         score += runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
         // Get score
@@ -200,7 +205,7 @@ void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
     score /= nbIterationTesting;
     success /= nbIterationTesting;
 
-    armLearnEnv->logTestingTrajectories();
+    armLearnEnv->logTestingTrajectories(false);
     
 
     std::cout<<"Testing score : "<<score<<" -- Testing success rate "<<success<<std::endl;
@@ -220,12 +225,12 @@ void ArmSacEngine::logNewGeneration()
 
 void ArmSacEngine::logHeader(){
 
-    std::cout << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Train"<< std::setw(colWidth)<<"Reward";
-    file << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Train"<< std::setw(colWidth)<<"Reward";
+    std::cout << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Tscore"<< std::setw(colWidth)<<"Treward";
+    file << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Tscore"<< std::setw(colWidth)<<"Treward";
 
     if (doValidation) {
-        std::cout << std::setw(colWidth) << "Valid"<< std::setw(colWidth) << "Success" ;
-        file << std::setw(colWidth) << "Valid" << std::setw(colWidth) << "Success" ;
+        std::cout << std::setw(colWidth) << "Vscore"<< std::setw(colWidth) << "Vreward" << std::setw(colWidth) << "Success" ;
+        file << std::setw(colWidth) << "Vscore" << std::setw(colWidth) << "Vreward" << std::setw(colWidth) << "Success" ;
     }
 
     if (doTrainingValidation){
@@ -270,11 +275,11 @@ void ArmSacEngine::logTraining(double score, double result){
     chronoFromNow();
 }
 
-void ArmSacEngine::logValidation(double score, double success){
+void ArmSacEngine::logValidation(double score, double result, double success){
 
-    std::cout<<score<<std::setw(colWidth)<<success<<std::setw(colWidth);
-    file<<score<<std::setw(colWidth)<<success<<std::setw(colWidth);
-    lastValidationScore = score;
+    std::cout<<score<<std::setw(colWidth)<<result<<std::setw(colWidth)<<success<<std::setw(colWidth);
+    file<<score<<std::setw(colWidth)<<result<<std::setw(colWidth)<<success<<std::setw(colWidth);
+    lastValidationScore = success;
 
     if(lastValidationScore > bestScore){
         bestScore = lastValidationScore;

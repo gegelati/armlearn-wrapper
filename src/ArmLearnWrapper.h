@@ -302,7 +302,7 @@ public:
     /// Load the validation trajectories from a ValidationTrajectories.txt file
     void loadValidationTrajectories();
 
-    void logTestingTrajectories();
+    void logTestingTrajectories(bool usingGegelati);
 
     /**
      * @brief Inherited via DeviceLearner

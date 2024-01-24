@@ -125,7 +125,7 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
     
     if(params.testing){
         allMotorPos.push_back(getMotorsPos());
-        if(terminal || nbActions == 1500){
+        if(terminal || nbActions == nbMaxActions){
             vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
             vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
             for(auto motor_value: allMotorPos){
@@ -187,7 +187,7 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
     
     if(params.testing){
         allMotorPos.push_back(getMotorsPos());
-        if(terminal || nbActions == 1500){
+        if(terminal || nbActions == nbMaxActions){
             vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
             vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
             for(auto motor_value: allMotorPos){
@@ -697,16 +697,18 @@ void ArmLearnWrapper::loadValidationTrajectories() {
     }
 }
 
-void ArmLearnWrapper::logTestingTrajectories(){
+void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati){
 
     // Nom du fichier CSV
-    std::string fileName = "outLogs/output.csv";
+    std::string fileName = (usingGegelati) ? "outLogs/outputGegelati.csv": "outLogs/outputSAC.csv";
 
     // Ouverture du fichier en mode écriture
     std::ofstream outputFile(fileName);
 
     // Vérification si le fichier est correctement ouvert
     if (outputFile.is_open()) {
+        outputFile<<"armPos0,"<<"armPos1,"<<"armPos2,"<<"armPos3,"<<"armPos4,"<<"armPos5,";
+        outputFile<<"targetPos0,"<<"targetPos1,"<<"targetPos2,"<<"Score,"<<"NbActions,"<<"MotorPos"<<std::endl;
         // Écriture des données dans le fichier CSV
         for (const auto &row : allValidationInfos) {
             for (size_t i = 0; i < row.size(); ++i) {

@@ -7,6 +7,7 @@
 #include <thread>
 
 #include <gegelati.h>
+#include "trainingParameters.h"
 
 namespace Learn {
     /**
@@ -23,6 +24,9 @@ namespace Learn {
     {
       private:
         std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> bestTrainingResult;
+
+        /// Parameters for the trianing
+        TrainingParameters trainingParams;
 
         bool doUpdateLimits;
         bool doTrainingValidation;
@@ -42,11 +46,11 @@ namespace Learn {
          */
         ArmLearningAgent(
             LearningEnvironment& le, const Instructions::Set& iSet,
-            const LearningParameters& p, bool doTrainingValidation, bool doUpdateLimits,
+            const LearningParameters& p, TrainingParameters trainingParams,
             const TPG::TPGFactory& factory = TPG::TPGFactory())
-            : ParallelLearningAgent(le, iSet, p, factory) {
-              this->doTrainingValidation = doTrainingValidation;
-              this->doUpdateLimits = doUpdateLimits;
+            : ParallelLearningAgent(le, iSet, p, factory), trainingParams(trainingParams) {
+              this->doUpdateLimits = (this->trainingParams.progressiveModeTargets || this->trainingParams.progressiveModeStartingPos);
+              this->doTrainingValidation = (this->trainingParams.doTrainingValidation && this->doUpdateLimits);
             };
 
         /**
@@ -68,6 +72,7 @@ namespace Learn {
          */
         virtual void trainOneGeneration(uint64_t generationNumber) override;
 
+        void testingBestRoot(uint64_t generationNumber);
 
         /**
          * \brief Evaluates policy starting from the given root.

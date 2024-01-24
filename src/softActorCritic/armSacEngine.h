@@ -130,7 +130,7 @@ class ArmSacEngine{
         void logTraining(double score, double result);
 
         /// Log the validation score, potentially save the models
-        void logValidation(double score, double success);
+        void logValidation(double score, double result, double success);
 
         /// Log the training validation score
         void logTrainingValidation(double score);

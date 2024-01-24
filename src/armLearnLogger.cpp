@@ -42,16 +42,16 @@ void Log::ArmLearnLogger::logHeader()
     // Second line of header
     //*this << std::right;
     *this << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "NbVert"
-          << std::setw(colWidth) << "Min" << std::setw(colWidth) << "Avg"
-          << std::setw(colWidth) << "Max";
+          << std::setw(colWidth) << "Tmin" << std::setw(colWidth) << "Tavg"
+          << std::setw(colWidth) << "Tmax";
     if (doValidation) {
-        *this << std::setw(colWidth) << "Min" << std::setw(colWidth) << "Avg"
-              << std::setw(colWidth) << "Max";
+        *this << std::setw(colWidth) << "Vmin" << std::setw(colWidth) << "Vavg"
+              << std::setw(colWidth) << "Vmax";
     }
 
     if (doTrainingValidation) {
-        *this << std::setw(colWidth) << "Min" << std::setw(colWidth) << "Avg"
-              << std::setw(colWidth) << "Max";
+        *this << std::setw(colWidth) << "TVmin" << std::setw(colWidth) << "TVavg"
+              << std::setw(colWidth) << "TVmax";
     }
 
     if (doUpdateLimits){
