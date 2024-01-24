@@ -126,14 +126,14 @@ class ArmSacEngine{
         /// Log the generation and reset checkpoint time
         void logNewGeneration();
 
-        /// Log the training result and score, potentially save the models
-        void logTraining(double score, double result);
+        /// Log the training result and distance, potentially save the models
+        void logTraining(double distance, double result);
 
-        /// Log the validation score, potentially save the models
-        void logValidation(double score, double result, double success);
+        /// Log the validation distance, potentially save the models
+        void logValidation(double distance, double result, double success);
 
-        /// Log the training validation score
-        void logTrainingValidation(double score);
+        /// Log the training validation distance
+        void logTrainingValidation(double distance);
         
         /// Log the size limits of the environnement (targets and starting position)
         void logLimits();

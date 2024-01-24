@@ -6,6 +6,7 @@
 
 #include "gegelati.h"
 
+
 namespace Log {
 
     /**

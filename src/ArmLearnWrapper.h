@@ -337,6 +337,8 @@ public:
     /// Get currentMaxLimitStartingPos
     double getCurrentMaxLimitStartingPos();
 
+    /// Get distance from the arm to the target
+    double getDistance();
 
 };
 

@@ -106,7 +106,7 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
     logNewGeneration();
 
     double result=0.0;
-    double score=0.0;
+    double distance=0.0;
 
     // Train for nbIterationTraining episode(s)
     for(int j = 0; j < sacParams.nbEpisodeTraining; j++){
@@ -115,20 +115,20 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
         // Add result
         result += runOneEpisode(seed, Learn::LearningMode::TRAINING, j);
         
-        // add score
-        score += armLearnEnv->getScore();
+        // add distance
+        distance += armLearnEnv->getDistance();
 
-        if(armLearnEnv->getScore() > -5){
+        if(armLearnEnv->getDistance() < trainingParams.thresholdUpgrade){
             armLearnEnv->addToDeleteTraj(j);
         }
 
     }
-    // Get the mean score and result
+    // Get the mean distance and result
     result /= sacParams.nbEpisodeTraining;
-    score /= sacParams.nbEpisodeTraining;
+    distance /= sacParams.nbEpisodeTraining;
 
     // Log the training
-    logTraining(score, result);
+    logTraining(distance, result);
 
     // Incremente generation
     generation++;
@@ -139,7 +139,7 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
 void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
 
     double result = 0;
-    double score = 0;
+    double distance = 0;
     double success = 0;
 
     // Validate for nbIterationTraining episode(s)
@@ -147,43 +147,43 @@ void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
 
         uint64_t seed = generation * 43000000000 + j;
         result += runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
-        // Get score
-        score += armLearnEnv->getScore();
+        // Get distance
+        distance += armLearnEnv->getDistance();
 
-        if (armLearnEnv->getReward() > 0){
+        if (armLearnEnv->getDistance() < trainingParams.thresholdUpgrade){
             success++;
         }
     }
-    // get the mean result, mean score and mean success
+    // get the mean result, mean distance and mean success
     result /= nbIterationValidation;
-    score /= nbIterationValidation;
+    distance /= nbIterationValidation;
     success /= nbIterationValidation;
 
     // Log the validation
-    logValidation(score, result, success);
+    logValidation(distance, result, success);
 };
 
 void ArmSacEngine::validateTrainingOneGeneration(uint16_t nbIterationTrainingValidation){
 
-    double score = 0;
+    double distance = 0;
 
     // Validate training for nbIterationTraining episode(s)
     for(int j = 0; j < nbIterationTrainingValidation; j++){
 
         uint64_t seed = generation * 5000000 + j;
         runOneEpisode(seed, Learn::LearningMode::TESTING, j);
-        // Get score
-        score += armLearnEnv->getScore();
+        // Get distance
+        distance += armLearnEnv->getDistance();
     }
-    // get the mean score
-    score /= nbIterationTrainingValidation;
+    // get the mean distance
+    distance /= nbIterationTrainingValidation;
 
     // Log the training validation
-    logTrainingValidation(score);
+    logTrainingValidation(distance);
 }
 
 void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
-    double score = 0;
+    double result = 0;
     double success = 0;
 
     // Validate for nbIterationTraining episode(s)
@@ -193,22 +193,22 @@ void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
         std::cout << '\r';
 
         uint64_t seed = generation * 43000465132000 + j;
-        score += runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
-        // Get score
-        //score += armLearnEnv->getScore();
+        result += runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
+        // Get distance
+        //distance += armLearnEnv->getScore();
 
-        if (armLearnEnv->getReward() > 0){
+        if (armLearnEnv->getDistance() < trainingParams.thresholdUpgrade){
             success++;
         }
     }
-    // get the mean score and mean success
-    score /= nbIterationTesting;
+    // get the mean result and mean success
+    result /= nbIterationTesting;
     success /= nbIterationTesting;
 
     armLearnEnv->logTestingTrajectories(false);
     
 
-    std::cout<<"Testing score : "<<score<<" -- Testing success rate "<<success<<std::endl;
+    std::cout<<"Testing resutlt : "<<result<<" -- Testing success rate "<<success<<std::endl;
 }
 
 void ArmSacEngine::chronoFromNow(){
@@ -225,12 +225,12 @@ void ArmSacEngine::logNewGeneration()
 
 void ArmSacEngine::logHeader(){
 
-    std::cout << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Tscore"<< std::setw(colWidth)<<"Treward";
-    file << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Tscore"<< std::setw(colWidth)<<"Treward";
+    std::cout << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Tdistance"<< std::setw(colWidth)<<"Treward";
+    file << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Tdistance"<< std::setw(colWidth)<<"Treward";
 
     if (doValidation) {
-        std::cout << std::setw(colWidth) << "Vscore"<< std::setw(colWidth) << "Vreward" << std::setw(colWidth) << "Success" ;
-        file << std::setw(colWidth) << "Vscore" << std::setw(colWidth) << "Vreward" << std::setw(colWidth) << "Success" ;
+        std::cout << std::setw(colWidth) << "Vdistance"<< std::setw(colWidth) << "Vreward" << std::setw(colWidth) << "Success" ;
+        file << std::setw(colWidth) << "Vdistance" << std::setw(colWidth) << "Vreward" << std::setw(colWidth) << "Success" ;
     }
 
     if (doTrainingValidation){
@@ -258,16 +258,16 @@ void ArmSacEngine::logHeader(){
     
 }
 
-void ArmSacEngine::logTraining(double score, double result){
+void ArmSacEngine::logTraining(double distance, double result){
 
-    std::cout<<score<<std::setw(colWidth)<<result<<std::setw(colWidth);
-    file<<score<<std::setw(colWidth)<<result<<std::setw(colWidth);
+    std::cout<<distance<<std::setw(colWidth)<<result<<std::setw(colWidth);
+    file<<distance<<std::setw(colWidth)<<result<<std::setw(colWidth);
 
-    lastTrainingScore = score;
+    lastTrainingScore = distance;
 
     learningAgent.saveModels(generation, false);
-    if(score > bestScore && !doValidation){
-        bestScore = score;
+    if(distance > bestScore && !doValidation){
+        bestScore = distance;
         learningAgent.saveModels(generation, true);
     }
 
@@ -275,10 +275,10 @@ void ArmSacEngine::logTraining(double score, double result){
     chronoFromNow();
 }
 
-void ArmSacEngine::logValidation(double score, double result, double success){
+void ArmSacEngine::logValidation(double distance, double result, double success){
 
-    std::cout<<score<<std::setw(colWidth)<<result<<std::setw(colWidth)<<success<<std::setw(colWidth);
-    file<<score<<std::setw(colWidth)<<result<<std::setw(colWidth)<<success<<std::setw(colWidth);
+    std::cout<<distance<<std::setw(colWidth)<<result<<std::setw(colWidth)<<success<<std::setw(colWidth);
+    file<<distance<<std::setw(colWidth)<<result<<std::setw(colWidth)<<success<<std::setw(colWidth);
     lastValidationScore = success;
 
     if(lastValidationScore > bestScore){
@@ -290,11 +290,11 @@ void ArmSacEngine::logValidation(double score, double result, double success){
 
 }
 
-void ArmSacEngine::logTrainingValidation(double score){
+void ArmSacEngine::logTrainingValidation(double distance){
 
-    std::cout<<score<<std::setw(colWidth);
-    file<<score<<std::setw(colWidth);
-    lastTrainingValidationScore = score; 
+    std::cout<<distance<<std::setw(colWidth);
+    file<<distance<<std::setw(colWidth);
+    lastTrainingValidationScore = distance; 
 
     trainingValidationTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
 }

@@ -121,6 +121,7 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
 
     nbActions++;
     reward = computeReward(); // Computation of reward
+    score += reward;
 
     
     if(params.testing){
@@ -183,7 +184,7 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 
     nbActions++;
     reward = computeReward(); // Computation of reward
-
+    score += reward;
     
     if(params.testing){
         allMotorPos.push_back(getMotorsPos());
@@ -203,22 +204,15 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 
 }
 
+
 double ArmLearnWrapper::computeReward() {
 
-    // Get the cartiesion coordonates of the arm
-    std::vector<double> cartesianCoords = converter->computeServoToCoord(getMotorsPos())->getCoord();
-
-    auto target = this->currentTarget->getInput();
-
     // Compute que Distance with the target
-    auto err = computeSquaredError(target, cartesianCoords);
+    auto err = getDistance();
 
     /// Compute the number of actions taken in the episode divide by the maximum number of actions takeable in an episode
     /// This ratio is multiplied by a coefficient that allow to choose the impact of this ratio on the reward
     //double valNbIterations = params.coefRewardNbIterations * (static_cast<double>(nbActions) / nbMaxActions);
-
-    // set Score
-    score = -1 * err;
 
     // Tempory reward to force to stop close to the objective
     if (score > params.thresholdUpgrade){
@@ -549,7 +543,7 @@ void ArmLearnWrapper::customTrajectory(armlearn::Input<int16_t> *newGoal, std::v
 
 void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation){
     // If the best TPG is above the threshold for upgrade
-    if (bestResult > params.thresholdUpgrade){
+    if (bestResult < params.thresholdUpgrade){
 
         // Incremente the counter for upgrading the max current limit
         counterIterationUpgrade += 1;
@@ -762,4 +756,16 @@ double ArmLearnWrapper::getCurrentMaxLimitTarget(){
 
 double ArmLearnWrapper::getCurrentMaxLimitStartingPos(){
     return currentMaxLimitStartingPos;
+}
+
+
+double ArmLearnWrapper::getDistance(){
+    
+    // Get the cartiesion coordonates of the arm
+    std::vector<double> cartesianCoords = converter->computeServoToCoord(getMotorsPos())->getCoord();
+
+    auto target = this->currentTarget->getInput();
+
+    // Compute and return the Distance with the target
+    return computeSquaredError(target, cartesianCoords);
 }

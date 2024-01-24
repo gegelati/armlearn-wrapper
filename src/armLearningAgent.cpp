@@ -2,6 +2,7 @@
 #include "armLearningAgent.h"
 #include "armLearnLogger.h"
 #include "ArmLearnWrapper.h"
+#include "armlearnEvaluationResult.h"
 
 void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
 
@@ -73,7 +74,7 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
         // Update limits
         auto iter = trainingValidationResults.begin();
         std::advance(iter, trainingValidationResults.size() - 1);
-        bestResult = iter->first->getResult();
+        bestResult = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getDistance();
 
     }
 
@@ -120,10 +121,13 @@ void Learn::ArmLearningAgent::testingBestRoot(uint64_t generationNumber){
 
     auto job = makeJob(roots.at(0), mode);
     this->archive.setRandomSeed(job->getArchiveSeed());
-    std::shared_ptr<EvaluationResult> avgScore = this->evaluateJob(
+    std::shared_ptr<EvaluationResult> result = this->evaluateJob(
         *tee, *job, generationNumber, mode, this->learningEnvironment);
 
-    
+    std::cout<<"Testing score : "<<result->getResult();
+    std::cout << " -- Testing success rate " << std::dynamic_pointer_cast<ArmlearnEvaluationResult>(result)->getSuccess() << std::endl;
+
+
 }
 
 std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
@@ -142,6 +146,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     }
 
     double success = 0.0;
+
+    double distance = 0.0;
 
     // Init results
     double result = 0.0;
@@ -173,28 +179,31 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
             le.doAction(actionID);
             // Count actions
             nbActions++;
+
         }
 
         // Update results
         result += le.getScore();
 
-        if(le.getScore() > trainingParams.thresholdUpgrade){
+        distance += ((ArmLearnWrapper&)le).getDistance();
+
+        if(((ArmLearnWrapper&)le).getDistance() < trainingParams.thresholdUpgrade){
             success += 1;
         }
     }
 
-    // For testing
     if(trainingParams.testing){
-        std::cout<<"Testing score : "<<result/(double)params.nbIterationsPerPolicyEvaluation;
-        std::cout<<" -- Testing success rate "<<success/(double)params.nbIterationsPerPolicyEvaluation<<std::endl;
         ((ArmLearnWrapper&)le).logTestingTrajectories(true);
-    }  
+    }
 
     // Create the EvaluationResult
     auto evaluationResult =
-        std::shared_ptr<EvaluationResult>(new EvaluationResult(
+        std::shared_ptr<Learn::ArmlearnEvaluationResult>(new Learn::ArmlearnEvaluationResult(
             result / (double)params.nbIterationsPerPolicyEvaluation,
+            success / (double)params.nbIterationsPerPolicyEvaluation,
+            distance / (double)params.nbIterationsPerPolicyEvaluation,
             params.nbIterationsPerPolicyEvaluation));
+
 
     // Combine it with previous one if any
     if (previousEval != nullptr) {
