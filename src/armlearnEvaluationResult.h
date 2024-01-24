@@ -26,6 +26,8 @@ namespace Learn {
         double success = 0;
         double distance = 0;
 
+        std::vector<int> trajReached;
+
       public:
         /**
          * \brief Base constructor of EvaluationResult, allowing to set scores
@@ -36,16 +38,21 @@ namespace Learn {
          * get these scores. Default is 1 as we can guess user only did 1
          * iteration.
          */
-        ArmlearnEvaluationResult(const double res, const double success, const double distance, const size_t& nbEval)
+        ArmlearnEvaluationResult(const double res, const double success, const double distance, std::vector<int> trajReached, const size_t& nbEval)
             : EvaluationResult(res, nbEval)
         {
           this->success = success;
           this->distance = distance;
+          for(auto val: trajReached){
+            this->trajReached.push_back(val);
+          }
         }
 
         double getSuccess() const;
 
         double getDistance() const;
+
+        std::vector<int> getTrajReached();
 
         virtual EvaluationResult& operator+=(const EvaluationResult& other) override;
 

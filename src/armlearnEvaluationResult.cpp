@@ -1,6 +1,7 @@
 
 
 #include "armlearnEvaluationResult.h"
+#include <iostream>
 
 double Learn::ArmlearnEvaluationResult::getSuccess() const{
     return this->success;
@@ -8,6 +9,10 @@ double Learn::ArmlearnEvaluationResult::getSuccess() const{
 
 double Learn::ArmlearnEvaluationResult::getDistance() const{
     return this->distance;
+}
+
+std::vector<int> Learn::ArmlearnEvaluationResult::getTrajReached(){
+    return this->trajReached;
 }
 
 Learn::EvaluationResult& Learn::ArmlearnEvaluationResult::operator+=(

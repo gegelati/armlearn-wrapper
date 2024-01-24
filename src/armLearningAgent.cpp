@@ -26,10 +26,13 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     for (auto logger : loggers) {
         logger.get().logAfterEvaluate(results);
     }
-    
     auto iter = results.begin();
     std::advance(iter, results.size() - 1);
-    double bestResult = iter->first->getResult();
+    double bestResult = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getDistance();
+
+    for(auto id: std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getTrajReached()){
+        ((ArmLearnWrapper&)learningEnvironment).addToDeleteTraj(id);
+    }
 
     // Remove worst performing roots
     decimateWorstRoots(results);
@@ -61,7 +64,6 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     }
 
     // Training Validation
-    // TODO Changes for limits update without training validation
     if (doTrainingValidation){
 
         auto trainingValidationResults = this->evaluateAllRoots(generationNumber, LearningMode::TESTING);
@@ -149,6 +151,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
     double distance = 0.0;
 
+    std::vector<int> trajectoriesReached;
+
     // Init results
     double result = 0.0;
 
@@ -189,6 +193,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
         if(((ArmLearnWrapper&)le).getDistance() < trainingParams.thresholdUpgrade){
             success += 1;
+            trajectoriesReached.push_back(iterationNumber);
         }
     }
 
@@ -202,8 +207,10 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
             result / (double)params.nbIterationsPerPolicyEvaluation,
             success / (double)params.nbIterationsPerPolicyEvaluation,
             distance / (double)params.nbIterationsPerPolicyEvaluation,
-            params.nbIterationsPerPolicyEvaluation));
+            trajectoriesReached, params.nbIterationsPerPolicyEvaluation));
 
+
+    
 
     // Combine it with previous one if any
     if (previousEval != nullptr) {

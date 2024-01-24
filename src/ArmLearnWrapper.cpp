@@ -296,12 +296,12 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     isMoving = true;
 }
 
+
 void ArmLearnWrapper::addToDeleteTraj(int index){
     trajToDelete.push_back(index);
 }
 
 void ArmLearnWrapper::deleteTrajectory(){
-
 
     for(int i = trainingTrajectories.size() - 1; i >= 0; --i) {
 
