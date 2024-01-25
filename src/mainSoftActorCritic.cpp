@@ -71,7 +71,8 @@ int main() {
 
 
     //Creation of the Output stream on cout and on the file
-    std::ofstream file((slashToAdd + "outLogs/logsSAC.ods").c_str(), std::ios::out);
+    auto nameLogs = (!trainingParams.testing) ? "logsSAC" : "garbage";
+    std::ofstream file((slashToAdd + "outLogs/" + nameLogs + ".ods").c_str(), std::ios::out);
 
     // Instantiate the softActorCritic engine
     ArmSacEngine learningAgent(sacParams, &armLearnEnv, file, trainingParams, gegelatiParams.maxNbActionsPerEval, 

@@ -81,6 +81,7 @@ class ArmSacEngine{
             this->doValidation=doValidation;
             this->doUpdateLimits = (this->trainingParams.progressiveModeTargets || this->trainingParams.progressiveModeStartingPos);
             this->doTrainingValidation = (this->trainingParams.doTrainingValidation && this->doUpdateLimits);
+            file << std::setprecision(2) << std::fixed << std::right;
             this->logHeader();
             file.flush();
         }
