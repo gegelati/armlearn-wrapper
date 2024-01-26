@@ -242,8 +242,14 @@ double ArmLearnWrapper::computeReward() {
         }
     }
 
+    // If the arm is not moving anymore, the reward is multiplied by the numper of action normally to come
+    double penalty = 1;
+    if(!isMoving){
+        penalty = nbMaxActions - nbActions;
+    }
+
     // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)
-    return -err * params.coefRewardMultiplication;
+    return -err * params.coefRewardMultiplication * penalty;
     
 }
 
