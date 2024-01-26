@@ -117,13 +117,6 @@ int main() {
     PointCloud << "Xp" << ";" << "Yp" << ";" << "Zp" << ";";
     PointCloud << "Xt" << ";" << "Yt" << ";" << "Zt" << ";" << "score" << std::endl; */
 
-    // File for printing best policy stat.
-    std::ofstream stats;
-    stats.open((slashToAdd + "outLogs/bestPolicyStats.md").c_str());
-    Log::LAPolicyStatsLogger logStats(la, stats);
-
-    // Create an exporter for all graphs
-    File::TPGGraphDotExporter dotExporter((slashToAdd + "outLogs/out_0000.dot").c_str(), *la.getTPGGraph());
 
 
     // Use previous Graphs
@@ -150,6 +143,15 @@ int main() {
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
     } else {
 
+
+        // File for printing best policy stat.
+        std::ofstream stats;
+        stats.open((slashToAdd + "outLogs/bestPolicyStats.md").c_str());
+        Log::LAPolicyStatsLogger logStats(la, stats);
+
+        // Create an exporter for all graphs
+        File::TPGGraphDotExporter dotExporter((slashToAdd + "outLogs/out_0000.dot").c_str(), *la.getTPGGraph());
+
         // Train for params.nbGenerations generations
         for (uint64_t i = 0; i < params.nbGenerations && !exitProgram; i++) {
             armLearnEnv.setgeneration(i);
@@ -173,20 +175,22 @@ int main() {
         la.keepBestPolicy();
         dotExporter.setNewFilePath((slashToAdd + "outLogs/out_best.dot").c_str());
         dotExporter.print();
+
+        
+        // Export best policy statistics.
+        TPG::PolicyStats ps;
+        ps.setEnvironment(la.getTPGGraph()->getEnvironment());
+        ps.analyzePolicy(la.getBestRoot().first);
+        std::ofstream bestStats;
+        bestStats.open((slashToAdd + "outLogs/out_best_stats.md").c_str());
+        bestStats << ps;
+        bestStats.close();
+
+        // close log file also
+        stats.close();
     }
 
 
-    // Export best policy statistics.
-    TPG::PolicyStats ps;
-    ps.setEnvironment(la.getTPGGraph()->getEnvironment());
-    ps.analyzePolicy(la.getBestRoot().first);
-    std::ofstream bestStats;
-    bestStats.open((slashToAdd + "outLogs/out_best_stats.md").c_str());
-    bestStats << ps;
-    bestStats.close();
-
-    // close log file also
-    stats.close();
 
     // cleanup
     for (unsigned int i = 0; i < set.getNbInstructions(); i++) {
