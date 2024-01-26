@@ -107,6 +107,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "controlTrajectoriesDeletion"){
+        controlTrajectoriesDeletion = (bool)value.asBool();
+        return;
+    }
+
     if (param == "propTrajectoriesReused"){
         propTrajectoriesReused = (double)value.asDouble();
         return;

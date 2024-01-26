@@ -108,6 +108,9 @@ public:
     /// Proportion of targets reused at each generation
     double propTrajectoriesReused = 1;
 
+    /// True to activate a control over the deletion of trajectories
+    bool controlTrajectoriesDeletion = false;
+
     /// Proportion of targets reused at each generation
     double coefRewardNbIterations = 0;
 

@@ -313,7 +313,7 @@ void ArmLearnWrapper::deleteTrajectory(){
 
         auto testFind = std::find(trajToDelete.begin(), trajToDelete.end(), i);
 
-        if (testFind != trajToDelete.end()){
+        if (testFind != trajToDelete.end() || !params.controlTrajectoriesDeletion){
             auto iterToDelete = trainingTrajectories.begin();
             std::advance(iterToDelete, i);
 
