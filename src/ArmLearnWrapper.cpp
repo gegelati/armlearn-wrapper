@@ -231,13 +231,13 @@ double ArmLearnWrapper::computeReward() {
     }*/
 
     if(params.reachingObjectives){
-        if(score > params.thresholdUpgrade){
+        if(err < params.thresholdUpgrade){
             terminal = true;
             return 1000;
         }
     } else if(nbActionsInThreshold == 10 || !isMoving){
         terminal = true;
-        if(score > params.thresholdUpgrade){
+        if(err < params.thresholdUpgrade){
             return 1000;
         }
     }
