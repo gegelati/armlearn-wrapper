@@ -11,7 +11,7 @@ void Log::ArmLearnLogger::logResults(
 {
     auto iter = results.begin();
     std::advance(iter, results.size() - 1);
-    double maxReward = iter->first->getResult();
+    double maxReward = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getScore();
     
     double maxDistance = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getDistance();
 
@@ -21,7 +21,7 @@ void Log::ArmLearnLogger::logResults(
         [](double acc,
            std::pair<std::shared_ptr<Learn::EvaluationResult>,
                      const TPG::TPGVertex*>
-               pair) -> double { return acc + pair.first->getResult(); });
+               pair) -> double { return acc + std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(pair.first)->getScore(); });
     avgReward /= (double)results.size();
 
 

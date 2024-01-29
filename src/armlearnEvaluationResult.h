@@ -25,6 +25,7 @@ namespace Learn {
         /// The scores of the roots, in the order in which they participated.
         double success = 0;
         double distance = 0;
+        double score = 0;
 
         std::vector<int> trajReached;
 
@@ -38,9 +39,10 @@ namespace Learn {
          * get these scores. Default is 1 as we can guess user only did 1
          * iteration.
          */
-        ArmlearnEvaluationResult(const double res, const double success, const double distance, std::vector<int> trajReached, const size_t& nbEval)
-            : EvaluationResult(res, nbEval)
+        ArmlearnEvaluationResult(const double score, const double success, const double distance, std::vector<int> trajReached, const size_t& nbEval, bool isScoreResult)
+            : EvaluationResult((isScoreResult) ? score:-1*distance, nbEval)
         {
+          this->score = score;
           this->success = success;
           this->distance = distance;
           for(auto val: trajReached){
@@ -51,6 +53,8 @@ namespace Learn {
         double getSuccess() const;
 
         double getDistance() const;
+
+        double getScore() const;
 
         std::vector<int> getTrajReached();
 

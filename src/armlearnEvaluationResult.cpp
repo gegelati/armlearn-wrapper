@@ -11,6 +11,10 @@ double Learn::ArmlearnEvaluationResult::getDistance() const{
     return this->distance;
 }
 
+double Learn::ArmlearnEvaluationResult::getScore() const{
+    return this->score;
+}
+
 std::vector<int> Learn::ArmlearnEvaluationResult::getTrajReached(){
     return this->trajReached;
 }
@@ -44,6 +48,11 @@ Learn::EvaluationResult& Learn::ArmlearnEvaluationResult::operator+=(
         this->distance = this->distance * (double)this->nbEvaluation +
                        otherConverted.distance * (double)otherConverted.nbEvaluation;
         this->distance /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
+
+        // Weighted addition of distance
+        this->score = this->score * (double)this->nbEvaluation +
+                       otherConverted.score * (double)otherConverted.nbEvaluation;
+        this->score /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
 
         // Addition ot nbEvaluation
         this->nbEvaluation += otherConverted.nbEvaluation;

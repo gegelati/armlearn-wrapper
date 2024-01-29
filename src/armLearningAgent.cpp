@@ -153,8 +153,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
     std::vector<int> trajectoriesReached;
 
-    // Init results
-    double result = 0.0;
+    // Init Score
+    double score = 0.0;
 
     // Evaluate nbIteration times
     for (auto iterationNumber = 0; iterationNumber < this->params.nbIterationsPerPolicyEvaluation; iterationNumber++) {
@@ -186,8 +186,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
         }
 
-        // Update results
-        result += le.getScore();
+        // Update score
+        score += le.getScore();
 
         distance += ((ArmLearnWrapper&)le).getDistance();
 
@@ -204,13 +204,11 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     // Create the EvaluationResult
     auto evaluationResult =
         std::shared_ptr<Learn::ArmlearnEvaluationResult>(new Learn::ArmlearnEvaluationResult(
-            result / (double)params.nbIterationsPerPolicyEvaluation,
+            score / (double)params.nbIterationsPerPolicyEvaluation,
             success / (double)params.nbIterationsPerPolicyEvaluation,
             distance / (double)params.nbIterationsPerPolicyEvaluation,
-            trajectoriesReached, params.nbIterationsPerPolicyEvaluation));
-
-
-    
+            trajectoriesReached, params.nbIterationsPerPolicyEvaluation,
+            trainingParams.isScoreResult));
 
     // Combine it with previous one if any
     if (previousEval != nullptr) {
