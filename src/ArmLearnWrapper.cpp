@@ -215,7 +215,7 @@ double ArmLearnWrapper::computeReward() {
     //double valNbIterations = params.coefRewardNbIterations * (static_cast<double>(nbActions) / nbMaxActions);
 
     // Tempory reward to force to stop close to the objective
-    if (score > params.thresholdUpgrade){
+    if (err < params.thresholdUpgrade){
         // Incremente a counter
         nbActionsInThreshold++;
 
