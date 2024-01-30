@@ -143,22 +143,16 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
 
 void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 
-    int test_moving = 0;
 
     std::vector<double> out;
     for (float &action : actions) {
         out.push_back(params.sizeAction * action * M_PI / 180);
 
-        // We condider that below 0.1, the motor is not moving
-        if(abs(action) < 0.1){
-            test_moving++;
-        }
     }
     out.push_back(0.0);
     out.push_back(0.0);
 
     
-    isMoving = (test_moving < 4);
 
     // Scale the positions
     auto scaledOutput = device->scalePosition(out, -M_PI, M_PI);
@@ -274,11 +268,13 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     if(params.testing){
         allMotorPos.clear();
         vectorValidationInfos.clear();
-        
 
+        
         for(auto val: *trajectories->at(iterationNumber).first){
             vectorValidationInfos.push_back(val);
         }
+
+        
         vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[0]);
         vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[1]);
         vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[2]);
@@ -295,6 +291,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     computeInput();
 
     // Init environnement parameters
+    reward = 0;
     score = 0;
     nbActions = 0;
     terminal = false;

@@ -15,7 +15,7 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
     double singleReward;
     double result=0;
     uint64_t nbActions = 0;
-        
+
     // Reset the environnement
     armLearnEnv->reset(seed, mode, iterationNumber);
 
@@ -30,11 +30,12 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
         // Get the continuous action
         actionTensor = learningAgent.chooseAction(state);
 
+
         if(!sacParams.multipleActions){
             // actionTensor return float between -1 and 1. 
-            // Add 1 and multiply by 4 return a float between 0 and 8
+            // Add 1 and multiply by 4.5 return a float between 0 and 9
             // The discrete armLearn has 9 actions
-            mulAction = (actionTensor.item<float>() + 1) * 4;
+            mulAction = (actionTensor.item<float>() + 1) * 4.5;
             actionTaken = 0;
             
             // Get the action
@@ -46,8 +47,9 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
             armLearnEnv->doAction(actionTaken);
         } else {
 
+            auto actionTaken = actionTensor;
             if (!sacParams.continuousActions){
-                actionTensor = torch::round(actionTensor);
+                actionTaken = torch::round(actionTensor * 3 / 2);
             }
 
             // Convert actionTensor to an actionVector
@@ -57,7 +59,6 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
             armLearnEnv->doActionContinuous(actionVector);
 
         }
-
 
 
         // Get the new state
@@ -90,6 +91,8 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
 
         // Set state to newState
         state = newState;
+
+        //std::cout<<"Action : "<<nbActions<<" - Reward :"<<armLearnEnv->getDistance()<<" - outAction : "<< actionTensor.item<float>()<< "- Acton Send"<< actionTaken<<std::endl;
 
         // Add the reward to the result
         result += singleReward;
