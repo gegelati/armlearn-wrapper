@@ -18,7 +18,6 @@ void ArmLearnWrapper::computeInput() {
     // For each motor and each value of motor (here value is only position)
     for (auto &motorState : deviceState) {
         for (unsigned short &value : motorState) {
-
             // Get the value
             motorPos.setDataAt(typeid(double), indInput, value);
             newMotorPos.emplace_back(value);
@@ -47,8 +46,9 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
 void ArmLearnWrapper::doAction(uint64_t actionID) {
 
     std::vector<double> out;
-    double step = M_PI / 180 * params.sizeAction; // discrete rotations of 1°
-    // -> move step size in training parameters
+    //double step = M_PI / 180 * params.sizeAction; // discrete rotations of 1°
+    double step  = params.sizeAction;
+
 
     // Get the action
     switch (actionID) {
@@ -97,21 +97,27 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
     }
 
     // Scale the positions : this return a vector of int between 0 and 4096 corresponding to the step
-    auto scaledOutput = device->scalePosition(out, -M_PI, M_PI);
+    auto scaledOutput = device->scalePosition({0, 0, 0, 0, 0, 0}, -M_PI, M_PI);
+
+
+    double inputI = (double) *(motorPos.getDataAt(typeid(double), 0).getSharedPointer<const double>());
+    // Substract by 2048 to get the out value indacted by the action
+    if(out[0] + inputI >= 2  && out[0] + inputI <= 4094){
+        scaledOutput[0] = out[0] + inputI;
+    }
 
     // changes relative coordinates to absolute
-    for (int i = 0; i < 4; i++) {
-        
-        double inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+    for (int i = 1; i < 4; i++) {
 
+        inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
         // Substract by 2048 to get the out value indacted by the action
-        scaledOutput[i] = (scaledOutput[i] - 2048) + inputI;
+        if(out[i] + inputI >= 1025 && out[i] + inputI <= 3071){
+            scaledOutput[i] = out[i]  + inputI;
+        }
 
     }
 
-    // Add one beacause of a bug
-    scaledOutput[0]++;
-    double inputI = (double) *(motorPos.getDataAt(typeid(double), 4).getSharedPointer<const double>());
+    inputI = (double) *(motorPos.getDataAt(typeid(double), 4).getSharedPointer<const double>());
     scaledOutput[4] = (scaledOutput[4] - 511) + inputI;
     inputI = (double) *(motorPos.getDataAt(typeid(double), 5).getSharedPointer<const double>());
     scaledOutput[5] = (scaledOutput[5] - 256) + inputI;
@@ -462,10 +468,11 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation, bool isTa
         l = (int16_t) std::max(std::min(distribution(gen), 3071.0),1025.0);
     }
     else{
-        i = (int16_t) (rng.getUnsignedInt64(1, 4094));
-        j = (int16_t) (rng.getUnsignedInt64(1025, 3071));
-        k = (int16_t) (rng.getUnsignedInt64(1025, 3071));
-        l = (int16_t) (rng.getUnsignedInt64(1025, 3071));
+        int16_t valueNeeded = 2048 % (int)params.sizeAction;
+        i = (int16_t) (valueNeeded + (int)(rng.getUnsignedInt64(1 - valueNeeded, 4096 - valueNeeded) / params.sizeAction) * params.sizeAction);
+        j = (int16_t) (valueNeeded + (int)(rng.getUnsignedInt64(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);
+        k = (int16_t) (valueNeeded + (int)(rng.getUnsignedInt64(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);
+        l = (int16_t) (valueNeeded + (int)(rng.getUnsignedInt64(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);
     }
 
     // Create the vector of motor positions
