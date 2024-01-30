@@ -8,7 +8,6 @@
 #include <iostream>
 
 #include <gegelati.h>
-#include "instructions.h"
 #include "trainingParameters.h"
 #include "armLearnLogger.h"
 
@@ -19,10 +18,6 @@
 
 int main() {
     std::cout << "Start ArmLearner application." << std::endl;
-
-    // Create the instruction set for programs
-	Instructions::Set set;
-	fillInstructionSet(set);
 
     // This is important for the singularity image
     std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";

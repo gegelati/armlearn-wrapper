@@ -162,6 +162,20 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "useInstrDist2d"){
+        useInstrDist2d = (bool)value.asBool();
+        return;
+    }
+    
+    if (param == "useInstrDist3d"){
+        useInstrDist3d = (bool)value.asBool();
+        return;
+    }
+    
+    if (param == "useInstrSphericalCoord"){
+        useInstrSphericalCoord = (bool)value.asBool();
+        return;
+    }
 
 
     // we didn't recognize the symbol

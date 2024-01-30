@@ -138,6 +138,15 @@ public:
     /// if true, deactivate the training and only logs results
 	bool testing = false;
 
+	/// To use distance 2D instruction
+	bool useInstrDist2d = false;
+
+	/// To use distance 3D instruction
+	bool useInstrDist3d = false;
+
+	// To use spherical coordonates instructions
+	bool useInstrSphericalCoord = false;
+
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.

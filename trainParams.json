@@ -21,12 +21,14 @@
 	"coefficientUpgradeMult": 1.2,
 	// Number of iterations to cumulate to upgrade the maxLengthStartingPos and MaxLengthTargets
 	"nbIterationsUpgrade": 2,
-	// Threshold reward to exceed to increment the counter of iteration to cumulate to upgrade the maxLengthStartingPos and MaxLengthTargets
-	"thresholdUpgrade" : -50,
+	// Threshold distance to exceed to increment the counter of iteration to cumulate to upgrade the maxLengthStartingPos and MaxLengthTargets
+	"thresholdUpgrade" : 5,
 	// Allow to start with a predifined TPG
-	"startPreviousTPG": true,
+	"startPreviousTPG": false,
 	// Name of the predifined TPG (no effect if startPreviousTPG is false)
-	"namePreviousTPG": "out_0657.dot",
+	"namePreviousTPG": "out_0299.dot",
+	// True to activate a control over the deletion of trajectories
+	"controlTrajectoriesDeletion": false,
 	// Proportion of trajectories (pair startingPos-Target) reused at each training generation
 	"propTrajectoriesReused": 0,
 	// Coefficient to choose the impact of the number of iterations taken by a TPG on the reward
@@ -45,6 +47,15 @@
 	// Size in degree of a discrete action, and max size of a continuous action
 	"sizeAction": 1,
 	// if true, deactivate the training and only logs results
-	"testing": false
+	"testing": false,
 
+	// To use distance 2D instruction
+	"useInstrDist2d": true,
+
+	// To use distance 3D instruction
+	"useInstrDist3d": true,
+
+	// To use spherical coordonates instructions
+	"useInstrSphericalCoord": true
+	
 }

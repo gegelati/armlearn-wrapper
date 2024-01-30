@@ -44,9 +44,6 @@ void getKey(std::atomic<bool>& exit) {
 int main() {
     std::cout << "Start ArmLearner application." << std::endl;
 
-    // Create the instruction set for programs
-	Instructions::Set set;
-	fillInstructionSet(set);
 
     // This is important for the singularity image
     std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
@@ -60,6 +57,9 @@ int main() {
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson((slashToAdd + "params/params.json").c_str(), params);
 
+    // Create the instruction set for programs
+	Instructions::Set set;
+	fillInstructionSet(set, trainingParams);
 
 
     // Instantiate the LearningEnvironment

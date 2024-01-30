@@ -9,10 +9,11 @@
 #define INSTRUCTIONS_H
 
 #include <gegelati.h>
+#include "trainingParameters.h"
 
 /**
 * Fill the given instruction set.
 */
-void fillInstructionSet(Instructions::Set& set);
+void fillInstructionSet(Instructions::Set& set, TrainingParameters params);
 
 #endif
