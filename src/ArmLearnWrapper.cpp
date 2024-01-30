@@ -21,10 +21,12 @@ void ArmLearnWrapper::computeInput() {
 
             // Get the value
             motorPos.setDataAt(typeid(double), indInput, value);
+            std::cout<<value<<" | ";
             newMotorPos.emplace_back(value);
             indInput++;
         }
     }
+    std::cout<<std::endl;
 
     // Get the cartesian coordonates of the motors
     auto newCartesianCoords = converter->computeServoToCoord(newMotorPos)->getCoord();
@@ -46,6 +48,7 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
 
 void ArmLearnWrapper::doAction(uint64_t actionID) {
 
+    std::cout<<actionID<<std::endl;
     std::vector<double> out;
     double step = M_PI / 180 * params.sizeAction; // discrete rotations of 1°
     // -> move step size in training parameters
@@ -101,12 +104,16 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
 
     // changes relative coordinates to absolute
     for (int i = 0; i < 4; i++) {
+        
         double inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
 
         // Substract by 2048 to get the out value indacted by the action
         scaledOutput[i] = (scaledOutput[i] - 2048) + inputI;
+
     }
 
+    // Add one beacause of a bug
+    scaledOutput[0]++;
     double inputI = (double) *(motorPos.getDataAt(typeid(double), 4).getSharedPointer<const double>());
     scaledOutput[4] = (scaledOutput[4] - 511) + inputI;
     inputI = (double) *(motorPos.getDataAt(typeid(double), 5).getSharedPointer<const double>());
@@ -164,6 +171,7 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
         scaledOutput[i] = (scaledOutput[i] - 2048) + inputI;
     }
 
+    scaledOutput[0]++;
     double inputI = (double) *(motorPos.getDataAt(typeid(double), 4).getSharedPointer<const double>());
     scaledOutput[4] = (scaledOutput[4] - 511) + inputI;
     inputI = (double) *(motorPos.getDataAt(typeid(double), 5).getSharedPointer<const double>());
