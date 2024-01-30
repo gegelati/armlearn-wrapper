@@ -21,12 +21,10 @@ void ArmLearnWrapper::computeInput() {
 
             // Get the value
             motorPos.setDataAt(typeid(double), indInput, value);
-            std::cout<<value<<" | ";
             newMotorPos.emplace_back(value);
             indInput++;
         }
     }
-    std::cout<<std::endl;
 
     // Get the cartesian coordonates of the motors
     auto newCartesianCoords = converter->computeServoToCoord(newMotorPos)->getCoord();
@@ -48,7 +46,6 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
 
 void ArmLearnWrapper::doAction(uint64_t actionID) {
 
-    std::cout<<actionID<<std::endl;
     std::vector<double> out;
     double step = M_PI / 180 * params.sizeAction; // discrete rotations of 1°
     // -> move step size in training parameters
