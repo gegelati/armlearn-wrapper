@@ -47,54 +47,78 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
 
 void ArmLearnWrapper::doAction(uint64_t actionID) {
 
-    std::vector<double> out;
+    std::vector<double> motorAction;
     double step  = params.sizeAction;
 
     // Get the action
     switch (actionID) {
         case 0:
-            out = {step, 0, 0, 0, 0, 0};
+            motorAction = {step, 0, 0, 0, 0, 0};
             break;
         case 1:
-            out = {0, step, 0, 0, 0, 0};
+            motorAction = {0, step, 0, 0, 0, 0};
             break;
         case 2:
-            out = {0, 0, step, 0, 0, 0};
+            motorAction = {0, 0, step, 0, 0, 0};
             break;
         case 3:
-            out = {0, 0, 0, step, 0, 0};
+            motorAction = {0, 0, 0, step, 0, 0};
             break;
         case 4:
-            out = {-step, 0, 0, 0, 0, 0};
+            motorAction = {-step, 0, 0, 0, 0, 0};
             break;
         case 5:
-            out = {0, -step, 0, 0, 0, 0};
+            motorAction = {0, -step, 0, 0, 0, 0};
             break;
         case 6:
-            out = {0, 0, -step, 0, 0, 0};
+            motorAction = {0, 0, -step, 0, 0, 0};
             break;
         case 7:
-            out = {0, 0, 0, -step, 0, 0};
+            motorAction = {0, 0, 0, -step, 0, 0};
             break;
         case 8:
-            out = {0, 0, 0, 0, 0, 0};
+            motorAction = {0, 0, 0, 0, 0, 0};
             isMoving=false;
             break;
 
             // Following cases only when the hand is trained
         case 9:
-            out = {0, 0, 0, 0, step, 0};
+            motorAction = {0, 0, 0, 0, step, 0};
             break;
         case 10:
-            out = {0, 0, 0, 0, 0, step};
+            motorAction = {0, 0, 0, 0, 0, step};
             break;
         case 11:
-            out = {0, 0, 0, 0, -step, 0};
+            motorAction = {0, 0, 0, 0, -step, 0};
             break;
         case 12:
-            out = {0, 0, 0, 0, 0, -step};
+            motorAction = {0, 0, 0, 0, 0, -step};
             break;
     }
+
+    // Execute the action
+    executeAction(motorAction);
+
+}
+
+void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
+
+
+    std::vector<double> motorAction;
+    for (float &action : actions) {
+        motorAction.push_back(round(params.sizeAction * action));
+    }
+    motorAction.push_back(0.0);
+    motorAction.push_back(0.0);
+
+    // Execute the action
+    executeAction(motorAction);
+
+
+}
+
+void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
+    
 
     // Scale the positions : this return a vector of int between 0 and 4096 corresponding to the step
     auto scaledOutput = device->scalePosition({0, 0, 0, 0, 0, 0}, -M_PI, M_PI);
@@ -103,8 +127,8 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
     double inputI = (double) *(motorPos.getDataAt(typeid(double), 0).getSharedPointer<const double>());
     
     // If the position aimed is possible, change the value
-    if(out[0] + inputI >= 2  && out[0] + inputI <= 4094){
-        scaledOutput[0] = out[0] + inputI;
+    if(motorAction[0] + inputI >= 2  && motorAction[0] + inputI <= 4094){
+        scaledOutput[0] = motorAction[0] + inputI;
     } else {
         // Else do not change the value.
         // The arm is not moving
@@ -112,12 +136,12 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
         isMoving=false; 
     }
 
-    for (int i = 1; i < 4; i++) {
 
+    for (int i = 1; i < 4; i++) {
         inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
         // If the position aimed is possible, change the value
-        if(out[i] + inputI >= 1025 && out[i] + inputI <= 3071){
-            scaledOutput[i] = out[i]  + inputI;
+        if(motorAction[i] + inputI >= 1025 && motorAction[i] + inputI <= 3071){
+            scaledOutput[i] = motorAction[i]  + inputI;
         } else {
             // Else do not change the value.
             // The arm is not moving
@@ -127,6 +151,7 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
 
     }
 
+    // TODO update this when the hand will be trained
     inputI = (double) *(motorPos.getDataAt(typeid(double), 4).getSharedPointer<const double>());
     scaledOutput[4] = (scaledOutput[4] - 511) + inputI;
     inputI = (double) *(motorPos.getDataAt(typeid(double), 5).getSharedPointer<const double>());
@@ -145,96 +170,31 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
 
     
     if(params.testing){
-        allMotorPos.push_back(getMotorsPos());
-        if(terminal || nbActions == nbMaxActions){
-            vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
-            vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
-            for(auto motor_value: allMotorPos){
-                vectorValidationInfos.push_back(motor_value[0]);
-                vectorValidationInfos.push_back(motor_value[1]);
-                vectorValidationInfos.push_back(motor_value[2]);
-                vectorValidationInfos.push_back(motor_value[3]);
-            }
-            allValidationInfos.push_back(vectorValidationInfos);
-        }
+        saveMotorPos();
     }
 
 }
 
-void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
+void ArmLearnWrapper::saveMotorPos(){
+    // Push back the motor position
+    allMotorPos.push_back(getMotorsPos());
+    if(terminal || nbActions == nbMaxActions){
 
+        // If terminal or end of episode, add score and number of actions
+        vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
+        vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
 
-    std::vector<double> out;
-    for (float &action : actions) {
-        out.push_back(round(params.sizeAction * action));
-    }
-    out.push_back(0.0);
-    out.push_back(0.0);
-
-
-    
-
-    // Scale the positions : this return a vector of int between 0 and 4096 corresponding to the step
-    auto scaledOutput = device->scalePosition({0, 0, 0, 0, 0, 0}, -M_PI, M_PI);
-
-
-    double inputI = (double) *(motorPos.getDataAt(typeid(double), 0).getSharedPointer<const double>());
-    // Substract by 2048 to get the out value indacted by the action
-    if(out[0] + inputI >= 2  && out[0] + inputI <= 4094){
-        scaledOutput[0] = out[0] + inputI;
-    } else {
-        scaledOutput[0] = inputI;
-    }
-
-    // changes relative coordinates to absolute
-    for (int i = 1; i < 4; i++) {
-
-        inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
-        // Substract by 2048 to get the out value indacted by the action
-        if(out[i] + inputI >= 1025 && out[i] + inputI <= 3071){
-            scaledOutput[i] = out[i]  + inputI;
-        } else {
-            scaledOutput[i] = inputI;
+        // Add each motor positions
+        for(auto motor_value: allMotorPos){
+            vectorValidationInfos.push_back(motor_value[0]);
+            vectorValidationInfos.push_back(motor_value[1]);
+            vectorValidationInfos.push_back(motor_value[2]);
+            vectorValidationInfos.push_back(motor_value[3]);
         }
-
+        // Add the vector containing the inforamtions to the vector containing all the informations
+        allValidationInfos.push_back(vectorValidationInfos);
     }
-
-
-
-    inputI = (double) *(motorPos.getDataAt(typeid(double), 4).getSharedPointer<const double>());
-    scaledOutput[4] = (scaledOutput[4] - 511) + inputI;
-    inputI = (double) *(motorPos.getDataAt(typeid(double), 5).getSharedPointer<const double>());
-    scaledOutput[5] = (scaledOutput[5] - 256) + inputI;
-
-    auto validOutput = device->toValidPosition(scaledOutput);
-    device->setPosition(validOutput); // Update position
-    device->waitFeedback();
-
-    
-    computeInput(); // to update  positions
-
-    nbActions++;
-    reward = computeReward(); // Computation of reward
-    score += reward;
-    
-    if(params.testing){
-        allMotorPos.push_back(getMotorsPos());
-        if(terminal || nbActions == nbMaxActions){
-            vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
-            vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
-            for(auto motor_value: allMotorPos){
-                vectorValidationInfos.push_back(motor_value[0]);
-                vectorValidationInfos.push_back(motor_value[1]);
-                vectorValidationInfos.push_back(motor_value[2]);
-                vectorValidationInfos.push_back(motor_value[3]);
-            }
-            allValidationInfos.push_back(vectorValidationInfos);
-        }
-    }
-
-
 }
-
 
 double ArmLearnWrapper::computeReward() {
 
@@ -256,11 +216,8 @@ double ArmLearnWrapper::computeReward() {
         nbActionsInThreshold=0;        
     }
 
-    // If the counter reach 10 or terminal is true (because the arm can stop and set terminal=true with action 8)
-    /*if(nbActionsInThreshold == 10 || !isMoving){
-        terminal = true;
-    }*/
 
+    // If the arm is not moving, set terminal to true
     if(!isMoving){
         terminal = true;
     }
@@ -306,20 +263,6 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
             break;
     }
 
-    if(params.testing){
-        allMotorPos.clear();
-        vectorValidationInfos.clear();
-
-        
-        for(auto val: *trajectories->at(iterationNumber).first){
-            vectorValidationInfos.push_back(val);
-        }
-
-        
-        vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[0]);
-        vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[1]);
-        vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[2]);
-    }
 
     // Change the starting position
     this->currentStartingPos = trajectories->at(iterationNumber).first;
@@ -338,6 +281,21 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     terminal = false;
     nbActionsInThreshold=0;
     isMoving = true;
+
+
+    // If we are testing the arm, we save the current trajectory
+    if(params.testing){
+        allMotorPos.clear();
+        vectorValidationInfos.clear();
+        
+        for(auto val: *trajectories->at(iterationNumber).first){
+            vectorValidationInfos.push_back(val);
+        }
+        
+        vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[0]);
+        vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[1]);
+        vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[2]);
+    }
 }
 
 
@@ -345,17 +303,19 @@ void ArmLearnWrapper::addToDeleteTraj(int index){
     trajToDelete.push_back(index);
 }
 
-int ArmLearnWrapper::getPropTrajectoriesDeleted(){
+int ArmLearnWrapper::getNbTrajectoriesDeleted(){
     return trajToDelete.size();
 }
 
 void ArmLearnWrapper::deleteTrajectory(){
 
+    // run the trajectories set backward to avoid size issues
     for(int i = trainingTrajectories.size() - 1; i >= 0; --i) {
 
         auto testFind = std::find(trajToDelete.begin(), trajToDelete.end(), i);
 
-        if (testFind != trajToDelete.end() || !params.controlTrajectoriesDeletion){
+        // If i is in the trajectories to delete, delete it
+        if (testFind != trajToDelete.end()){
             auto iterToDelete = trainingTrajectories.begin();
             std::advance(iterToDelete, i);
 
@@ -367,7 +327,7 @@ void ArmLearnWrapper::deleteTrajectory(){
 
 
     }
-
+    // Clear the vector
     trajToDelete.clear();
 }
 
@@ -426,9 +386,6 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
         // Clear a define prortion of the training targets by giving the proportion of targets reused
         clearPropTrainingTrajectories();
     }
-    
-
-
 
     while (trainingTrajectories.size() < nbTrajectories){
 
@@ -438,11 +395,8 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
         // Get a new random Goal
         auto newTarget = randomGoal(*newStartingPos, false);
 
-
-
         // add the pair startingPos and target to the vector
         trainingTrajectories.push_back(std::make_pair(newStartingPos, newTarget));
-
     }
 }
 
@@ -507,6 +461,10 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation, bool isTa
         
     }
     else{
+        // The calcul insure that the value sampled are possible 
+        // For exemple with params.sizeAction = 5, 
+        // valueNeeded = 3, then the value is sample between 1022 and 3061. The division/multiplication allow to round around 5
+        // Then we add 3 again to be sure that the coordonates are possible
         int16_t valueNeeded = 2048 % (int)params.sizeAction;
         i = (int16_t) (valueNeeded + (int)(rng.getInt32(1 - valueNeeded, 4096 - valueNeeded) / params.sizeAction) * params.sizeAction);
         j = (int16_t) (valueNeeded + (int)(rng.getInt32(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);

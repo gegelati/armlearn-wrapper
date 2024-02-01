@@ -111,12 +111,16 @@ protected:
     armlearn::Input<double> *currentTarget;
 
 
-    
-    bool logTestInfo = false;
+    /// Vector that store all the motors positions of an episode
     std::vector<std::vector<uint16_t>> allMotorPos;
+
+    /// Vector that store all the informations of an episode
     std::vector<int32_t> vectorValidationInfos;
+
+    /// vector that store all the informations of each episode
     std::vector<std::vector<int32_t>> allValidationInfos;
 
+    /// Vector that contain the indices of the trajectories do delete if trainingParams.controlTrajectoriesDeletion is true
     std::vector<int> trajToDelete;
 
 
@@ -187,6 +191,12 @@ public:
     /// Do a multi continuous action.
     void doActionContinuous(std::vector<float> actions);
 
+    /// execute the action choosed
+    void executeAction(std::vector<double> motorAction);
+
+    /// Save the current motor position(
+    void saveMotorPos();
+
     /// @brief Inherited via LearningEnvironment
     void reset(size_t seed = 0, Learn::LearningMode mode = Learn::LearningMode::TRAINING, uint16_t iterationNumber = 0, uint64_t generationNumber = 0) override;
 
@@ -198,14 +208,17 @@ public:
     /// @brief Clear a given proportion of the current set of training targets 
     void clearPropTrainingTrajectories();
 
-    int getPropTrajectoriesDeleted();
+    /// Return the number of trajectories deleted if trainingParams.controlTrajectoriesDeletion is true
+    int getNbTrajectoriesDeleted();
+
+    // Delete the tractories in the trajToDelete vector
     void deleteTrajectory();
+
+    // Add the indices given to the trajToDelete vector
     void addToDeleteTraj(int j);
 
-    /**
-     * @brief Inherited from LearningEnvironment.
-     *
-     */
+
+    ///@brief Inherited from LearningEnvironment.
     double getScore() const override;
 
     /// @brief Return the reward for the last action done;
@@ -307,6 +320,7 @@ public:
     /// Load the validation trajectories from a ValidationTrajectories.txt file
     void loadValidationTrajectories();
 
+    // Log the trajectories store in allValidationInfos vector
     void logTestingTrajectories(bool usingGegelati);
 
     /**

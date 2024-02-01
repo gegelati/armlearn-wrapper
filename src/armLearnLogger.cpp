@@ -63,6 +63,10 @@ void Log::ArmLearnLogger::logHeader()
         *this << std::setw(colWidth) << "S_Targ"; 
         *this << std::setw(colWidth) << "S_StartP";
     }
+
+    if (doControlTrajDeletion){
+        *this << std::setw(colWidth) << "T_Del"; 
+    }
         
 
     *this << std::setw(colWidth) << "T_mutat" << std::setw(colWidth)
@@ -156,4 +160,8 @@ void Log::ArmLearnLogger::logEnvironnementStatus(double envSizeTargets, double e
 {
     *this << std::setw(colWidth) << envSizeTargets;
     *this << std::setw(colWidth) << envSizeStartingPos;
+}
+
+void Log::ArmLearnLogger::logTrajDeleted(int nbTrajDeleted){
+    *this << std::setw(colWidth) << nbTrajDeleted;
 }

@@ -314,8 +314,8 @@ void ArmSacEngine::logLimits(){
 }
 
 void ArmSacEngine::logTrajectoriesDeletion(){
-    std::cout<<armLearnEnv->getPropTrajectoriesDeleted()<<std::setw(colWidth);
-    file<<armLearnEnv->getPropTrajectoriesDeleted()<<std::setw(colWidth);
+    std::cout<<armLearnEnv->getNbTrajectoriesDeleted()<<std::setw(colWidth);
+    file<<armLearnEnv->getNbTrajectoriesDeleted()<<std::setw(colWidth);
 }
 
 void ArmSacEngine::logTimes(){

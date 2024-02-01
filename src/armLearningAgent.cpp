@@ -95,6 +95,15 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
             ((ArmLearnWrapper&)learningEnvironment).updateCurrentLimits(bestResult, params.nbIterationsPerPolicyEvaluation);
         }
     }
+
+    if (trainingParams.controlTrajectoriesDeletion){
+        for (auto logger : loggers) {
+            if(typeid(logger.get()) == typeid(Log::ArmLearnLogger)){
+                ((Log::ArmLearnLogger&)logger.get()).logTrajDeleted(((ArmLearnWrapper&)learningEnvironment).getNbTrajectoriesDeleted());
+            }
+        }
+    }
+
     for (auto logger : loggers) {
         logger.get().logEndOfTraining();
     }

@@ -107,8 +107,8 @@ int main() {
     //Creation of the Output stream on cout and on the file
     auto nameLogs = (!trainingParams.testing) ? "logsGegelati" : "garbage";
     std::ofstream fichier((slashToAdd + "outLogs/" + nameLogs + ".ods").c_str(), std::ios::out);
-    auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,fichier);
-    auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits);
+    auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion,fichier);
+    auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion);
 
 
 

@@ -242,9 +242,9 @@ void runRealArmByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, 
     path.executeTrajectory();
     path.removePoint();
 
-    int16_t x=0;
-    int16_t y=0;
-    int16_t z=0;
+    double x=0;
+    double y=0;
+    double z=0;
     while (x!=-1){
         // Get current servo position
         arbotix.updateInfos();

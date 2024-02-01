@@ -34,6 +34,9 @@ namespace Log {
          */
         bool doTrainingValidation;
 
+        /// boolean that indicate if the deletion of trajectories is controlled
+        bool doControlTrajDeletion;
+
         /**
          * Keeps the duration of the training validation to be able to log it
          * some time after it is computed.
@@ -61,8 +64,9 @@ namespace Log {
          */
         explicit ArmLearnLogger(Learn::LearningAgent& la,
                                 bool doTrainingValidation=false, bool doUpdateLimits=false,
+                                bool doControlTrajDeletion=true,
                                 std::ostream& out = std::cout)
-            : LALogger(la, out), doTrainingValidation(doTrainingValidation), doUpdateLimits(doUpdateLimits)
+            : LALogger(la, out), doTrainingValidation(doTrainingValidation), doUpdateLimits(doUpdateLimits), doControlTrajDeletion(doControlTrajDeletion)
         {
             // fixing float precision
             *this << std::setprecision(2) << std::fixed << std::right;
@@ -159,6 +163,8 @@ namespace Log {
          * \param envSizeStartingPos Size of the environnement for the starting positions
          */
         virtual void logEnvironnementStatus(double envSizeTargets, double envSizeStartingPos);
+
+        virtual void logTrajDeleted(int nbTrajDeleted);
 
     };
 
