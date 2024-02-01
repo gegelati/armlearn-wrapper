@@ -110,20 +110,13 @@ int main() {
     auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,fichier);
     auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits);
 
-    /*//Creation of CloudPoint.csv, point that the robotic arm ended to touch
-    std::ofstream PointCloud;
-    PointCloud.open("PointCloud.csv",std::ios::out);
-
-    PointCloud << "Xp" << ";" << "Yp" << ";" << "Zp" << ";";
-    PointCloud << "Xt" << ";" << "Yt" << ";" << "Zt" << ";" << "score" << std::endl; */
-
 
 
     // Use previous Graphs
     if(trainingParams.startPreviousTPG){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, armLearnEnv.getDataSources(), 8);
-        File::TPGGraphDotImporter dotImporter((slashToAdd + "outLogs/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
+        File::TPGGraphDotImporter dotImporter((slashToAdd + "outLogs/dotfiles/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
     }
 
     // Save the validation trajectories
@@ -150,7 +143,7 @@ int main() {
         Log::LAPolicyStatsLogger logStats(la, stats);
 
         // Create an exporter for all graphs
-        File::TPGGraphDotExporter dotExporter((slashToAdd + "outLogs/out_0000.dot").c_str(), *la.getTPGGraph());
+        File::TPGGraphDotExporter dotExporter((slashToAdd + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
 
         // Train for params.nbGenerations generations
         for (uint64_t i = 0; i < params.nbGenerations && !exitProgram; i++) {
@@ -162,7 +155,7 @@ int main() {
 
             //print the previous graphs
             char buff[16];
-            sprintf(buff, (slashToAdd + "outLogs/out_%04d.dot").c_str(), static_cast<uint16_t>(i));
+            sprintf(buff, (slashToAdd + "outLogs/dotfiles/out_%04d.dot").c_str(), static_cast<uint16_t>(i));
             dotExporter.setNewFilePath(buff);
             dotExporter.print();
 
