@@ -53,7 +53,7 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
             }
 
             // Convert actionTensor to an actionVector
-            std::vector<float> actionVector(actionTensor.data_ptr<float>(), actionTensor.data_ptr<float>() + actionTensor.numel());
+            std::vector<float> actionVector(actionTaken.data_ptr<float>(), actionTaken.data_ptr<float>() + actionTaken.numel());
 
             // Do a continuous action
             armLearnEnv->doActionContinuous(actionVector);
@@ -63,7 +63,7 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
 
         // Get the new state
         newState = getTensorState();
-        
+
         // Get the reward
         singleReward = armLearnEnv->getReward();
         
@@ -341,7 +341,7 @@ double ArmSacEngine::getLastTrainingScore(){
 
 torch::Tensor ArmSacEngine::getTensorState(){
     // Create zero tensor
-    torch::Tensor tensorState = torch::zeros(10, torch::kFloat);
+    torch::Tensor tensorState = torch::zeros(13, torch::kFloat);
 
     auto dataSrc = armLearnEnv->getDataSources();
     // Get data (cartesian position of the hand)
@@ -355,8 +355,12 @@ torch::Tensor ArmSacEngine::getTensorState(){
     }
         
     // Get data (angular position of the motors)
+    for(int i=0; i<3;i++){
+        tensorState[i+6] = *dataSrc.at(2).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/100;
+    }
+
     for(int i=0; i<4;i++){
-        tensorState[i+6] = *dataSrc.at(2).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/4096;
+        tensorState[i+9] = *dataSrc.at(3).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/4096;
     }
     
     // Flatten the tensor

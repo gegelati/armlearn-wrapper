@@ -26,6 +26,6 @@ void runRealArmByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, 
 
 // makes simulation arm go to a given target and adds its trajectory in path
 void goToPos(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le,
-            armlearn::Trajectory& path, armlearn::Input<int16_t> *target);
+            armlearn::Trajectory& path, armlearn::Input<double> *target);
 
 #endif //ARMGEGELATI_RESULTTESTER_H

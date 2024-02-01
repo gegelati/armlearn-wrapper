@@ -43,7 +43,7 @@ int main() {
     ArmLearnWrapper le(1000, params);
 
 
-    auto * validationGoal = new armlearn::Input<int16_t>({300, 50, 50});
+    auto * validationGoal = new armlearn::Input<double>({300, 50, 50});
     auto validationStartingPos = le.getInitStartingPos();
     le.customTrajectory(validationGoal, validationStartingPos);
     le.reset();
@@ -164,15 +164,15 @@ void runRealArmAuto(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, Ar
     armlearn::Trajectory path(&arbotix);
 
     // open pliers here
-    auto* goal1 = new armlearn::Input<int16_t>({220, 25, 200});
-    auto* goal2 = new armlearn::Input<int16_t>({220, 25, 15});
+    auto* goal1 = new armlearn::Input<double>({220, 25, 200});
+    auto* goal2 = new armlearn::Input<double>({220, 25, 15});
     // grab here
-    auto* goal3 = new armlearn::Input<int16_t>({220, 25, 200});
-    auto* goal4 = new armlearn::Input<int16_t>({150, 150, 200});
-    auto* goal5 = new armlearn::Input<int16_t>({25, 250, 200});
-    auto* goal6 = new armlearn::Input<int16_t>({25, 250, 20});
+    auto* goal3 = new armlearn::Input<double>({220, 25, 200});
+    auto* goal4 = new armlearn::Input<double>({150, 150, 200});
+    auto* goal5 = new armlearn::Input<double>({25, 250, 200});
+    auto* goal6 = new armlearn::Input<double>({25, 250, 20});
     // release here
-    auto* goal7 = new armlearn::Input<int16_t>({25, 200, 200});
+    auto* goal7 = new armlearn::Input<double>({25, 200, 200});
 
 
     // open pliers
@@ -284,7 +284,7 @@ void runRealArmByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, 
         std::cout<<"z"<<std::endl;
         std::cin>>z;
 
-        auto * goal = new armlearn::Input<int16_t>({x, y, z});
+        auto * goal = new armlearn::Input<double>({x, y, z});
         goToPos(root, tee, le, path, goal);
 
         path.init();
@@ -307,7 +307,7 @@ void runRealArmByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, 
 }
 
 void goToPos(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnWrapper& le,
-            armlearn::Trajectory& path, armlearn::Input<int16_t> *target){
+            armlearn::Trajectory& path, armlearn::Input<double> *target){
     
     auto validationStartingPos = le.getInitStartingPos();
     le.customTrajectory(target, validationStartingPos);

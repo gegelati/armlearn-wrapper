@@ -52,10 +52,14 @@ protected:
     Data::PrimitiveTypeArray<double> motorPos;
 
     /// Current hand of the arm position
-    Data::PrimitiveTypeArray<double> cartesianPos;
+    Data::PrimitiveTypeArray<double> cartesianHand;
 
-    /// Current arm and goal distance vector
-    Data::PrimitiveTypeArray<double> cartesianDif;
+    /// Current goal position
+    Data::PrimitiveTypeArray<double> cartesianTarget;
+
+    /// Current goal position
+    Data::PrimitiveTypeArray<double> cartesianDiff;
+    
 
     /// converter used to covnert motorPos to cartesionPos
     armlearn::kinematics::Converter *converter;
@@ -92,19 +96,19 @@ protected:
     std::vector<uint16_t> *currentStartingPos;
 
     /// Vector with Starting positions in keys and Targets positions in values used for the training
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> trainingTrajectories;
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<double>*>> trainingTrajectories;
 
     /// Vector with Starting positions in keys and Targets positions in values used for the training validation
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> trainingValidationTrajectories;
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<double>*>> trainingValidationTrajectories;
 
     /// Vector with Starting positions in keys and Targets positions in values used for the validation
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> validationTrajectories;
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<double>*>> validationTrajectories;
         
     /// Current generation
     int generation = 0;
 
     /// Target currently used to move the arm.
-    armlearn::Input<int16_t> *currentTarget;
+    armlearn::Input<double> *currentTarget;
 
 
     
@@ -148,7 +152,7 @@ public:
      */
     ArmLearnWrapper(int nbMaxActions, TrainingParameters params, bool handServosTrained = false)
             : LearningEnvironment((handServosTrained) ? 13 : 9), handServosTrained(handServosTrained),
-              nbMaxActions(nbMaxActions), motorPos(6), cartesianPos(3), cartesianDif(3),
+              nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params), gen(params.seed) {
         if (params.progressiveModeStartingPos) this->currentMaxLimitStartingPos=params.maxLengthStartingPos;
@@ -161,7 +165,7 @@ public:
     */
     ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions),
                                                     nbMaxActions(other.nbMaxActions), motorPos(other.motorPos),
-                                                    cartesianPos(other.cartesianPos), cartesianDif(other.cartesianDif),
+                                                    cartesianHand(other.cartesianHand), cartesianTarget(other.cartesianTarget), cartesianDiff(other.cartesianDiff),
                                                     trainingTrajectories(other.trainingTrajectories),
                                                     validationTrajectories(other.validationTrajectories),
                                                     trainingValidationTrajectories(other.trainingValidationTrajectories),
@@ -263,12 +267,12 @@ public:
      * @param[in] validation true if the target is for the validation, else false
      * @param[in] maxLength distance max that the arm will have to browse in the trajectory
      */
-    armlearn::Input<int16_t>* randomGoal(std::vector<uint16_t> startingPos, bool validation);
+    armlearn::Input<double>* randomGoal(std::vector<uint16_t> startingPos, bool validation);
 
     /**
      * @brief Puts a custom goal in the first slot of the trainingTargets list.
      */ 
-    void customTrajectory(armlearn::Input<int16_t> *newGoal, std::vector<uint16_t> startingPos, bool validation = false);
+    void customTrajectory(armlearn::Input<double> *newGoal, std::vector<uint16_t> startingPos, bool validation = false);
 
     /**
      * @brief Check if the current limits for starting position and targets have to be updated based on the bestResult

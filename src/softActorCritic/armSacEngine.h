@@ -76,7 +76,7 @@ class ArmSacEngine{
         ArmSacEngine(SACParameters sacParams, ArmLearnWrapper* armLearnEnv, std::ostream& file, TrainingParameters trainingParams,
         uint16_t maxNbActions, bool doValidation=false)
         : sacParams(sacParams), file(file), armLearnEnv(armLearnEnv), trainingParams(trainingParams),
-        learningAgent(sacParams, 10, (sacParams.multipleActions) ? 4:1) {
+        learningAgent(sacParams, 13, (sacParams.multipleActions) ? 4:1) {
             this->maxNbActions = maxNbActions;
             this->doValidation=doValidation;
             this->doUpdateLimits = (this->trainingParams.progressiveModeTargets || this->trainingParams.progressiveModeStartingPos);
