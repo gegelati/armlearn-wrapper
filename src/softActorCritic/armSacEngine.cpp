@@ -245,6 +245,11 @@ void ArmSacEngine::logHeader(){
         file <<std::setw(colWidth) << "S_StartP"<<std::setw(colWidth)<<"S_Targ";
     }
 
+    if (trainingParams.controlTrajectoriesDeletion){
+        std::cout<<std::setw(colWidth)<<"T_Del";
+        file<<std::setw(colWidth)<<"T_Del";
+    }
+
 
     std::cout << std::setw(colWidth) << "T_Train"<<std::setw(colWidth)<< "T_Learn";
     file << std::setw(colWidth) << "T_Train"<<std::setw(colWidth)<< "T_Learn";
@@ -306,6 +311,11 @@ void ArmSacEngine::logLimits(){
 
     std::cout<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<armLearnEnv->getCurrentMaxLimitTarget()<<std::setw(colWidth);
     file<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<armLearnEnv->getCurrentMaxLimitTarget()<<std::setw(colWidth);
+}
+
+void ArmSacEngine::logTrajectoriesDeletion(){
+    std::cout<<armLearnEnv->getPropTrajectoriesDeleted()<<std::setw(colWidth);
+    file<<armLearnEnv->getPropTrajectoriesDeleted()<<std::setw(colWidth);
 }
 
 void ArmSacEngine::logTimes(){

@@ -198,6 +198,7 @@ public:
     /// @brief Clear a given proportion of the current set of training targets 
     void clearPropTrainingTrajectories();
 
+    int getPropTrajectoriesDeleted();
     void deleteTrajectory();
     void addToDeleteTraj(int j);
 

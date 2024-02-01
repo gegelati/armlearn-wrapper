@@ -121,6 +121,10 @@ int main() {
                 
             }
 
+            if (trainingParams.controlTrajectoriesDeletion){
+                learningAgent.logTrajectoriesDeletion();
+            }
+
 
             learningAgent.logTimes();
     }

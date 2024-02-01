@@ -48,7 +48,6 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
 void ArmLearnWrapper::doAction(uint64_t actionID) {
 
     std::vector<double> out;
-    //double step = M_PI / 180 * params.sizeAction; // discrete rotations of 1°
     double step  = params.sizeAction;
 
     // Get the action
@@ -100,26 +99,30 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
     // Scale the positions : this return a vector of int between 0 and 4096 corresponding to the step
     auto scaledOutput = device->scalePosition({0, 0, 0, 0, 0, 0}, -M_PI, M_PI);
 
-
+    // The new position of the first motor is calculated before the three others because the possibilities of the motors are different
     double inputI = (double) *(motorPos.getDataAt(typeid(double), 0).getSharedPointer<const double>());
-    // Substract by 2048 to get the out value indacted by the action
+    
+    // If the position aimed is possible, change the value
     if(out[0] + inputI >= 2  && out[0] + inputI <= 4094){
         scaledOutput[0] = out[0] + inputI;
     } else {
+        // Else do not change the value.
+        // The arm is not moving
         scaledOutput[0] = inputI;
-        isMoving=false;
+        isMoving=false; 
     }
 
-    // changes relative coordinates to absolute
     for (int i = 1; i < 4; i++) {
 
         inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
-        // Substract by 2048 to get the out value indacted by the action
+        // If the position aimed is possible, change the value
         if(out[i] + inputI >= 1025 && out[i] + inputI <= 3071){
             scaledOutput[i] = out[i]  + inputI;
         } else {
+            // Else do not change the value.
+            // The arm is not moving
             scaledOutput[i] = inputI;
-            isMoving=false;
+            isMoving=false; // TODO activate only for gegelati
         }
 
     }
@@ -340,6 +343,10 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
 
 void ArmLearnWrapper::addToDeleteTraj(int index){
     trajToDelete.push_back(index);
+}
+
+int ArmLearnWrapper::getPropTrajectoriesDeleted(){
+    return trajToDelete.size();
 }
 
 void ArmLearnWrapper::deleteTrajectory(){
