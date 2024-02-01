@@ -370,9 +370,8 @@ void ArmLearnWrapper::clearPropTrainingTrajectories(){
     if (trainingTrajectories.size() == 0)
         return;
 
-    // Clear all and return if the proportion is 1 (or above, even if it should not be higher than 1)
+    // if the proportion is 1 do not delete anything
     if (params.propTrajectoriesReused >= 1){
-        trainingTrajectories.clear();
         return;
     }
 
@@ -387,7 +386,8 @@ void ArmLearnWrapper::clearPropTrainingTrajectories(){
     std::for_each(trainingTrajectories.begin(), it, [this](auto& pair){
          if (this->params.doRandomStartingPosition) delete pair.first; // check doublon pointeur
          delete pair.second;
-    }); 
+    });
+
     // Delete then the pair in the vector
     trainingTrajectories.erase(trainingTrajectories.begin(), it);
 }
@@ -412,10 +412,16 @@ bool ArmLearnWrapper::isCopyable() const {
 
 void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
 
-    deleteTrajectory();
+    if(params.controlTrajectoriesDeletion){
+        // delete only the trajectories reached
+        deleteTrajectory();
+    } else {
+        // Clear a define prortion of the training targets by giving the proportion of targets reused
+        clearPropTrainingTrajectories();
+    }
+    
 
-    // Clear a define prortion of the training targets by giving the proportion of targets reused
-    //clearPropTrainingTrajectories();
+
 
     while (trainingTrajectories.size() < nbTrajectories){
 
@@ -716,9 +722,9 @@ void ArmLearnWrapper::loadValidationTrajectories() {
             } while (inFile >> value && i < 9);
 
             auto targetInput = new armlearn::Input<double>({
-                (int16_t) (target[0]), //X
-                (int16_t) (target[1]), //Y
-                (int16_t) (target[2])});
+                (double) (target[0]), //X
+                (double) (target[1]), //Y
+                (double) (target[2])});
 
             // Add to trajectories
             validationTrajectories.push_back(std::make_pair(startingPos, targetInput));
