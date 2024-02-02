@@ -40,7 +40,7 @@ int main() {
     set.add(*(new Instructions::LambdaInstruction<double>(sin)));
 
     TrainingParameters params;
-    ArmLearnWrapper le(1000, params);
+    ArmLearnWrapper le(1000, params, true);
 
 
     auto * validationGoal = new armlearn::Input<double>({300, 50, 50});

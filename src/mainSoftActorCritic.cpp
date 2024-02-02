@@ -35,7 +35,7 @@ int main() {
 
 
     // Instantiate the LearningEnvironment
-    ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams);
+    ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams, false);
 
     // Set and Prompt the number of threads
     torch::set_num_threads(gegelatiParams.nbThreads);

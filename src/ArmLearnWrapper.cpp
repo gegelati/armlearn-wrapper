@@ -133,7 +133,13 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         // Else do not change the value.
         // The arm is not moving
         scaledOutput[0] = inputI;
-        isMoving=false; 
+
+        // only active for gegelati because SAC is not deterministic
+        if(gegelatiRunning){
+            isMoving=false; 
+        }
+        // Penalty to give
+        
     }
 
 
@@ -146,7 +152,12 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
             // Else do not change the value.
             // The arm is not moving
             scaledOutput[i] = inputI;
-            isMoving=false; // TODO activate only for gegelati
+
+            // only active for gegelati because SAC is not deterministic
+            if(gegelatiRunning){
+                isMoving=false; 
+            }
+            // Penalty to give
         }
 
     }
@@ -182,6 +193,8 @@ void ArmLearnWrapper::saveMotorPos(){
 
         // If terminal or end of episode, add score and number of actions
         vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
+        vectorValidationInfos.push_back(static_cast<int32_t>(getDistance()));
+        vectorValidationInfos.push_back(static_cast<int32_t>((getDistance() < params.thresholdUpgrade) ? 1: 0));
         vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
 
         // Add each motor positions
@@ -714,7 +727,7 @@ void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati){
     // Vérification si le fichier est correctement ouvert
     if (outputFile.is_open()) {
         outputFile<<"armPos0,"<<"armPos1,"<<"armPos2,"<<"armPos3,"<<"armPos4,"<<"armPos5,";
-        outputFile<<"targetPos0,"<<"targetPos1,"<<"targetPos2,"<<"Score,"<<"NbActions,"<<"MotorPos"<<std::endl;
+        outputFile<<"targetPos0,"<<"targetPos1,"<<"targetPos2,"<<"Score,"<<"Distance,"<<"Success,"<<"NbActions,"<<"MotorPos"<<std::endl;
         // Écriture des données dans le fichier CSV
         for (const auto &row : allValidationInfos) {
             for (size_t i = 0; i < row.size(); ++i) {

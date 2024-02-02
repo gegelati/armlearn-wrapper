@@ -63,7 +63,7 @@ int main() {
 
 
     // Instantiate the LearningEnvironment
-    ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams);
+    ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
 
     // Prompt the number of threads
     std::cout << "Number of threads: " << params.nbThreads << std::endl;

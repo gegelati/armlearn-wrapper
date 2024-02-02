@@ -123,6 +123,9 @@ protected:
     /// Vector that contain the indices of the trajectories do delete if trainingParams.controlTrajectoriesDeletion is true
     std::vector<int> trajToDelete;
 
+    /// True if gegelati is running else an other algorithm : SAC for now
+    bool gegelatiRunning = true;
+
 
 public:
 
@@ -154,8 +157,8 @@ public:
      * \param[in] handServosTrained boolean controlling whether the 2 servos
      * controlling the hand of the robotic arm are trained.
      */
-    ArmLearnWrapper(int nbMaxActions, TrainingParameters params, bool handServosTrained = false)
-            : LearningEnvironment((handServosTrained) ? 13 : 9), handServosTrained(handServosTrained),
+    ArmLearnWrapper(int nbMaxActions, TrainingParameters params, bool gegelatiRunning, bool handServosTrained = false)
+            : LearningEnvironment((handServosTrained) ? 13 : 9), gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
               nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params), gen(params.seed) {
