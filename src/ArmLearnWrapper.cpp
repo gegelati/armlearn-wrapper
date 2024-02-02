@@ -22,8 +22,11 @@ void ArmLearnWrapper::computeInput() {
             motorPos.setDataAt(typeid(double), indInput, value);
             newMotorPos.emplace_back(value);
             indInput++;
+
+            if(printing) std::cout<<value<<" - ";
         }
     }
+    if(printing) std::cout<<" | ";
 
     // Get the cartesian coordonates of the motors
     auto newCartesianCoords = converter->computeServoToCoord(newMotorPos)->getCoord();
@@ -33,7 +36,9 @@ void ArmLearnWrapper::computeInput() {
         cartesianHand.setDataAt(typeid(double), i, newCartesianCoords[i]);
         cartesianTarget.setDataAt(typeid(double), i, this->currentTarget->getInput()[i]);
         cartesianDiff.setDataAt(typeid(double), i, this->currentTarget->getInput()[i] - newCartesianCoords[i]);
+        if(printing) std::cout<<this->currentTarget->getInput()[i]<< ", ";
     }
+    if(printing) std::cout<< std::setw(8)<< getDistance()<< std::setw(8);
 }
 
 std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::getDataSources() {
@@ -119,6 +124,12 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 
 void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     
+    for(auto val: motorAction){
+        if(printing) std::cout<<val<<", ";
+    }
+    if(printing) std::cout<<" | ";
+
+    bool givePenaltyMoveUnavailable = false;
 
     // Scale the positions : this return a vector of int between 0 and 4096 corresponding to the step
     auto scaledOutput = device->scalePosition({0, 0, 0, 0, 0, 0}, -M_PI, M_PI);
@@ -138,7 +149,9 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         if(gegelatiRunning){
             isMoving=false; 
         }
-        // Penalty to give
+        // Give a penalty if the algorithm as taken an unavailable action
+        if(printing) std::cout<< "0"<< ",";
+        givePenaltyMoveUnavailable = true;
         
     }
 
@@ -157,10 +170,13 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
             if(gegelatiRunning){
                 isMoving=false; 
             }
-            // Penalty to give
+            // Give a penalty if the algorithm as taken an unavailable action (only one penalty even with multiple action)
+            givePenaltyMoveUnavailable = true;
+            if(printing) std::cout<< i<< ",";
         }
 
     }
+    if(printing) std::cout<<" | ";
 
     // TODO update this when the hand will be trained
     inputI = (double) *(motorPos.getDataAt(typeid(double), 4).getSharedPointer<const double>());
@@ -176,7 +192,8 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     computeInput(); // to update  positions
 
     nbActions++;
-    reward = computeReward(); // Computation of reward
+    reward = computeReward(givePenaltyMoveUnavailable); // Computation of reward
+    if(printing) std::cout<<reward<<" | "<<std::endl;;
     score += reward;
 
     
@@ -209,7 +226,7 @@ void ArmLearnWrapper::saveMotorPos(){
     }
 }
 
-double ArmLearnWrapper::computeReward() {
+double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
 
     // Compute que Distance with the target
     auto err = getDistance();
@@ -238,23 +255,28 @@ double ArmLearnWrapper::computeReward() {
     if(params.reachingObjectives){
         if(err < params.thresholdUpgrade){
             terminal = true;
-            return 1000;
+            return 1;
         }
     } else if(nbActionsInThreshold == 10 || !isMoving){
         terminal = true;
         if(err < params.thresholdUpgrade){
-            return 1000;
+            return 1;
         }
     }
 
     // If the arm is not moving anymore, the reward is multiplied by the numper of action normally to come
-    double penalty = 1;
+    double penaltyStopTooSoon = 1;
     if(!isMoving){
-        penalty = nbMaxActions - nbActions;
+        penaltyStopTooSoon = nbMaxActions - nbActions;
+    }
+
+    double penaltyMoveUnavailable = 0;
+    if (givePenaltyMoveUnavailable){
+        penaltyMoveUnavailable = params.penaltyMoveUnavailable;
     }
 
     // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)
-    return -err * params.coefRewardMultiplication * penalty;
+    return (-err * params.coefRewardMultiplication - penaltyMoveUnavailable) * penaltyStopTooSoon;
     
 }
 
@@ -682,37 +704,45 @@ void ArmLearnWrapper::loadValidationTrajectories() {
     std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
     std::ifstream inFile((slashToAdd + "params/ValidationTrajectories.txt").c_str());
 
+    std::vector<std::vector<double>> allValues;
+
     if (inFile.is_open()) {
-        int value;
-        inFile >> value;
-        do {
-            std::vector<uint16_t>* startingPos = new std::vector<uint16_t>();
-            int i = 0;
-            do { // Get the starting position
-                startingPos->push_back(static_cast<uint16_t>(value));
-                i++;
-            } while (inFile >> value && i < 6);
 
-            std::vector<int> target;
-            do { // Get the target
-                target.push_back(static_cast<uint16_t>(value));
-                i++;
-            } while (inFile >> value && i < 9);
+        std::string line;
 
-            auto targetInput = new armlearn::Input<double>({
-                (double) (target[0]), //X
-                (double) (target[1]), //Y
-                (double) (target[2])});
+        // Lecture de chaque ligne du fichier
+        while (std::getline(inFile, line)) {
+            std::vector<double> values;
+            std::istringstream streamLine(line);
+            double value;
 
-            // Add to trajectories
-            validationTrajectories.push_back(std::make_pair(startingPos, targetInput));
-        } while(inFile.peek() != EOF);
+            // Lecture des valeurs dans la ligne
+            while (streamLine >> value) {
+                values.push_back(value);
+            }
+
+            // Ajout du vecteur de valeurs de la ligne au vecteur principal
+            allValues.push_back(values);
+        }
 
         // Close the file
         inFile.close();
 
     } else {
         std::cerr << "Error while openning file for loading validation trajectories" << std::endl;
+    }
+
+    for(auto values: allValues){
+
+        if(values.size()>0){
+            std::vector<uint16_t>* startingPos = new std::vector<uint16_t>();
+            for(int i = 0; i < 6; i++){
+                startingPos->push_back((uint16_t)values[i]);
+            }
+            auto targetInput = new armlearn::Input<double>({values[6], values[7], values[8]});
+
+            validationTrajectories.push_back(std::make_pair(startingPos, targetInput));
+        }
     }
 }
 

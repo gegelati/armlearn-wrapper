@@ -111,8 +111,8 @@ public:
     /// True to activate a control over the deletion of trajectories
     bool controlTrajectoriesDeletion = false;
 
-    /// Proportion of targets reused at each generation
-    double coefRewardNbIterations = 0;
+    /// Value to penalize the algorithm if an unavailable action is taken : reward = reward - penalty
+    double penaltyMoveUnavailable = 0;
 
     /// Coefficient to multiply the reward with
     double coefRewardMultiplication = 1;

@@ -354,25 +354,27 @@ torch::Tensor ArmSacEngine::getTensorState(){
     torch::Tensor tensorState = torch::zeros(13, torch::kFloat);
 
     auto dataSrc = armLearnEnv->getDataSources();
-    // Get data (cartesian position of the hand)
+    // Get data (cartesian position of the target)
     for(int i=0; i<3;i++){
         tensorState[i] = *dataSrc.at(0).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/100;
     }
 
-    // Get data (cartesian difference between hand and target)
+    // Get data (cartesian position of the hand)
     for(int i=0; i<3;i++){
         tensorState[i+3] = *dataSrc.at(1).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/100;
     }
         
-    // Get data (angular position of the motors)
+    // Get data (cartesian difference between hand and target)
     for(int i=0; i<3;i++){
         tensorState[i+6] = *dataSrc.at(2).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/100;
     }
 
-    for(int i=0; i<4;i++){
-        tensorState[i+9] = *dataSrc.at(3).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/4096;
+    // Get data (angular position of the motors)
+    tensorState[9] = *dataSrc.at(3).get().getDataAt(typeid(double), 0).getSharedPointer<const double>()/2048 - 1;
+    for(int i=1; i<4;i++){
+        tensorState[i+9] = *dataSrc.at(3).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/1024 - 2;
     }
-    
+    //std::cout<<tensorState<<std::endl;
     // Flatten the tensor
     return tensorState.view({1, -1});
 }

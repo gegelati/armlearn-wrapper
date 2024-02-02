@@ -31,9 +31,11 @@
 */
 class ArmLearnWrapper : public Learn::LearningEnvironment, armlearn::learning::DeviceLearner {
 protected:
+
+    bool printing=false;
     void computeInput();
 
-    double computeReward();
+    double computeReward(bool givePenaltyMoveUnavailable);
 
     TrainingParameters params;
 

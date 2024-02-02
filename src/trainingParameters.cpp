@@ -117,8 +117,8 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "coefRewardNbIterations"){
-        coefRewardNbIterations = (double)value.asDouble();
+    if (param == "penaltyMoveUnavailable"){
+        penaltyMoveUnavailable = (double)value.asDouble();
         return;
     }
 
