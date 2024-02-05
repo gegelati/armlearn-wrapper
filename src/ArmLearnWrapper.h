@@ -62,6 +62,8 @@ protected:
     /// Current goal position
     Data::PrimitiveTypeArray<double> cartesianDiff;
     
+    /// Current motor speed
+    Data::PrimitiveTypeArray<double> dataMotorSpeed;
 
     /// converter used to covnert motorPos to cartesionPos
     armlearn::kinematics::Converter *converter;
@@ -74,7 +76,7 @@ protected:
 
     /// Number of actions done in the episode
     size_t nbActions = 0;
-
+    
     int nbActionsInThreshold=0;
 
     bool isMoving=true;
@@ -128,6 +130,8 @@ protected:
     /// True if gegelati is running else an other algorithm : SAC for now
     bool gegelatiRunning = true;
 
+    /// Motor speed : Use only if trainingParams.actionSpeed is true. speed is in motorPoint/iteration
+    std::vector<double> motorSpeed = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 public:
 
@@ -161,7 +165,7 @@ public:
      */
     ArmLearnWrapper(int nbMaxActions, TrainingParameters params, bool gegelatiRunning, bool handServosTrained = false)
             : LearningEnvironment((handServosTrained) ? 13 : 9), gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
-              nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3),
+              nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3), dataMotorSpeed(4),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params), gen(params.seed) {
         if (params.progressiveModeStartingPos) this->currentMaxLimitStartingPos=params.maxLengthStartingPos;
@@ -175,6 +179,7 @@ public:
     ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions),
                                                     nbMaxActions(other.nbMaxActions), motorPos(other.motorPos),
                                                     cartesianHand(other.cartesianHand), cartesianTarget(other.cartesianTarget), cartesianDiff(other.cartesianDiff),
+                                                    dataMotorSpeed(other.dataMotorSpeed),
                                                     trainingTrajectories(other.trainingTrajectories),
                                                     validationTrajectories(other.validationTrajectories),
                                                     trainingValidationTrajectories(other.trainingValidationTrajectories),

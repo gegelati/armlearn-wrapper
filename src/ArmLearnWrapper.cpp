@@ -36,9 +36,7 @@ void ArmLearnWrapper::computeInput() {
         cartesianHand.setDataAt(typeid(double), i, newCartesianCoords[i]);
         cartesianTarget.setDataAt(typeid(double), i, this->currentTarget->getInput()[i]);
         cartesianDiff.setDataAt(typeid(double), i, this->currentTarget->getInput()[i] - newCartesianCoords[i]);
-        if(printing) std::cout<<this->currentTarget->getInput()[i]<< ", ";
     }
-    if(printing) std::cout<< std::setw(8)<< getDistance()<< std::setw(8);
 }
 
 std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::getDataSources() {
@@ -47,6 +45,7 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
     result.emplace_back(cartesianHand);
     result.emplace_back(cartesianDiff);
     result.emplace_back(motorPos);
+    result.emplace_back(dataMotorSpeed);
     return result;
 }
 
@@ -83,7 +82,7 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
             break;
         case 8:
             motorAction = {0, 0, 0, 0, 0, 0};
-            if(gegelatiRunning){
+            if(gegelatiRunning || !params.actionSpeed){
                 isMoving=false;
             }
             break;
@@ -126,10 +125,19 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 
 void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
-    for(auto val: motorAction){
-        if(printing) std::cout<<val<<", ";
+    if(params.actionSpeed){
+        // Change the speed of the motors
+        for(int i=0; i<6; i++){
+            motorSpeed[i] += motorAction[i];
+            if(i < 4){
+                dataMotorSpeed.setDataAt(typeid(double), i, motorSpeed[i]);
+            }
+        }
+
+        // The new speed is the action
+        motorAction = motorSpeed;
     }
-    if(printing) std::cout<<" | ";
+
 
     bool givePenaltyMoveUnavailable = false;
 
@@ -152,7 +160,6 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
             isMoving=false;
         }
         // Give a penalty if the algorithm as taken an unavailable action
-        if(printing) std::cout<< "0"<< ",";
         givePenaltyMoveUnavailable = true;
 
     }
@@ -174,11 +181,9 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
             }
             // Give a penalty if the algorithm as taken an unavailable action (only one penalty even with multiple action)
             givePenaltyMoveUnavailable = true;
-            if(printing) std::cout<< i<< ",";
         }
 
     }
-    if(printing) std::cout<<" | ";
 
     // TODO update this when the hand will be trained
     inputI = (double) *(motorPos.getDataAt(typeid(double), 4).getSharedPointer<const double>());
@@ -195,7 +200,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
     nbActions++;
     reward = computeReward(givePenaltyMoveUnavailable); // Computation of reward
-    if(printing) std::cout<<reward<<" | "<<std::endl;;
+    if(printing) std::cout<<reward<<" | "<<std::endl;
     score += reward;
 
 
@@ -318,6 +323,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     terminal = false;
     nbActionsInThreshold=0;
     isMoving = true;
+    motorSpeed = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 
     // If we are testing the arm, we save the current trajectory

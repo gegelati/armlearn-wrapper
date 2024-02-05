@@ -147,6 +147,9 @@ public:
 	// To use spherical coordonates instructions
 	bool useInstrSphericalCoord = false;
 
+    /// If false, action change the motor position, if true action change the motor speed
+    bool actionSpeed = true;
+
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.

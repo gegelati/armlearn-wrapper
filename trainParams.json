@@ -55,6 +55,7 @@
 	// To use distance 3D instruction
 	"useInstrDist3d": false,
 	// To use spherical coordonates instructions
-	"useInstrSphericalCoord": false
-	
+	"useInstrSphericalCoord": false,
+	// If false, action change the motor position, if true action change the motor speed
+	"actionSpeed": true
 }

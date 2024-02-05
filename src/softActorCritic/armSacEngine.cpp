@@ -351,7 +351,7 @@ double ArmSacEngine::getLastTrainingScore(){
 
 torch::Tensor ArmSacEngine::getTensorState(){
     // Create zero tensor
-    torch::Tensor tensorState = torch::zeros(13, torch::kFloat);
+    torch::Tensor tensorState = torch::zeros((trainingParams.actionSpeed) ? 17 : 13, torch::kFloat);
 
     auto dataSrc = armLearnEnv->getDataSources();
     // Get data (cartesian position of the target)
@@ -374,6 +374,15 @@ torch::Tensor ArmSacEngine::getTensorState(){
     for(int i=1; i<4;i++){
         tensorState[i+9] = *dataSrc.at(3).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/1024 - 2;
     }
+
+    if(trainingParams.actionSpeed){
+        // Get data (angular speed of the motors)
+        for(int i=0; i<4;i++){
+            tensorState[i+13] = *dataSrc.at(4).get().getDataAt(typeid(double), i).getSharedPointer<const double>();
+        }
+    }
+
+
     //std::cout<<tensorState<<std::endl;
     // Flatten the tensor
     return tensorState.view({1, -1});
