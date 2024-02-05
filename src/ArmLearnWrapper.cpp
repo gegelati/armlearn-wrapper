@@ -30,7 +30,7 @@ void ArmLearnWrapper::computeInput() {
 
     // Get the cartesian coordonates of the motors
     auto newCartesianCoords = converter->computeServoToCoord(newMotorPos)->getCoord();
-   
+
     // For each motor, save the position and the relative position with the target
     for (int i = 0; i < newCartesianCoords.size(); i++) {
         cartesianHand.setDataAt(typeid(double), i, newCartesianCoords[i]);
@@ -83,7 +83,9 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
             break;
         case 8:
             motorAction = {0, 0, 0, 0, 0, 0};
-            isMoving=false;
+            if(gegelatiRunning){
+                isMoving=false;
+            }
             break;
 
             // Following cases only when the hand is trained
@@ -123,7 +125,7 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 }
 
 void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
-    
+
     for(auto val: motorAction){
         if(printing) std::cout<<val<<", ";
     }
@@ -136,7 +138,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
     // The new position of the first motor is calculated before the three others because the possibilities of the motors are different
     double inputI = (double) *(motorPos.getDataAt(typeid(double), 0).getSharedPointer<const double>());
-    
+
     // If the position aimed is possible, change the value
     if(motorAction[0] + inputI >= 2  && motorAction[0] + inputI <= 4094){
         scaledOutput[0] = motorAction[0] + inputI;
@@ -147,12 +149,12 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
         // only active for gegelati because SAC is not deterministic
         if(gegelatiRunning){
-            isMoving=false; 
+            isMoving=false;
         }
         // Give a penalty if the algorithm as taken an unavailable action
         if(printing) std::cout<< "0"<< ",";
         givePenaltyMoveUnavailable = true;
-        
+
     }
 
 
@@ -168,7 +170,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
             // only active for gegelati because SAC is not deterministic
             if(gegelatiRunning){
-                isMoving=false; 
+                isMoving=false;
             }
             // Give a penalty if the algorithm as taken an unavailable action (only one penalty even with multiple action)
             givePenaltyMoveUnavailable = true;
@@ -188,7 +190,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     device->setPosition(validOutput); // Update position
     device->waitFeedback();
 
-    
+
     computeInput(); // to update  positions
 
     nbActions++;
@@ -196,7 +198,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     if(printing) std::cout<<reward<<" | "<<std::endl;;
     score += reward;
 
-    
+
     if(params.testing){
         saveMotorPos();
     }
@@ -243,7 +245,7 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
     // If not close to the objective
     } else{
         // reset counter
-        nbActionsInThreshold=0;        
+        nbActionsInThreshold=0;
     }
 
 
@@ -277,7 +279,7 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
 
     // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)
     return (-err * params.coefRewardMultiplication - penaltyMoveUnavailable) * penaltyStopTooSoon;
-    
+
 }
 
 
@@ -285,7 +287,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
 
     // Get the right trajectories' map
     std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<double>*>>* trajectories;
-    
+
     switch (mode) {
         case Learn::LearningMode::TRAINING:
             trajectories = &trainingTrajectories;
@@ -322,11 +324,11 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     if(params.testing){
         allMotorPos.clear();
         vectorValidationInfos.clear();
-        
+
         for(auto val: *trajectories->at(iterationNumber).first){
             vectorValidationInfos.push_back(val);
         }
-        
+
         vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[0]);
         vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[1]);
         vectorValidationInfos.push_back(trajectories->at(iterationNumber).second->getInput()[2]);
@@ -442,7 +444,7 @@ void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories){
     std::for_each(trainingValidationTrajectories.begin(), trainingValidationTrajectories.end(), [this](auto& pair){
          if (this->params.doRandomStartingPosition) delete pair.first; // check doublon pointeur
          delete pair.second;
-    }); 
+    });
     trainingValidationTrajectories.clear();
 
     for (int i=0; i<nbTrajectories; i++){
@@ -463,7 +465,7 @@ void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
     // Clear all the current validation trajectories
     std::for_each(validationTrajectories.begin(), validationTrajectories.end(), [this](auto& pair){
          delete pair.second;
-    }); 
+    });
     validationTrajectories.clear();
 
     for (int i=0; i<nbTrajectories; i++){
@@ -487,17 +489,17 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation, bool isTa
 
 
     if(!validation && params.progressiveModeMotor){
-        
+
         int16_t valueNeeded = 2048 % (int)params.sizeAction;
         i = (int16_t) (valueNeeded + (int)(rng.getInt32(std::max(2.0, 2048 - limit) - valueNeeded, std::min(4094.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
         j = (int16_t) (valueNeeded + (int)(rng.getInt32(std::max(1025.0, 2048 - limit) - valueNeeded, std::min(3071.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
         k = (int16_t) (valueNeeded + (int)(rng.getInt32(std::max(1025.0, 2048 - limit) - valueNeeded, std::min(3071.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
         l = (int16_t) (valueNeeded + (int)(rng.getInt32(std::max(1025.0, 2048 - limit) - valueNeeded, std::min(3071.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
-        
+
     }
     else{
-        // The calcul insure that the value sampled are possible 
-        // For exemple with params.sizeAction = 5, 
+        // The calcul insure that the value sampled are possible
+        // For exemple with params.sizeAction = 5,
         // valueNeeded = 3, then the value is sample between 1022 and 3061. The division/multiplication allow to round around 5
         // Then we add 3 again to be sure that the coordonates are possible
         int16_t valueNeeded = 2048 % (int)params.sizeAction;
@@ -559,7 +561,7 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
 
         // Compute the distance to browse
         distance = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
-        
+
     } while (!validation && distance > currentMaxLimitTarget && !params.progressiveModeMotor);
 
     // Create the input to return
@@ -583,7 +585,7 @@ void ArmLearnWrapper::customTrajectory(armlearn::Input<double> *newGoal, std::ve
         delete iterator->second;
         trajectories.erase(iterator);
     }
-    
+
     // Add the custom target with the corresponding starting position
     trajectories.push_back(std::make_pair(&startingPos, newGoal));
 }
@@ -616,7 +618,7 @@ void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPer
 
             // Update the training validation trajectories
             updateTrainingValidationTrajectories(nbIterationsPerPolicyEvaluation);
-            
+
         }
     }
     // Reset the counter
@@ -697,7 +699,7 @@ void ArmLearnWrapper::loadValidationTrajectories() {
     // Clear the trajectories
     std::for_each(validationTrajectories.begin(), validationTrajectories.end(), [this](auto& pair){
         delete pair.second;
-    }); 
+    });
     validationTrajectories.clear();
 
     // Get file
@@ -815,7 +817,7 @@ double ArmLearnWrapper::getCurrentMaxLimitStartingPos(){
 
 
 double ArmLearnWrapper::getDistance(){
-    
+
     // Get the cartiesion coordonates of the arm
     std::vector<double> cartesianCoords = converter->computeServoToCoord(getMotorsPos())->getCoord();
 
