@@ -133,6 +133,12 @@ protected:
     /// Motor speed : Use only if trainingParams.actionSpeed is true. speed is in motorPoint/iteration
     std::vector<double> motorSpeed = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
+    /// Current range target to reach
+    double currentRangeTarget;
+
+    /// True if this is validation, else false
+    bool isValidation = true;
+
 public:
 
     /// @brief Do not know
@@ -165,11 +171,17 @@ public:
      */
     ArmLearnWrapper(int nbMaxActions, TrainingParameters params, bool gegelatiRunning, bool handServosTrained = false)
             : LearningEnvironment((handServosTrained) ? 13 : 9), gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
-              nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3), dataMotorSpeed(4),
+              nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3), dataMotorSpeed((params.actionSpeed) ? 4:0),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params), gen(params.seed) {
-        if (params.progressiveModeStartingPos) this->currentMaxLimitStartingPos=params.maxLengthStartingPos;
-        if (params.progressiveModeTargets) this->currentMaxLimitTarget=params.maxLengthTargets;
+        if(params.progressiveRangeTarget){
+            this->currentRangeTarget = params.maxLengthTargets;
+        } else {
+            if (params.progressiveModeStartingPos) this->currentMaxLimitStartingPos=params.maxLengthStartingPos;
+            if (params.progressiveModeTargets) this->currentMaxLimitTarget=params.maxLengthTargets;
+            this->currentRangeTarget = params.rangeTarget;
+        }
+
         rng.setSeed(params.seed);
         }
 
@@ -302,7 +314,7 @@ public:
      * @brief Check if the current limits for starting position and targets have to be updated based on the bestResult
      * If the limits are updated, the trajectories are updated based on the nbIterationsPerPolicyEvaluation 
      */ 
-    void updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation);
+    bool updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation);
 
     /**
      * @brief Returns a string logging the goal (to use e.g. when there is a goal change)
@@ -365,6 +377,9 @@ public:
 
     /// Get currentMaxLimitStartingPos
     double getCurrentMaxLimitStartingPos();
+
+    /// Get currentRangeTarget
+    double getCurrentRangeTarget();
 
     /// Get distance from the arm to the target
     double getDistance();

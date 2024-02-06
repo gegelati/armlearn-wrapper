@@ -45,7 +45,7 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
     result.emplace_back(cartesianHand);
     result.emplace_back(cartesianDiff);
     result.emplace_back(motorPos);
-    result.emplace_back(dataMotorSpeed);
+    if (params.actionSpeed) result.emplace_back(dataMotorSpeed);
     return result;
 }
 
@@ -238,12 +238,14 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
     // Compute que Distance with the target
     auto err = getDistance();
 
+    double range = (isValidation) ? params.rangeTarget : currentRangeTarget;
+
     /// Compute the number of actions taken in the episode divide by the maximum number of actions takeable in an episode
     /// This ratio is multiplied by a coefficient that allow to choose the impact of this ratio on the reward
     //double valNbIterations = params.coefRewardNbIterations * (static_cast<double>(nbActions) / nbMaxActions);
 
     // Tempory reward to force to stop close to the objective
-    if (err < params.rangeTarget){
+    if (err < range){
         // Incremente a counter
         nbActionsInThreshold++;
 
@@ -260,14 +262,14 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
     }
 
     if(params.reachingObjectives){
-        if(err < params.rangeTarget){
+        if(err < range){
             terminal = true;
-            return 1;
+            return 10;
         }
     } else if(nbActionsInThreshold == 10 || !isMoving){
         terminal = true;
-        if(err < params.rangeTarget){
-            return 1;
+        if(err < range){
+            return 10;
         }
     }
 
@@ -306,6 +308,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     }
 
 
+
     // Change the starting position
     this->currentStartingPos = trajectories->at(iterationNumber).first;
 
@@ -324,6 +327,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     nbActionsInThreshold=0;
     isMoving = true;
     motorSpeed = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    isValidation = (mode==Learn::LearningMode::VALIDATION);
 
 
     // If we are testing the arm, we save the current trajectory
@@ -596,9 +600,9 @@ void ArmLearnWrapper::customTrajectory(armlearn::Input<double> *newGoal, std::ve
     trajectories.push_back(std::make_pair(&startingPos, newGoal));
 }
 
-void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation){
-    // If the best TPG is above the threshold for upgrade
-    if (bestResult < params.rangeTarget){
+bool ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation){
+    // If the best TPG is above the range for upgrade
+    if (bestResult < currentRangeTarget){
 
         // Incremente the counter for upgrading the max current limit
         counterIterationUpgrade += 1;
@@ -608,8 +612,14 @@ void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPer
 
             // Upgrade the limit of tagets
             if (params.progressiveModeTargets){
-                currentMaxLimitTarget = std::min(currentMaxLimitTarget * params.coefficientUpgradeMult, currentMaxLimitTarget + params.coefficientUpgradeAdd);
-                currentMaxLimitTarget = std::min(currentMaxLimitTarget, 750.0d);
+                if(params.progressiveRangeTarget){
+                    currentRangeTarget = std::max(currentRangeTarget * params.coefficientUpgradeMult, currentRangeTarget + params.coefficientUpgradeAdd);
+                    currentRangeTarget = std::max(currentRangeTarget, params.rangeTarget);
+                } else{
+                    currentMaxLimitTarget = std::min(currentMaxLimitTarget * params.coefficientUpgradeMult, currentMaxLimitTarget + params.coefficientUpgradeAdd);
+                    currentMaxLimitTarget = std::min(currentMaxLimitTarget, 750.0d);
+                }
+
             }
 
 
@@ -625,11 +635,14 @@ void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPer
             // Update the training validation trajectories
             updateTrainingValidationTrajectories(nbIterationsPerPolicyEvaluation);
 
+            return true;
         }
-    }
-    // Reset the counter
-    else
+    } else{
+        // Reset the counter
         counterIterationUpgrade = 0;
+
+    }
+    return false;
 }
 
 std::string ArmLearnWrapper::newGoalToString() const {
@@ -821,6 +834,9 @@ double ArmLearnWrapper::getCurrentMaxLimitStartingPos(){
     return currentMaxLimitStartingPos;
 }
 
+double ArmLearnWrapper::getCurrentRangeTarget(){
+    return currentRangeTarget;
+}
 
 double ArmLearnWrapper::getDistance(){
 

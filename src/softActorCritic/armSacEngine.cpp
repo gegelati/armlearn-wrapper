@@ -325,8 +325,10 @@ void ArmSacEngine::logTrainingValidation(double distance){
 
 void ArmSacEngine::logLimits(){
 
-    std::cout<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<armLearnEnv->getCurrentMaxLimitTarget()<<std::setw(colWidth);
-    file<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<armLearnEnv->getCurrentMaxLimitTarget()<<std::setw(colWidth);
+    double targetLimit = (trainingParams.progressiveRangeTarget) ? armLearnEnv->getCurrentRangeTarget() : armLearnEnv->getCurrentMaxLimitTarget();
+
+    std::cout<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<targetLimit<<std::setw(colWidth);
+    file<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<targetLimit<<std::setw(colWidth);
 }
 
 void ArmSacEngine::logTrajectoriesDeletion(){

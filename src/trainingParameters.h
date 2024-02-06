@@ -64,25 +64,28 @@ private:
 
 public:
     /// Choose between stopping in or reaching the objectives
-    bool reachingObjectives = true;
+    bool reachingObjectives = false;
 
     /// True if training validation is used for random starting pos and random target pos
-    bool doTrainingValidation = true;
+    bool doTrainingValidation = false;
 
-    /// If True, progressive mode is done by increasing motor position, instead it is the euclidian distance that increase
-    bool progressiveModeMotor = true;
+    /// Use the progressive mode for choosing randomly the targets. If true, progressiveModeMotor is ignored
+    bool progressiveRangeTarget = false;
+
+    /// If True, progressive mode is done by increasing motor position, instead it is the euclidian distance that increase, is ignored if progressiveRangeTarget is true
+    bool progressiveModeMotor = false;
 
     /// True if the starting positions are set randomly
-    bool doRandomStartingPosition = true;
+    bool doRandomStartingPosition = false;
 
     /// True if the sphere will grow progressivly
-    bool progressiveModeTargets = true;
+    bool progressiveModeTargets = false;
 
     /// Init size of the sphere within which the target will be instantiate
     double maxLengthTargets = 30.0;
 
     /// True if the sphere will grow progressivly
-    bool progressiveModeStartingPos = true;
+    bool progressiveModeStartingPos = false;
 
     /// Init size of the sphere within which the target will be instantiate
     double maxLengthStartingPos = 30.0;
@@ -133,7 +136,7 @@ public:
     double sizeAction = 1;
 
     /// if true, selection for gegelati is based on score (sum of reward), else on distance
-    bool isScoreResult = true;
+    bool isScoreResult = false;
 
     /// if true, deactivate the training and only logs results
 	bool testing = false;
@@ -148,7 +151,7 @@ public:
 	bool useInstrSphericalCoord = false;
 
     /// If false, action change the motor position, if true action change the motor speed
-    bool actionSpeed = true;
+    bool actionSpeed = false;
 
     /**
      * \brief Loads a given json file and fills the parameters it contains

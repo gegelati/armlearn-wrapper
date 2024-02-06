@@ -2,26 +2,28 @@
 	// Choose between stopping in or reaching the objectives
 	"reachingObjectives": true,
 	// True if training validation is used for random starting pos and random target pos
-	"doTrainingValidation": true,
+	"doTrainingValidation": false,
 	// If True, progressive mode is done by increasing motor position, instead it is the euclidian distance that increase
 	"progressiveModeMotor": false,
-	// Use the progressive mode for choosing randomly the targets
+	// If True, the target size will not be progressive but the range to reach will. If true, progressiveModeMotor is ignored
+	"progressiveRangeTarget": true,
+	// Use the progressive mode for choosing randomly the targets, is ignored if progressiveRangeTarget is true
 	"progressiveModeTargets": true,
 	// Initial maximum distance between the target and the starting position
-	"maxLengthTargets": 30,
+	"maxLengthTargets": 200,
 	// Allow to choose if the starting position are random of the BACKHOE one
 	"doRandomStartingPosition": false,
 	// Use the progressive mode for choosing randomly the starting position (no effect if doRandomStartingPosition is false)
 	"progressiveModeStartingPos": false,
 	// Initial maximum distance between the random starting position and the BACKHOE one
-	"maxLengthStartingPos": 30,
+	"maxLengthStartingPos": 100,
 	// Coefficient to upgrade the maxLengthStartingPos and MaxLengthTargets
-	"coefficientUpgradeAdd": 20,
+	"coefficientUpgradeAdd": -20,
 	// Coefficient to upgrade the maxLengthStartingPos and MaxLengthTargets
-	"coefficientUpgradeMult": 1.2,
+	"coefficientUpgradeMult": 0.8,
 	// Number of iterations to cumulate to upgrade the maxLengthStartingPos and MaxLengthTargets
 	"nbIterationsUpgrade": 2,
-	// DIstance in milimeters to reach to validate the target
+	// Distance in milimeters to reach to validate the target
 	"rangeTarget" : 5,
 	// Allow to start with a predifined TPG
 	"startPreviousTPG": false,
@@ -38,24 +40,26 @@
 	// true to load the validation trajectories
 	"loadValidationTrajectories": false,
 	// true to save the validation trajectories
-	"saveValidationTrajectories": false,
+	"saveValidationTrajectories": true,
 	// Seed to init the algorithm (gegelati or SAC)
-	"seed": 0,
+	"seed": 2,
 	// Set interactive mode or not (usefull for calcul machine)
 	"interactiveMode": true,
     // if true, selection for gegelati is based on score (sum of reward), else on distance
     "isScoreResult": false,
 	// Size in degree of a discrete action, and max size of a continuous action
-	"sizeAction": 10,
+	"sizeAction": 3,
 	// if true, deactivate the training and only logs results
 	"testing": false,
 
 	// To use distance 2D instruction
-	"useInstrDist2d": true,
+	"useInstrDist2d": false,
 	// To use distance 3D instruction
 	"useInstrDist3d": false,
 	// To use spherical coordonates instructions
 	"useInstrSphericalCoord": false,
+
 	// If false, action change the motor position, if true action change the motor speed
 	"actionSpeed": true
+	
 }

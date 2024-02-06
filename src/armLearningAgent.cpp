@@ -83,6 +83,7 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     if (doUpdateLimits){
         // Log limits
         if(typeid(learningEnvironment) == typeid(ArmLearnWrapper)){
+            double target = (trainingParams.progressiveRangeTarget) ? ((ArmLearnWrapper&)learningEnvironment).getCurrentRangeTarget() : ((ArmLearnWrapper&)learningEnvironment).getCurrentMaxLimitTarget();
             for (auto logger : loggers) {
                 if(typeid(logger.get()) == typeid(Log::ArmLearnLogger)){
                     ((Log::ArmLearnLogger&)logger.get()).logEnvironnementStatus(

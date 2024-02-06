@@ -47,10 +47,17 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "progressiveModeMotor") {
-        progressiveModeMotor = (bool)value.asBool();
+    if (param == "progressiveRangeTarget") {
+        progressiveRangeTarget = (bool)value.asBool();
         return;
     }
+
+    if (param == "progressiveModeMotor") {
+        // progressiveModeMotor always false if progressiveRangeTarget is true
+        progressiveModeMotor = (progressiveRangeTarget) ? false: (bool)value.asBool();
+        return;
+    }
+
 
     if (param == "doRandomStartingPosition") {
         doRandomStartingPosition = (bool)value.asBool();
