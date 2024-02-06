@@ -92,8 +92,8 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "thresholdUpgrade") {
-        thresholdUpgrade = (double)value.asDouble();
+    if (param == "rangeTarget") {
+        rangeTarget = (double)value.asDouble();
         return;
     }
 

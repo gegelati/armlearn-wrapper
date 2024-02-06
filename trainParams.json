@@ -21,8 +21,8 @@
 	"coefficientUpgradeMult": 1.2,
 	// Number of iterations to cumulate to upgrade the maxLengthStartingPos and MaxLengthTargets
 	"nbIterationsUpgrade": 2,
-	// Threshold distance to exceed to increment the counter of iteration to cumulate to upgrade the maxLengthStartingPos and MaxLengthTargets
-	"thresholdUpgrade" : 5,
+	// DIstance in milimeters to reach to validate the target
+	"rangeTarget" : 5,
 	// Allow to start with a predifined TPG
 	"startPreviousTPG": false,
 	// Name of the predifined TPG (no effect if startPreviousTPG is false)

@@ -96,8 +96,8 @@ public:
     /// Number of consecuitive iterations before upgrading the sphere
     int nbIterationsUpgrade = 3;
 
-    /// Threshold that the best TPG has to surpass to increment the upgrade coefficient
-    double thresholdUpgrade = -3.0;
+    /// rangeTarget that the best TPG has to surpass to increment the upgrade coefficient
+    double rangeTarget = -3.0;
 
     /// True to start with a previous TPG
     bool startPreviousTPG = false;

@@ -115,13 +115,17 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
     for(int j = 0; j < sacParams.nbEpisodeTraining; j++){
 
         uint64_t seed = generation * 100000 + j;
+
+        // Set torch seed
+        torch::manual_seed(seed);
+
         // Add result
         result += runOneEpisode(seed, Learn::LearningMode::TRAINING, j);
         
         // add distance
         distance += armLearnEnv->getDistance();
 
-        if(armLearnEnv->getDistance() < trainingParams.thresholdUpgrade){
+        if(armLearnEnv->getDistance() < trainingParams.rangeTarget){
             armLearnEnv->addToDeleteTraj(j);
         }
 
@@ -149,11 +153,15 @@ void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
     for(int j = 0; j < nbIterationValidation; j++){
 
         uint64_t seed = generation * 43000000000 + j;
+
+        // Set torch seed
+        torch::manual_seed(seed);
+
         result += runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
         // Get distance
         distance += armLearnEnv->getDistance();
 
-        if (armLearnEnv->getDistance() < trainingParams.thresholdUpgrade){
+        if (armLearnEnv->getDistance() < trainingParams.rangeTarget){
             success++;
         }
     }
@@ -174,6 +182,10 @@ void ArmSacEngine::validateTrainingOneGeneration(uint16_t nbIterationTrainingVal
     for(int j = 0; j < nbIterationTrainingValidation; j++){
 
         uint64_t seed = generation * 5000000 + j;
+
+        // Set torch seed
+        torch::manual_seed(seed);
+
         runOneEpisode(seed, Learn::LearningMode::TESTING, j);
         // Get distance
         distance += armLearnEnv->getDistance();
@@ -195,12 +207,16 @@ void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
         std::cout<<"Episode "<<j+1<<"/"<<nbIterationTesting<<"      "<<std::flush;
         std::cout << '\r';
 
-        uint64_t seed = generation * 43000465132000 + j;
+        uint64_t seed = generation * 9300000000000 + j;
+
+        // Set torch seed
+        torch::manual_seed(seed);
+
         result += runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
         // Get distance
         //distance += armLearnEnv->getScore();
 
-        if (armLearnEnv->getDistance() < trainingParams.thresholdUpgrade){
+        if (armLearnEnv->getDistance() < trainingParams.rangeTarget){
             success++;
         }
     }

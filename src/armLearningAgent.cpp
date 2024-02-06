@@ -200,7 +200,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
         distance += ((ArmLearnWrapper&)le).getDistance();
 
-        if(((ArmLearnWrapper&)le).getDistance() < trainingParams.thresholdUpgrade){
+        if(((ArmLearnWrapper&)le).getDistance() < trainingParams.rangeTarget){
             success += 1;
             trajectoriesReached.push_back(iterationNumber);
         }

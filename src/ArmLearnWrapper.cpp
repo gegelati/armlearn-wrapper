@@ -218,7 +218,7 @@ void ArmLearnWrapper::saveMotorPos(){
         // If terminal or end of episode, add score and number of actions
         vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
         vectorValidationInfos.push_back(static_cast<int32_t>(getDistance()));
-        vectorValidationInfos.push_back(static_cast<int32_t>((getDistance() < params.thresholdUpgrade) ? 1: 0));
+        vectorValidationInfos.push_back(static_cast<int32_t>((getDistance() < params.rangeTarget) ? 1: 0));
         vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
 
         // Add each motor positions
@@ -243,7 +243,7 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
     //double valNbIterations = params.coefRewardNbIterations * (static_cast<double>(nbActions) / nbMaxActions);
 
     // Tempory reward to force to stop close to the objective
-    if (err < params.thresholdUpgrade){
+    if (err < params.rangeTarget){
         // Incremente a counter
         nbActionsInThreshold++;
 
@@ -260,13 +260,13 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
     }
 
     if(params.reachingObjectives){
-        if(err < params.thresholdUpgrade){
+        if(err < params.rangeTarget){
             terminal = true;
             return 1;
         }
     } else if(nbActionsInThreshold == 10 || !isMoving){
         terminal = true;
-        if(err < params.thresholdUpgrade){
+        if(err < params.rangeTarget){
             return 1;
         }
     }
@@ -598,7 +598,7 @@ void ArmLearnWrapper::customTrajectory(armlearn::Input<double> *newGoal, std::ve
 
 void ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation){
     // If the best TPG is above the threshold for upgrade
-    if (bestResult < params.thresholdUpgrade){
+    if (bestResult < params.rangeTarget){
 
         // Incremente the counter for upgrading the max current limit
         counterIterationUpgrade += 1;

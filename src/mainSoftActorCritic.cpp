@@ -59,10 +59,6 @@ int main() {
         armLearnEnv.updateTrainingValidationTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
     }
 
-    std::atomic<bool> exitProgram = false; // (set to false by other thread)
-    std::thread threadKeyboard;
-
-
 
 
     //Creation of the Output stream on cout and on the file
