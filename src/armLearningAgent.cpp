@@ -86,10 +86,7 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
             double target = (trainingParams.progressiveRangeTarget) ? ((ArmLearnWrapper&)learningEnvironment).getCurrentRangeTarget() : ((ArmLearnWrapper&)learningEnvironment).getCurrentMaxLimitTarget();
             for (auto logger : loggers) {
                 if(typeid(logger.get()) == typeid(Log::ArmLearnLogger)){
-                    ((Log::ArmLearnLogger&)logger.get()).logEnvironnementStatus(
-                        ((ArmLearnWrapper&)learningEnvironment).getCurrentMaxLimitTarget(),
-                        ((ArmLearnWrapper&)learningEnvironment).getCurrentMaxLimitStartingPos()
-                    );
+                    ((Log::ArmLearnLogger&)logger.get()).logEnvironnementStatus(target, ((ArmLearnWrapper&)learningEnvironment).getCurrentMaxLimitStartingPos());
                 }
             }
 
