@@ -69,10 +69,10 @@ protected:
     armlearn::kinematics::Converter *converter;
 
     /// Score of the training
-    double score = 0;
+    double score = 0.0;
 
     /// Reward of the last action done
-    double reward = 0;
+    double reward = 0.0;
 
     /// Number of actions done in the episode
     size_t nbActions = 0;
@@ -134,7 +134,7 @@ protected:
     std::vector<double> motorSpeed = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     /// Current range target to reach
-    double currentRangeTarget;
+    double currentRangeTarget = 5;
 
     /// True if this is validation, else false
     bool isValidation = true;
@@ -187,18 +187,21 @@ public:
 
     /**
     * \brief Copy constructor for the armLearnWrapper.
-    */
-    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions),
-                                                    nbMaxActions(other.nbMaxActions), motorPos(other.motorPos),
+    */ 
+    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions), 
+                                                    nbMaxActions(other.nbMaxActions), motorPos(other.motorPos), gegelatiRunning(other.gegelatiRunning),
                                                     cartesianHand(other.cartesianHand), cartesianTarget(other.cartesianTarget), cartesianDiff(other.cartesianDiff),
                                                     dataMotorSpeed(other.dataMotorSpeed),
                                                     trainingTrajectories(other.trainingTrajectories),
                                                     validationTrajectories(other.validationTrajectories),
                                                     trainingValidationTrajectories(other.trainingValidationTrajectories),
                                                     DeviceLearner(iniController()), params(other.params), gen(params.seed) {
-        //this->reset(0);
-        //computeInput();
-    }
+        if(params.progressiveRangeTarget){
+            this->currentRangeTarget = other.currentRangeTarget;
+        } else {
+            this->currentRangeTarget = params.rangeTarget;
+        }               
+        }
 
     /// @brief Destructor
     ~ArmLearnWrapper() {

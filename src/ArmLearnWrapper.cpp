@@ -82,7 +82,7 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
             break;
         case 8:
             motorAction = {0, 0, 0, 0, 0, 0};
-            if(gegelatiRunning || !params.actionSpeed){
+            if(gegelatiRunning && !params.actionSpeed){
                 isMoving=false;
             }
             break;
@@ -320,8 +320,8 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     computeInput();
 
     // Init environnement parameters
-    reward = 0;
-    score = 0;
+    reward = 0.0;
+    score = 0.0;
     nbActions = 0;
     terminal = false;
     nbActionsInThreshold=0;
@@ -572,7 +572,7 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
         // Compute the distance to browse
         distance = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
 
-    } while (!validation && distance > currentMaxLimitTarget && !params.progressiveModeMotor);
+    } while (!validation && distance > currentMaxLimitTarget && distance < currentRangeTarget && !params.progressiveModeMotor);
 
     // Create the input to return
     return new armlearn::Input<double>(
