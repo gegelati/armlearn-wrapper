@@ -201,7 +201,7 @@ public:
         } else {
             this->currentRangeTarget = params.rangeTarget;
         }               
-        }
+    }
 
     /// @brief Destructor
     ~ArmLearnWrapper() {

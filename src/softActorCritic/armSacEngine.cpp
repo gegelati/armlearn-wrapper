@@ -401,7 +401,6 @@ torch::Tensor ArmSacEngine::getTensorState(){
     }
 
 
-    //std::cout<<tensorState<<std::endl;
     // Flatten the tensor
     return tensorState.view({1, -1});
 }

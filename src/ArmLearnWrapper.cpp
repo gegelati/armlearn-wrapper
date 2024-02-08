@@ -109,7 +109,7 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
 
 void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 
-
+    // Get the action
     std::vector<double> motorAction;
     for (float &action : actions) {
         motorAction.push_back(round(params.sizeAction * action));
@@ -119,8 +119,6 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 
     // Execute the action
     executeAction(motorAction);
-
-
 }
 
 void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
@@ -279,6 +277,7 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
         penaltyStopTooSoon = nbMaxActions - nbActions;
     }
 
+    // If the arm has done an unavailable move, the algorithm get a penalty
     double penaltyMoveUnavailable = 0;
     if (givePenaltyMoveUnavailable){
         penaltyMoveUnavailable = params.penaltyMoveUnavailable;
@@ -480,8 +479,8 @@ void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
 
     for (int i=0; i<nbTrajectories; i++){
 
-        // Get a new starting pos based on the BACKHOE_POSITION
-        auto newStartingPos = &initStartingPos;
+        // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
+        auto newStartingPos = (params.doRandomStartingPosition) ? randomStartingPos(true) : &initStartingPos;
 
         // Get a new random Goal
         auto newTarget = randomGoal(*newStartingPos, true);

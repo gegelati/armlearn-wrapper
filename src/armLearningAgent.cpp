@@ -90,10 +90,12 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
                 }
             }
 
+            // Update the current limits
             ((ArmLearnWrapper&)learningEnvironment).updateCurrentLimits(bestResult, params.nbIterationsPerPolicyEvaluation);
         }
     }
 
+    // If the trajectories deletion is controlled
     if (trainingParams.controlTrajectoriesDeletion){
         for (auto logger : loggers) {
             if(typeid(logger.get()) == typeid(Log::ArmLearnLogger)){
@@ -110,13 +112,6 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
 }
 
 void Learn::ArmLearningAgent::testingBestRoot(uint64_t generationNumber){
-
-    /*
-
-    std::unique_ptr<TPG::TPGExecutionEngine> tee =
-    this->tpg->getFactory().createTPGExecutionEngine(
-        this->env,
-        (mode == LearningMode::TRAINING) ? &this->archive : NULL);*/
 
     auto mode = Learn::LearningMode::VALIDATION;
 
