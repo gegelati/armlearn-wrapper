@@ -571,7 +571,7 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
         // Compute the distance to browse
         distance = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
 
-    } while (!validation && distance > currentMaxLimitTarget && distance < currentRangeTarget && !params.progressiveModeMotor);
+    } while (!validation && ((distance > currentMaxLimitTarget || distance < currentRangeTarget) && !params.progressiveModeMotor));
 
     // Create the input to return
     return new armlearn::Input<double>(
