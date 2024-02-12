@@ -129,6 +129,12 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "penaltySpeed"){
+        penaltySpeed = (double)value.asDouble();
+        return;
+    }
+
+
     if (param == "coefRewardMultiplication"){
         coefRewardMultiplication = (double)value.asDouble();
         return;
@@ -166,6 +172,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
 
     if (param == "testing"){
         testing = (bool)value.asBool();
+        return;
+    }
+
+    if (param == "testPath") {
+        testPath = (std::string)value.asString();
         return;
     }
 

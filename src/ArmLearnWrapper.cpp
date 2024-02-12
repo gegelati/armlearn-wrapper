@@ -283,8 +283,16 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
         penaltyMoveUnavailable = params.penaltyMoveUnavailable;
     }
 
+    double penaltySpeed = 0;
+    if(params.actionSpeed){
+        for(auto speed: motorSpeed){
+            penaltySpeed += abs(speed);
+        }
+        penaltySpeed *= params.penaltySpeed;
+    }
+
     // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)
-    return (-err * params.coefRewardMultiplication - penaltyMoveUnavailable) * penaltyStopTooSoon;
+    return (- err * params.coefRewardMultiplication - penaltyMoveUnavailable - penaltySpeed) * penaltyStopTooSoon;
 
 }
 
@@ -769,7 +777,7 @@ void ArmLearnWrapper::loadValidationTrajectories() {
 void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati){
 
     // Nom du fichier CSV
-    std::string fileName = (usingGegelati) ? "outLogs/outputGegelati.csv": "outLogs/outputSAC.csv";
+    std::string fileName = (params.testPath + ((usingGegelati) ? "/outputGegelati.csv": "/outputSAC.csv")).c_str();
 
     // Ouverture du fichier en mode écriture
     std::ofstream outputFile(fileName);

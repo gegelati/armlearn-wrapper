@@ -10,7 +10,7 @@
 class SoftActorCritic{
     private:
         /// Parmaters
-        SACParameters params;
+        SACParameters& params;
 
         /// Memory for the training
         ReplayBuffer memory;
@@ -34,14 +34,14 @@ class SoftActorCritic{
 
     public:
         SoftActorCritic(
-            SACParameters params, int stateSize, int actionSize)
-            : memory(params.sizeBuffer, stateSize, actionSize),
+            SACParameters& params, int stateSize, int actionSize)
+            : params(params),
+            memory(params.sizeBuffer, stateSize, actionSize),
             actorNet(params.lr, stateSize, actionSize, params.sizeHL1, params.sizeHL2, "actor"),
             criticNet1(params.lr, stateSize, actionSize, params.sizeHL1, params.sizeHL2, "critic1"),
             criticNet2(params.lr, stateSize, actionSize, params.sizeHL1, params.sizeHL2, "critic2"),
             valueNet(params.lr, stateSize, params.sizeHL1, params.sizeHL2, "value"),
             targetValueNet(params.lr, stateSize, params.sizeHL1, params.sizeHL2, "targetvalue") {
-                this->params = params;
 
                 // Update target value network with tau=1 is equivalent to copie the weight of value network to target value
                 updateNetworkParameter(1);

@@ -37,7 +37,7 @@ protected:
 
     double computeReward(bool givePenaltyMoveUnavailable);
 
-    TrainingParameters params;
+    TrainingParameters& params;
 
     /// true if the the environnement is terminated
     bool terminal = false;
@@ -169,7 +169,7 @@ public:
      * \param[in] handServosTrained boolean controlling whether the 2 servos
      * controlling the hand of the robotic arm are trained.
      */
-    ArmLearnWrapper(int nbMaxActions, TrainingParameters params, bool gegelatiRunning, bool handServosTrained = false)
+    ArmLearnWrapper(int nbMaxActions, TrainingParameters& params, bool gegelatiRunning, bool handServosTrained = false)
             : LearningEnvironment((handServosTrained) ? 13 : 9), gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
               nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3), dataMotorSpeed((params.actionSpeed) ? 4:0),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),

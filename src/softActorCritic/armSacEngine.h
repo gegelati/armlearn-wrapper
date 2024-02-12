@@ -16,10 +16,10 @@ class ArmSacEngine{
         SoftActorCritic learningAgent;
 
         /// Parameters for the soft actor critic
-        SACParameters sacParams;
+        SACParameters& sacParams;
 
         /// Parameters for the trianing
-        TrainingParameters trainingParams;
+        TrainingParameters& trainingParams;
 
         /// ArmLearn Environnement
         ArmLearnWrapper* armLearnEnv;
@@ -73,7 +73,7 @@ class ArmSacEngine{
         //std::vector<std::vector<int32_t>> vectorValue;
 
     public:
-        ArmSacEngine(SACParameters sacParams, ArmLearnWrapper* armLearnEnv, std::ostream& file, TrainingParameters trainingParams,
+        ArmSacEngine(SACParameters& sacParams, ArmLearnWrapper* armLearnEnv, std::ostream& file, TrainingParameters& trainingParams,
         uint16_t maxNbActions, bool doValidation=false)
         : sacParams(sacParams), file(file), armLearnEnv(armLearnEnv), trainingParams(trainingParams),
         learningAgent(sacParams, (trainingParams.actionSpeed) ? 17: 13, (sacParams.multipleActions) ? 4:1) {

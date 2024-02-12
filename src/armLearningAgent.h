@@ -26,7 +26,7 @@ namespace Learn {
         std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> bestTrainingResult;
 
         /// Parameters for the trianing
-        TrainingParameters trainingParams;
+        TrainingParameters& trainingParams;
 
         bool doUpdateLimits;
         bool doTrainingValidation;
@@ -46,7 +46,7 @@ namespace Learn {
          */
         ArmLearningAgent(
             LearningEnvironment& le, const Instructions::Set& iSet,
-            const LearningParameters& p, TrainingParameters trainingParams,
+            const LearningParameters& p, TrainingParameters& trainingParams,
             const TPG::TPGFactory& factory = TPG::TPGFactory())
             : ParallelLearningAgent(le, iSet, p, factory), trainingParams(trainingParams) {
               this->doUpdateLimits = (this->trainingParams.progressiveModeTargets || this->trainingParams.progressiveModeStartingPos);

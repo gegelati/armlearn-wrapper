@@ -151,6 +151,13 @@ int main(){
             // close log file also
             stats.close();
 
+            auto &tpg = *la.getTPGGraph();
+            Environment env(set, armLearnEnv.getDataSources(), 8);
+            File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
+            trainingParams.testPath = (path + "outLogs").c_str();
+            trainingParams.testing = true;
+            la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
+
             // cleanup
             for (unsigned int i = 0; i < set.getNbInstructions(); i++) {
                 delete (&set.getInstruction(i));

@@ -117,6 +117,9 @@ public:
     /// Value to penalize the algorithm if an unavailable action is taken : reward = reward - penalty
     double penaltyMoveUnavailable = 0;
 
+	/// Penalty for moving a motor : the goal is to avoid to much speed unecessary
+	double penaltySpeed = 0;
+
     /// Coefficient to multiply the reward with
     double coefRewardMultiplication = 1;
 
@@ -140,6 +143,9 @@ public:
 
     /// if true, deactivate the training and only logs results
 	bool testing = false;
+
+    /// path to store the testing output
+    std::string testPath = "outLogs/";
 
 	/// To use distance 2D instruction
 	bool useInstrDist2d = false;
