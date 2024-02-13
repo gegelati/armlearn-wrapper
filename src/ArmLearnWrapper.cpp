@@ -180,7 +180,19 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
             // Give a penalty if the algorithm as taken an unavailable action (only one penalty even with multiple action)
             givePenaltyMoveUnavailable = true;
         }
+    }
 
+    if(!params.negativeCoordZ && motorNegative(scaledOutput)){
+        // only active for gegelati because SAC is not deterministic
+        if(gegelatiRunning){
+            isMoving=false;
+        }
+        // Give a penalty if the algorithm as taken an unavailable action (only one penalty even with multiple action)
+        givePenaltyMoveUnavailable = true;
+        for (int i = 0; i < 4; i++) {
+            inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+            scaledOutput[i] = inputI;
+        }
     }
 
     // TODO update this when the hand will be trained
@@ -540,6 +552,9 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
     std::vector<uint16_t> motorPos;
     std::vector<double> newStartingPos;
 
+    bool distanceIsNotGood = false;
+    bool handNotGood = false;
+
     // Init the distance at -1 to be sure that the while condition never return true during validation
     double distance = -1;
 
@@ -554,7 +569,13 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
         // Compute the distance the new starting position and the initial one
         distance = computeSquaredError(converter->computeServoToCoord(initStartingPos)->getCoord(), newStartingPos);
 
-    } while (!validation && distance > currentMaxLimitStartingPos && !params.progressiveModeMotor);
+        // Distance is not good if it is above the current limit and bellow the current range target
+        distanceIsNotGood = (distance > currentMaxLimitStartingPos);
+
+        // Hand is not good if the target is bellow 0 on z axis
+        handNotGood = (!params.negativeCoordZ && motorNegative(motorPos));
+
+    } while ((!validation && distanceIsNotGood && !params.progressiveModeMotor) || handNotGood);
 
     return new std::vector<uint16_t>(motorPos);
 
@@ -564,6 +585,9 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
 
     std::vector<uint16_t> motorPos;
     std::vector<double> newCartesianCoords;
+
+    bool distanceIsNotGood = false;
+    bool handNotGood = false;
 
     // Init the distance at -1 to be sure that the while condition never return true during validation
     double distance = -1;
@@ -579,7 +603,13 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
         // Compute the distance to browse
         distance = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
 
-    } while (!validation && ((distance > currentMaxLimitTarget || distance < currentRangeTarget) && !params.progressiveModeMotor));
+        // Distance is not good if it is above the current limit and bellow the current range target
+        distanceIsNotGood = (distance > currentMaxLimitTarget || distance < currentRangeTarget);
+
+        // Hand is not good if the target is bellow 0 on z axis
+        handNotGood = (!params.negativeCoordZ && motorNegative(motorPos));
+
+    } while ((!validation && distanceIsNotGood && !params.progressiveModeMotor) || handNotGood);
 
     // Create the input to return
     return new armlearn::Input<double>(
@@ -854,4 +884,40 @@ double ArmLearnWrapper::getDistance(){
 
     // Compute and return the Distance with the target
     return computeSquaredError(target, cartesianCoords);
+}
+
+bool ArmLearnWrapper::motorNegative(std::vector<uint16_t> newMotorPos){
+
+    // Constant
+    uint16_t length_base = 125;
+    uint16_t length_shoulder = 142;
+    uint16_t length_elbow = 142;
+    uint16_t length_wrist = 155;
+
+    uint16_t displacement = 49;
+
+    double angle_base = (double) newMotorPos[0] / 4096 * 360;
+    double angle_shoulder = ((double) newMotorPos[1] - 1024) / 2048 * 180;
+    double angle_elbow = ((double) newMotorPos[2] - 1024) / 2048 * 180;
+    double angle_wrist = ((double) newMotorPos[3] - 1024) / 2048 * 180;
+
+    double radiant_angle_base = angle_base / 180 * M_PI;
+    double radiant_angle_shoulder = angle_shoulder / 180 * M_PI;
+    double radiant_angle_elbow = M_PI - angle_elbow / 180 * M_PI;
+    double radiant_angle_wrist = M_PI/2 - angle_wrist / 180 * M_PI;
+
+
+    double val1_z = std::sin(radiant_angle_shoulder) * length_shoulder + length_base;
+    double val2_z = val1_z + std::sin(radiant_angle_shoulder + M_PI/2) * displacement;
+    double val3_z = val2_z + std::sin(radiant_angle_shoulder + radiant_angle_elbow) * length_elbow;
+    double val4_z = val3_z + std::sin(radiant_angle_shoulder + radiant_angle_elbow + radiant_angle_wrist) * length_wrist;
+
+    
+
+    if(val1_z < 0 || val2_z < 0 || val3_z < 0 || val4_z < 0){
+        return true;
+    }
+    return false;
+    
+
 }

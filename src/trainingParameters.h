@@ -159,6 +159,9 @@ public:
     /// If false, action change the motor position, if true action change the motor speed
     bool actionSpeed = false;
 
+    /// True to allow coordonate/target bellow 0 on z axis
+    bool negativeCoordZ = true;
+
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.

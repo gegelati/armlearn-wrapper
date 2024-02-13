@@ -387,6 +387,14 @@ public:
     /// Get distance from the arm to the target
     double getDistance();
 
+
+    /**
+     * @brief Return True if one of the motor is bellow 0 on the Z axis
+     * 
+     * @param[in] newMotorPos Position in motor point of the different motors
+     */
+    bool motorNegative(std::vector<uint16_t> newMotorPos);
+
 };
 
 #endif

@@ -200,6 +200,10 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "negativeCoordZ"){
+        negativeCoordZ = (bool)value.asBool();
+        return;
+    }
 
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;

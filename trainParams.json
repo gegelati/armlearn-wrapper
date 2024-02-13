@@ -51,6 +51,8 @@
 	"sizeAction": 3,
 	// if true, deactivate the training and only logs results
 	"testing": false,
+	// path to store the testing output
+	"testPath": "../../result/Gegelati/outLogs/config_0_0/outLogs",
 
 	// To use distance 2D instruction
 	"useInstrDist2d": false,
@@ -60,6 +62,9 @@
 	"useInstrSphericalCoord": false,
 
 	// If false, action change the motor position, if true action change the motor speed
-	"actionSpeed": true
+	"actionSpeed": true,
+
+	// True to allow coordonate/target bellow 0 on z axis
+	"negativeCoordZ": true
 	
 }
