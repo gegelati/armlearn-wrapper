@@ -282,7 +282,7 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
 
     // If the arm is not moving anymore, the reward is multiplied by the numper of action normally to come
     double penaltyStopTooSoon = 1;
-    if(!isMoving){
+    if(!isMoving && gegelatiRunning){
         penaltyStopTooSoon = nbMaxActions - nbActions;
     }
 
