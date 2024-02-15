@@ -63,7 +63,7 @@ int main(){
                 std::filesystem::copy(repoConfig + "params.json", (path + "params/").c_str());
             }
 
-
+            std::cout<<"\nActually working with config " << indexConf << " and seed "<< seed<<"\n"<<std::endl;
 
             TrainingParameters trainingParams;
             trainingParams.loadParametersFromJson((path + "params/trainParams_" + std::to_string(indexConf) + ".json").c_str());
