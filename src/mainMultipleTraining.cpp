@@ -30,8 +30,8 @@ int main(){
 
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
-    Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson((repoConfig + "params.json").c_str(), params);
+    Learn::LearningParameters globalParams;
+    File::ParametersParser::loadParametersFromJson((repoConfig + "params.json").c_str(), globalParams);
 
 
     std::ifstream file((repoConfig + "launchMultiTraining.txt").c_str());
@@ -60,7 +60,7 @@ int main(){
                 std::filesystem::create_directory((path + "params/").c_str());
 
                 std::filesystem::copy(repoConfig + "trainParams_" + std::to_string(indexConf) + ".json", (path + "params/").c_str());
-                std::filesystem::copy(repoConfig + "params.json", (path + "params/").c_str());
+                std::filesystem::copy(repoConfig + "params_" + std::to_string(indexConf) + ".json", (path + "params/").c_str());
             }
 
             std::cout<<"\nActually working with config " << indexConf << " and seed "<< seed<<"\n"<<std::endl;
@@ -68,16 +68,20 @@ int main(){
             TrainingParameters trainingParams;
             trainingParams.loadParametersFromJson((path + "params/trainParams_" + std::to_string(indexConf) + ".json").c_str());
 
+            // Params of this config
+            Learn::LearningParameters params;
+            File::ParametersParser::loadParametersFromJson((repoConfig + "params_" + std::to_string(indexConf) + ".json").c_str(), params);
+
             // Create the instruction set for programs
             Instructions::Set set;
             fillInstructionSet(set, trainingParams);
 
             // Instantiate the LearningEnvironment
-            ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
+            ArmLearnWrapper armLearnEnv(globalParams.maxNbActionsPerEval, trainingParams, true);
 
             // Generate validation targets.
-            if(params.doValidation){
-                armLearnEnv.updateValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
+            if(globalParams.doValidation){
+                armLearnEnv.updateValidationTrajectories(globalParams.nbIterationsPerPolicyEvaluation);
                 if(seed == 0 && indexConf == 0){
                     armLearnEnv.saveValidationTrajectories();
                 }
@@ -118,7 +122,7 @@ int main(){
             bool timeLimitReached = false;
 
             // Train for params.nbGenerations generations
-            for (uint64_t i = 0; i < params.nbGenerations && !timeLimitReached; i++) {
+            for (uint64_t i = 0; i < globalParams.nbGenerations && !timeLimitReached; i++) {
                 armLearnEnv.setgeneration(i);
 
 
@@ -166,7 +170,7 @@ int main(){
             File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
             trainingParams.testPath = (path + "outLogs").c_str();
             trainingParams.testing = true;
-            la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
+            la.testingBestRoot(globalParams.nbIterationsPerPolicyEvaluation);
 
             // cleanup
             for (unsigned int i = 0; i < set.getNbInstructions(); i++) {
