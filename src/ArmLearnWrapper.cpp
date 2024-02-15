@@ -153,8 +153,10 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         // The arm is not moving
         scaledOutput[0] = inputI;
 
-
-        isMoving=false;
+        // only active for gegelati because SAC is not deterministic
+        if(gegelatiRunning){
+            isMoving=false;
+        }
 
         // Give a penalty if the algorithm as taken an unavailable action
         givePenaltyMoveUnavailable = true;
@@ -173,7 +175,10 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
             scaledOutput[i] = inputI;
 
 
-            isMoving=false;
+            // only active for gegelati because SAC is not deterministic
+            if(gegelatiRunning){
+                isMoving=false;
+            }
 
             // Give a penalty if the algorithm as taken an unavailable action (only one penalty even with multiple action)
             givePenaltyMoveUnavailable = true;
@@ -182,7 +187,10 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
     if(!params.negativeCoordZ && motorNegative(scaledOutput)){
 
-        isMoving=false;
+        // only active for gegelati because SAC is not deterministic
+        if(gegelatiRunning){
+            isMoving=false;
+        }
 
         // Give a penalty if the algorithm as taken an unavailable action (only one penalty even with multiple action)
         givePenaltyMoveUnavailable = true;
