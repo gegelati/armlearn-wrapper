@@ -35,6 +35,8 @@
 	"propTrajectoriesReused": 0,
 	// Value to penalize the algorithm if an unavailable action is taken : reward = reward - penalty
 	"penaltyMoveUnavailable": 10,
+	// Penalty for moving a motor : the goal is to avoid to much speed unecessary
+	"penaltySpeed" : 0.05,
 	// Coefficient to multiply the reward with
 	"coefRewardMultiplication" : 0.01,
 	// true to load the validation trajectories
@@ -65,6 +67,8 @@
 	"actionSpeed": true,
 
 	// True to allow coordonate/target bellow 0 on z axis
-	"negativeCoordZ": true
-	
+	"negativeCoordZ": true,
+
+	// Number of training iteration (nbIterationsPerPolicyEvaluation will be only for validation/training validation)
+	"nbIterationTraining": 3
 }

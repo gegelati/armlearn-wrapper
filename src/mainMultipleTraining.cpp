@@ -119,7 +119,7 @@ int main(){
 
 
                 // Update/Generate the training trajectories
-                armLearnEnv.updateTrainingTrajectories(params.nbIterationsPerPolicyEvaluation);
+                armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
 
                 //print the previous graphs
                 char buff[16];

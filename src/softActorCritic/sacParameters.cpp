@@ -98,10 +98,6 @@ void SACParameters::setParameterFromString(const std::string& param, Json::Value
         return;
     }
 
-    if (param == "nbEpisodeTraining"){
-        nbEpisodeTraining = (int)value.asUInt();
-        return;
-    }
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }

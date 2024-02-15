@@ -87,10 +87,10 @@ int main() {
             armLearnEnv.setgeneration(i);
 
             // Update/Generate the training trajectories
-            armLearnEnv.updateTrainingTrajectories(sacParams.nbEpisodeTraining);
+            armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
 
             // Train
-            learningAgent.trainOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
+            learningAgent.trainOneGeneration(trainingParams.nbIterationTraining);
 
             // Does a validation or not according to the parameter doValidation
             if (gegelatiParams.doValidation){

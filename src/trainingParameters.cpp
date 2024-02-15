@@ -205,6 +205,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "nbIterationTraining"){
+        nbIterationTraining = (uint64_t)value.asUInt64();
+        return;
+    }
+
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }

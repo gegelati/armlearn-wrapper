@@ -158,11 +158,13 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     // Init Score
     double score = 0.0;
 
+    uint64_t nbIteration = (mode == LearningMode::TRAINING) ? trainingParams.nbIterationTraining : this->params.nbIterationsPerPolicyEvaluation;
+
     // Evaluate nbIteration times
-    for (auto iterationNumber = 0; iterationNumber < this->params.nbIterationsPerPolicyEvaluation; iterationNumber++) {
+    for (auto iterationNumber = 0; iterationNumber < nbIteration; iterationNumber++) {
 
         if(trainingParams.testing){
-            std::cout<<"Episode "<<iterationNumber+1<<"/"<<this->params.nbIterationsPerPolicyEvaluation<<"      "<<std::flush;
+            std::cout<<"Episode "<<iterationNumber+1<<"/"<<nbIteration<<"      "<<std::flush;
             std::cout << '\r';
         }
 
@@ -206,10 +208,10 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     // Create the EvaluationResult
     auto evaluationResult =
         std::shared_ptr<Learn::ArmlearnEvaluationResult>(new Learn::ArmlearnEvaluationResult(
-            score / (double)params.nbIterationsPerPolicyEvaluation,
-            success / (double)params.nbIterationsPerPolicyEvaluation,
-            distance / (double)params.nbIterationsPerPolicyEvaluation,
-            trajectoriesReached, params.nbIterationsPerPolicyEvaluation,
+            score / (double)nbIteration,
+            success / (double)nbIteration,
+            distance / (double)nbIteration,
+            trajectoriesReached, nbIteration,
             trainingParams.isScoreResult));
 
     // Combine it with previous one if any

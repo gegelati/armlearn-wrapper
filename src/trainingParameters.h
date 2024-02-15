@@ -162,6 +162,9 @@ public:
     /// True to allow coordonate/target bellow 0 on z axis
     bool negativeCoordZ = true;
 
+    // Number of training iteration (nbIterationsPerPolicyEvaluation will be only for validation/training validation)
+	uint64_t nbIterationTraining = 1;
+
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.

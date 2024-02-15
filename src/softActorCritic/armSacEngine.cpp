@@ -112,7 +112,7 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
     double distance=0.0;
 
     // Train for nbIterationTraining episode(s)
-    for(int j = 0; j < sacParams.nbEpisodeTraining; j++){
+    for(int j = 0; j < nbIterationTraining; j++){
 
         uint64_t seed = generation * 100000 + j;
 
@@ -131,8 +131,8 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
 
     }
     // Get the mean distance and result
-    result /= sacParams.nbEpisodeTraining;
-    distance /= sacParams.nbEpisodeTraining;
+    result /= nbIterationTraining;
+    distance /= nbIterationTraining;
 
     // Log the training
     logTraining(distance, result);
