@@ -82,8 +82,13 @@ int main() {
     if(trainingParams.testing){
         learningAgent.testingModel(gegelatiParams.nbIterationsPerPolicyEvaluation);
     } else {
+
+        std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
+        std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+        bool timeLimitReached = false;
+
         // Train for params.nbGenerations generations
-        for (int i = 0; i < gegelatiParams.nbGenerations; i++) {
+        for (int i = 0; i < gegelatiParams.nbGenerations && !timeLimitReached; i++) {
             armLearnEnv.setgeneration(i);
 
             // Update/Generate the training trajectories
@@ -123,6 +128,12 @@ int main() {
 
 
             learningAgent.logTimes();
+
+            // Check time limit only if the parameter is above 0
+            if(trainingParams.timeMaxTraining > 0){
+                // Set true if the time is above the limit
+                timeLimitReached = (((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() > trainingParams.timeMaxTraining);
+            }
     }
 
 

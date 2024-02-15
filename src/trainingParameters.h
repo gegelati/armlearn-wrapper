@@ -165,6 +165,9 @@ public:
     // Number of training iteration (nbIterationsPerPolicyEvaluation will be only for validation/training validation)
 	uint64_t nbIterationTraining = 1;
 
+    // Set a limit of time to train (in seconds), if 0 : no limit
+	uint64_t timeMaxTraining = 0;
+
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.

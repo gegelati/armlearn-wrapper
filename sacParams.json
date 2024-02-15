@@ -22,7 +22,5 @@
 	// True to unable multiple actions
 	"multipleActions": true,
 	// True to unable continuous actions. Note : actions can only be continuous if multiple actions is unable
-	"continuousActions": true,
-    // Number of episodes to train on between each log and validation
-    "nbEpisodeTraining": 100
+	"continuousActions": true
 }

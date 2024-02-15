@@ -70,5 +70,8 @@
 	"negativeCoordZ": true,
 
 	// Number of training iteration (nbIterationsPerPolicyEvaluation will be only for validation/training validation)
-	"nbIterationTraining": 3
+	"nbIterationTraining": 3,
+
+	// Set a limit of time to train (in seconds), if 0: no limit
+	"timeMaxTraining": 15
 }

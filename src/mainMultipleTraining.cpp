@@ -113,8 +113,12 @@ int main(){
             // Create an exporter for all graphs
             File::TPGGraphDotExporter dotExporter((path + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
 
+            std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
+            std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+            bool timeLimitReached = false;
+
             // Train for params.nbGenerations generations
-            for (uint64_t i = 0; i < params.nbGenerations; i++) {
+            for (uint64_t i = 0; i < params.nbGenerations && !timeLimitReached; i++) {
                 armLearnEnv.setgeneration(i);
 
 
@@ -128,6 +132,12 @@ int main(){
                 dotExporter.print();
 
                 la.trainOneGeneration(i);
+
+                // Check time limit only if the parameter is above 0
+                if(trainingParams.timeMaxTraining > 0){
+                    // Set true if the time is above the limit
+                    timeLimitReached = (((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() > trainingParams.timeMaxTraining);
+                }
 
             }
 
