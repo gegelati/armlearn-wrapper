@@ -15,6 +15,9 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
     auto ln = [](double a)->double {return std::log(a); };
 	auto exp = [](double a)->double {return std::exp(a); };
 
+    auto multByConst = [](Data::Constant c) -> double { return (double)c ; };
+    set.add(*(new Instructions::LambdaInstruction<Data::Constant>(multByConst)));
+
     set.add(*(new Instructions::LambdaInstruction<double, double>(minus)));
     set.add(*(new Instructions::LambdaInstruction<double, double>(add)));
     set.add(*(new Instructions::LambdaInstruction<double, double>(times)));
@@ -25,6 +28,7 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
 
     set.add(*(new Instructions::LambdaInstruction<double>(ln)));
     set.add(*(new Instructions::LambdaInstruction<double>(exp)));
+	
 
     if(params.useInstrDist2d){
         auto dist2d_xy = [](const double a[3], const double b[3])->double { return std::sqrt(std::pow(a[0] - b[0], 2) + std::pow(a[1] - b[1], 2)); };
