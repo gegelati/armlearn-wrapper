@@ -48,7 +48,6 @@ protected:
 
     /// Randomness control
     Mutator::RNG rng;
-    std::mt19937 gen;
 
     /// Current motor position 
     Data::PrimitiveTypeArray<double> motorPos;
@@ -139,6 +138,9 @@ protected:
     /// True if this is validation, else false
     bool isValidation = true;
 
+    /// Vector that register all the possible goal to seek for in cartesian coordonates
+    std::vector<std::vector<double>> dataTarget;
+
 public:
 
     /// @brief Do not know
@@ -173,7 +175,7 @@ public:
             : LearningEnvironment((handServosTrained) ? 13 : 9), gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
               nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3), dataMotorSpeed((params.actionSpeed) ? 4:0),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
-              DeviceLearner(iniController()), params(params), gen(params.seed) {
+              DeviceLearner(iniController()), params(params) {
         if(params.progressiveRangeTarget){
             this->currentRangeTarget = params.maxLengthTargets;
         } else {
@@ -183,7 +185,9 @@ public:
         }
 
         rng.setSeed(params.seed);
-        }
+
+        loadTargetCSV();
+    }
 
     /**
     * \brief Copy constructor for the armLearnWrapper.
@@ -195,7 +199,7 @@ public:
                                                     trainingTrajectories(other.trainingTrajectories),
                                                     validationTrajectories(other.validationTrajectories),
                                                     trainingValidationTrajectories(other.trainingValidationTrajectories),
-                                                    DeviceLearner(iniController()), params(other.params), gen(params.seed) {
+                                                    DeviceLearner(iniController()), params(other.params){
         if(params.progressiveRangeTarget){
             this->currentRangeTarget = other.currentRangeTarget;
         } else {
@@ -288,7 +292,7 @@ public:
     /**
      * @brief Create and return a random position with the motors
      */
-    std::vector<uint16_t> randomMotorPos(bool validation, bool isTarget);
+    std::vector<uint16_t> randomMotorPos(std::vector<double> cartesianGoal, bool validation, bool isTarget);
 
     /**
      * @brief Create and return a random starting position for the arm
@@ -307,6 +311,11 @@ public:
      * @param[in] maxLength distance max that the arm will have to browse in the trajectory
      */
     armlearn::Input<double>* randomGoal(std::vector<uint16_t> startingPos, bool validation);
+
+    /**
+     * @brief Load the CSV containing equilibrate random positions
+     */
+    void loadTargetCSV();
 
     /**
      * @brief Puts a custom goal in the first slot of the trainingTargets list.

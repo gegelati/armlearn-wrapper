@@ -6,6 +6,7 @@
 #include <utility>
 #include <random>
 #include <algorithm>
+#include <cstdlib> 
 
 void ArmLearnWrapper::computeInput() {
 
@@ -515,39 +516,58 @@ void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
     }
 }
 
-std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation, bool isTarget){
+std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(std::vector<double> cartesianGoal, bool validation, bool isTarget){
+
+    double minDistance = 10000;
+    std::vector<uint16_t> keepMotorPos;
+
     uint16_t i, j, k, l;
     std::vector<uint16_t> newMotorPos, validMotorPos;
 
-    auto limit = (isTarget) ? currentMaxLimitTarget: currentMaxLimitStartingPos;
+    std::vector<double> cartesianPos;
+    double distance = 0;
+
+    for(int index=0; index < 10000; index++){
+
+        auto limit = (isTarget) ? currentMaxLimitTarget: currentMaxLimitStartingPos;
 
 
-    if(!validation && params.progressiveModeMotor){
+        if(!validation && params.progressiveModeMotor){
 
-        int16_t valueNeeded = 2048 % (int)params.sizeAction;
-        i = (int16_t) (valueNeeded + (int)(rng.getInt32(std::max(2.0, 2048 - limit) - valueNeeded, std::min(4094.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
-        j = (int16_t) (valueNeeded + (int)(rng.getInt32(std::max(1025.0, 2048 - limit) - valueNeeded, std::min(3071.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
-        k = (int16_t) (valueNeeded + (int)(rng.getInt32(std::max(1025.0, 2048 - limit) - valueNeeded, std::min(3071.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
-        l = (int16_t) (valueNeeded + (int)(rng.getInt32(std::max(1025.0, 2048 - limit) - valueNeeded, std::min(3071.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
+            int16_t valueNeeded = 2048 % (int)params.sizeAction;
+            i = (uint16_t) (valueNeeded + (int)(rng.getInt32(std::max(2.0, 2048 - limit) - valueNeeded, std::min(4094.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
+            j = (uint16_t) (valueNeeded + (int)(rng.getInt32(std::max(1025.0, 2048 - limit) - valueNeeded, std::min(3071.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
+            k = (uint16_t) (valueNeeded + (int)(rng.getInt32(std::max(1025.0, 2048 - limit) - valueNeeded, std::min(3071.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
+            l = (uint16_t) (valueNeeded + (int)(rng.getInt32(std::max(1025.0, 2048 - limit) - valueNeeded, std::min(3071.0, 2048 + limit) - valueNeeded) / params.sizeAction) * params.sizeAction);
 
+        }
+        else{
+            // The calcul insure that the value sampled are possible
+            // For exemple with params.sizeAction = 5,
+            // valueNeeded = 3, then the value is sample between 1022 and 3061. The division/multiplication allow to round around 5
+            // Then we add 3 again to be sure that the coordonates are possible
+            int16_t valueNeeded = 2048 % (int)params.sizeAction;
+            i = (uint16_t) (valueNeeded + (int)(rng.getInt32(1 - valueNeeded, 4096 - valueNeeded) / params.sizeAction) * params.sizeAction);
+            j = (uint16_t) (valueNeeded + (int)(rng.getInt32(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);
+            k = (uint16_t) (valueNeeded + (int)(rng.getInt32(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);
+            l = (uint16_t) (valueNeeded + (int)(rng.getInt32(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);
+        }
+
+        // Create the vector of motor positions
+        newMotorPos = {i,j,k,l,512,256};
+
+        validMotorPos = device->toValidPosition(newMotorPos);
+
+        break;
+
+        cartesianPos = converter->computeServoToCoord(validMotorPos)->getCoord();
+
+        distance = computeSquaredError(cartesianPos, cartesianGoal);
+        if(distance < minDistance){
+            keepMotorPos = validMotorPos;
+            minDistance = distance;
+        }
     }
-    else{
-        // The calcul insure that the value sampled are possible
-        // For exemple with params.sizeAction = 5,
-        // valueNeeded = 3, then the value is sample between 1022 and 3061. The division/multiplication allow to round around 5
-        // Then we add 3 again to be sure that the coordonates are possible
-        int16_t valueNeeded = 2048 % (int)params.sizeAction;
-        i = (int16_t) (valueNeeded + (int)(rng.getInt32(1 - valueNeeded, 4096 - valueNeeded) / params.sizeAction) * params.sizeAction);
-        j = (int16_t) (valueNeeded + (int)(rng.getInt32(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);
-        k = (int16_t) (valueNeeded + (int)(rng.getInt32(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);
-        l = (int16_t) (valueNeeded + (int)(rng.getInt32(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);
-    }
-
-    // Create the vector of motor positions
-    newMotorPos = {i,j,k,l,512,256};
-
-    // Use this function to convert the vector of motor positions into a valid one
-    validMotorPos = device->toValidPosition(newMotorPos);
 
     return validMotorPos;
 }
@@ -555,7 +575,7 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(bool validation, bool isTa
 std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
 
     std::vector<uint16_t> motorPos;
-    std::vector<double> newStartingPos;
+    std::vector<double> newStartingPos, cartesianGoal;
 
     bool distanceIsNotGood = false;
     bool handNotGood = false;
@@ -563,10 +583,16 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
     // Init the distance at -1 to be sure that the while condition never return true during validation
     double distance = -1;
 
+    size_t index;
+
     // Do one time then only while the distance is above the distance between the new starting position and the initial one
     do {
+        // Get random cartesian goal
+        size_t index = rng.getUnsignedInt64(0, dataTarget.size());
+        auto cartesianGoal = dataTarget[index];
+
         // Get a random motor positions
-        motorPos = randomMotorPos(validation, false);
+        motorPos = randomMotorPos(cartesianGoal, validation, false);
 
         // Compute the cartesian coordonates of those motor positions
         newStartingPos = converter->computeServoToCoord(motorPos)->getCoord();
@@ -582,6 +608,11 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
 
     } while ((!validation && distanceIsNotGood && !params.progressiveModeMotor) || handNotGood);
 
+    // Delete used index
+    auto it = dataTarget.begin();
+    std::advance(it, index);
+    dataTarget.erase(it);
+
     return new std::vector<uint16_t>(motorPos);
 
 }
@@ -589,7 +620,7 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
 armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> startingPos, bool validation){
 
     std::vector<uint16_t> motorPos;
-    std::vector<double> newCartesianCoords;
+    std::vector<double> newCartesianCoords, cartesianGoal;
 
     bool distanceIsNotGood = false;
     bool handNotGood = false;
@@ -597,10 +628,16 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
     // Init the distance at -1 to be sure that the while condition never return true during validation
     double distance = -1;
 
+    size_t index = 0;
+
     // Do one time then only while the distance is above the distance to browse
     do {
+        // Get random cartesian goal
+        index = rng.getUnsignedInt64(0, dataTarget.size());
+        cartesianGoal = dataTarget[index];
+
         // Get a random motor positions
-        motorPos = randomMotorPos(validation, true);
+        motorPos = randomMotorPos(cartesianGoal, validation, true);
 
         // Compute the cartesian coordonates of those motor positions
         newCartesianCoords = converter->computeServoToCoord(motorPos)->getCoord();
@@ -616,6 +653,11 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
 
     } while ((!validation && distanceIsNotGood && !params.progressiveModeMotor) || handNotGood);
 
+    // Delete used index
+    auto it = dataTarget.begin();
+    std::advance(it, index);
+    dataTarget.erase(it);
+
     // Create the input to return
     return new armlearn::Input<double>(
     {
@@ -624,6 +666,37 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
         (double) (newCartesianCoords[2])}); //Z
 }
 
+void ArmLearnWrapper::loadTargetCSV() {
+
+    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
+
+    std::ifstream file((slashToAdd + "params/AllTarget.csv").c_str());
+    if (!file.is_open()) {
+        std::cerr << "Error: unable to open file" << std::endl;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::vector<double> values;
+        std::stringstream ss(line);
+        std::string token;
+
+        while (std::getline(ss, token, ',')) {
+            // Utiliser la fonction de conversion de chaîne en double
+            std::istringstream iss(token);
+            double result;
+            iss >> result;
+            values.push_back(result);
+        }
+
+        dataTarget.push_back(values);
+    }
+
+    file.close();
+
+    std::mt19937 rngData(params.seed);
+    std::shuffle(dataTarget.begin(), dataTarget.end(), rngData);
+}
 
 void ArmLearnWrapper::customTrajectory(armlearn::Input<double> *newGoal, std::vector<uint16_t> startingPos, bool validation) {
 
