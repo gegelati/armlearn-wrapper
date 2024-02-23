@@ -200,8 +200,8 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "negativeCoordZ"){
-        negativeCoordZ = (bool)value.asBool();
+    if (param == "realSimulation"){
+        realSimulation = (bool)value.asBool();
         return;
     }
 

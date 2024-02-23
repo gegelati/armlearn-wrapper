@@ -186,7 +186,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         }
     }
 
-    if(!params.negativeCoordZ && motorNegative(scaledOutput)){
+    if(params.realSimulation && motorCollision(scaledOutput)){
 
         // only active for gegelati because SAC is not deterministic
         if(gegelatiRunning){
@@ -558,8 +558,6 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(std::vector<double> cartes
 
         validMotorPos = device->toValidPosition(newMotorPos);
 
-        break;
-
         cartesianPos = converter->computeServoToCoord(validMotorPos)->getCoord();
 
         distance = computeSquaredError(cartesianPos, cartesianGoal);
@@ -569,7 +567,7 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(std::vector<double> cartes
         }
     }
 
-    return validMotorPos;
+    return keepMotorPos;
 }
 
 std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
@@ -604,7 +602,14 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
         distanceIsNotGood = (distance > currentMaxLimitStartingPos);
 
         // Hand is not good if the target is bellow 0 on z axis
-        handNotGood = (!params.negativeCoordZ && motorNegative(motorPos));
+        handNotGood = (params.realSimulation && motorCollision(motorPos));
+
+        if(handNotGood){
+            // Delete index because it will never be correct
+            auto it = dataTarget.begin();
+            std::advance(it, index);
+            dataTarget.erase(it);
+        }
 
     } while ((!validation && distanceIsNotGood && !params.progressiveModeMotor) || handNotGood);
 
@@ -649,7 +654,14 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
         distanceIsNotGood = (distance > currentMaxLimitTarget || distance < currentRangeTarget);
 
         // Hand is not good if the target is bellow 0 on z axis
-        handNotGood = (!params.negativeCoordZ && motorNegative(motorPos));
+        handNotGood = (params.realSimulation && motorCollision(motorPos) );
+
+        if(handNotGood){
+            // Delete index because it will never be correct
+            auto it = dataTarget.begin();
+            std::advance(it, index);
+            dataTarget.erase(it);
+        }
 
     } while ((!validation && distanceIsNotGood && !params.progressiveModeMotor) || handNotGood);
 
@@ -964,7 +976,7 @@ double ArmLearnWrapper::getDistance(){
     return computeSquaredError(target, cartesianCoords);
 }
 
-bool ArmLearnWrapper::motorNegative(std::vector<uint16_t> newMotorPos){
+bool ArmLearnWrapper::motorCollision(std::vector<uint16_t> newMotorPos){
 
     // Constant
     uint16_t length_base = 125;
@@ -984,6 +996,10 @@ bool ArmLearnWrapper::motorNegative(std::vector<uint16_t> newMotorPos){
     double radiant_angle_elbow = M_PI - angle_elbow / 180 * M_PI;
     double radiant_angle_wrist = M_PI/2 - angle_wrist / 180 * M_PI;
 
+    double val1_side = std::cos(radiant_angle_shoulder) * length_shoulder;
+    double val2_side = val1_side + std::cos(radiant_angle_shoulder + M_PI/2) * displacement;
+    double val3_side = val2_side + std::cos(radiant_angle_shoulder + radiant_angle_elbow) * length_elbow;
+    double val4_side = val3_side + std::cos(radiant_angle_shoulder + radiant_angle_elbow + radiant_angle_wrist) * length_wrist;
 
     double val1_z = std::sin(radiant_angle_shoulder) * length_shoulder + length_base;
     double val2_z = val1_z + std::sin(radiant_angle_shoulder + M_PI/2) * displacement;
@@ -991,11 +1007,82 @@ bool ArmLearnWrapper::motorNegative(std::vector<uint16_t> newMotorPos){
     double val4_z = val3_z + std::sin(radiant_angle_shoulder + radiant_angle_elbow + radiant_angle_wrist) * length_wrist;
 
     
-
     if(val1_z < 0 || val2_z < 0 || val3_z < 0 || val4_z < 0){
         return true;
     }
-    return false;
+
+    double angle = radiant_angle_shoulder + radiant_angle_elbow + radiant_angle_wrist;
+    double coordx1 = val3_side + std::cos(angle) * 160 + std::cos(angle - M_PI/2) * 24;
+    double coordx2 = val3_side + std::cos(angle) * 160 + std::cos(angle - M_PI/2) * -32;
+    double coordx3 = val3_side + std::cos(angle - M_PI/2) * -32;
+
+    double coordy1 = val3_z + std::sin(angle) * 160 + std::sin(angle - M_PI/2) * 24;
+    double coordy2 = val3_z + std::sin(angle) * 160 + std::sin(angle - M_PI/2) * -32;
+    double coordy3 = val3_z + std::sin(angle - M_PI/2) * -32;
+
+    angle = radiant_angle_shoulder + radiant_angle_elbow;
+    double coordx4 = val3_side + std::cos(angle) * 10 + std::cos(angle - M_PI/2) * 18;
+    double coordx5 = val3_side + std::cos(angle) * 10 + std::cos(angle - M_PI/2) * -18 ;
+    double coordx6 = val2_side + std::cos(angle - M_PI/2) * -18;
     
+    double coordy4 = val3_z + std::sin(angle) * 10 + std::sin(angle - M_PI/2) * 18;
+    double coordy5 = val3_z + std::sin(angle) * 10 + std::sin(angle - M_PI/2) * -18;
+    double coordy6 = val2_z + std::sin(angle - M_PI/2) * -18;
+
+    std::vector<std::vector<double>> armSegments;
+    armSegments.push_back({coordx1, coordx2, coordy1, coordy2});
+    armSegments.push_back({coordx3, coordx2, coordy3, coordy2});
+    armSegments.push_back({coordx4, coordx5, coordy4, coordy5});
+    armSegments.push_back({coordx6, coordx5, coordy6, coordy5});
+
+    for(auto armSeg: armSegments){
+        for(auto baseSeg: baseSegments){
+            if(hasCollision(armSeg, baseSeg)){
+                return true;
+            }
+        }
+    }
+    return false;
+
+}
+
+bool ArmLearnWrapper::hasCollision(std::vector<double> armSegment, std::vector<double> baseSegment){
+
+    // Vector contain xA, xB, yA, yB
+    if(baseSegment[2] == baseSegment[3]){
+
+        if (std::min(armSegment[0], armSegment[1]) > std::max(baseSegment[0], baseSegment[1])){
+            return false;
+        }
+        if (std::max(armSegment[0], armSegment[1]) < std::min(baseSegment[0], baseSegment[1])){
+            return false;
+        }
+
+        if (std::max(armSegment[2], armSegment[3]) < baseSegment[2]){
+            return false;
+        }
+        if (std::min(armSegment[2], armSegment[3]) > baseSegment[2]){
+            return false;
+        }
+    }
+    else if(baseSegment[0] == baseSegment[1]){
+
+        if (std::min(armSegment[2], armSegment[3]) > std::max(baseSegment[2], baseSegment[3])){
+            return false;
+        }
+        if (std::max(armSegment[3], armSegment[3]) < std::min(baseSegment[2], baseSegment[3])){
+            return false;
+        }
+
+        if (std::max(armSegment[0], armSegment[1]) < baseSegment[0]){
+            return false;
+        }
+        if (std::min(armSegment[0], armSegment[1]) > baseSegment[0]){
+            return false;
+        }
+    }
+
+    return true;
+
 
 }

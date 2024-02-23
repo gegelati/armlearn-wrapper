@@ -141,6 +141,9 @@ protected:
     /// Vector that register all the possible goal to seek for in cartesian coordonates
     std::vector<std::vector<double>> dataTarget;
 
+    /// Vector containing base segments to avoid collision with
+    std::vector<std::vector<double>> baseSegments = {{68, 90, 9, 9}, {68, 68, 9, 95}, {15, 68, 95, 95}, {15, 15, 95, 151}};
+
 public:
 
     /// @brief Do not know
@@ -398,11 +401,14 @@ public:
 
 
     /**
-     * @brief Return True if one of the motor is bellow 0 on the Z axis
+     * @brief Return True if one of the motor has collision or is bellow 0 on z axis
      * 
      * @param[in] newMotorPos Position in motor point of the different motors
      */
-    bool motorNegative(std::vector<uint16_t> newMotorPos);
+    bool motorCollision(std::vector<uint16_t> newMotorPos);
+
+    bool hasCollision(std::vector<double> armSegment, std::vector<double> baseSegment);
+
 
 };
 

@@ -159,8 +159,8 @@ public:
     /// If false, action change the motor position, if true action change the motor speed
     bool actionSpeed = false;
 
-    /// True to allow coordonate/target bellow 0 on z axis
-    bool negativeCoordZ = true;
+    /// True to stop coordonate/target bellow 0 on z axis and collision
+    bool realSimulation = true;
 
     // Number of training iteration (nbIterationsPerPolicyEvaluation will be only for validation/training validation)
 	uint64_t nbIterationTraining = 1;
