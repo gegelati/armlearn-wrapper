@@ -986,8 +986,6 @@ bool ArmLearnWrapper::motorCollision(std::vector<uint16_t> newMotorPos){
 
     uint16_t displacement = 49;
 
-    newMotorPos = {3, 1953, 1193, 1513};
-
     double angle_base = (double) newMotorPos[0] / 4096 * 360;
     double angle_shoulder = ((double) newMotorPos[1] - 1024) / 2048 * 180;
     double angle_elbow = ((double) newMotorPos[2] - 1024) / 2048 * 180;
