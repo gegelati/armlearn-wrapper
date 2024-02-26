@@ -1043,7 +1043,7 @@ bool ArmLearnWrapper::motorCollision(std::vector<uint16_t> newMotorPos){
 
     for(auto armSeg: armSegments){
         for(auto val: armSeg){
-        }std::cout<<std::endl;
+        }
 
         for(auto baseSeg: baseSegments){
             if(hasCollision(armSeg, baseSeg)){
@@ -1051,7 +1051,6 @@ bool ArmLearnWrapper::motorCollision(std::vector<uint16_t> newMotorPos){
             }
         }
     }
-    std::cout<<std::endl;
     return false;
 
 }
