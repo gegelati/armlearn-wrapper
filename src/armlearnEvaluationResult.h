@@ -27,7 +27,7 @@ namespace Learn {
         double distance = 0;
         double score = 0;
 
-        std::vector<int> trajReached;
+        std::vector<std::pair<int, double>> trajScores;
 
       public:
         /**
@@ -39,15 +39,13 @@ namespace Learn {
          * get these scores. Default is 1 as we can guess user only did 1
          * iteration.
          */
-        ArmlearnEvaluationResult(const double score, const double success, const double distance, std::vector<int> trajReached, const size_t& nbEval, bool isScoreResult)
+        ArmlearnEvaluationResult(const double score, const double success, const double distance, std::vector<std::pair<int, double>> trajScores, const size_t& nbEval, bool isScoreResult)
             : EvaluationResult((isScoreResult) ? score:-1*distance, nbEval)
         {
           this->score = score;
           this->success = success;
           this->distance = distance;
-          for(auto val: trajReached){
-            this->trajReached.push_back(val);
-          }
+          this->trajScores = trajScores;
         }
 
         double getSuccess() const;
@@ -56,7 +54,7 @@ namespace Learn {
 
         double getScore() const;
 
-        std::vector<int> getTrajReached();
+        std::vector<std::pair<int, double>> getTrajScores();
 
         virtual EvaluationResult& operator+=(const EvaluationResult& other) override;
 

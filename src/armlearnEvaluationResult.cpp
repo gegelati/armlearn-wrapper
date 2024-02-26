@@ -15,8 +15,8 @@ double Learn::ArmlearnEvaluationResult::getScore() const{
     return this->score;
 }
 
-std::vector<int> Learn::ArmlearnEvaluationResult::getTrajReached(){
-    return this->trajReached;
+std::vector<std::pair<int, double>> Learn::ArmlearnEvaluationResult::getTrajScores(){
+    return this->trajScores;
 }
 
 Learn::EvaluationResult& Learn::ArmlearnEvaluationResult::operator+=(

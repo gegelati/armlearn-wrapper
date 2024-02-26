@@ -139,9 +139,6 @@ class ArmSacEngine{
         /// Log the size limits of the environnement (targets and starting position)
         void logLimits();
 
-        /// Log the ratio of trajectories deleted
-        void logTrajectoriesDeletion();
-
         /// Log the training, learning, validation, training validation and total times
         void logTimes();
 

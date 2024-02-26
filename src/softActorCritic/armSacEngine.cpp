@@ -125,9 +125,7 @@ void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
         // add distance
         distance += armLearnEnv->getDistance();
 
-        if(armLearnEnv->getDistance() < trainingParams.rangeTarget){
-            armLearnEnv->addToDeleteTraj(j);
-        }
+        armLearnEnv->addToScoreTrajectories(j, armLearnEnv->getDistance());
 
     }
     // Get the mean distance and result
@@ -329,11 +327,6 @@ void ArmSacEngine::logLimits(){
 
     std::cout<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<targetLimit<<std::setw(colWidth);
     file<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<targetLimit<<std::setw(colWidth);
-}
-
-void ArmSacEngine::logTrajectoriesDeletion(){
-    std::cout<<armLearnEnv->getNbTrajectoriesDeleted()<<std::setw(colWidth);
-    file<<armLearnEnv->getNbTrajectoriesDeleted()<<std::setw(colWidth);
 }
 
 void ArmSacEngine::logTimes(){

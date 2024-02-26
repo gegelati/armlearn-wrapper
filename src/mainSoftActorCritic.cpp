@@ -122,11 +122,6 @@ int main() {
                 
             }
 
-            if (trainingParams.controlTrajectoriesDeletion){
-                learningAgent.logTrajectoriesDeletion();
-            }
-
-
             learningAgent.logTimes();
 
             // Check time limit only if the parameter is above 0

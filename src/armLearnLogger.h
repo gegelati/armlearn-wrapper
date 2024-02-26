@@ -164,8 +164,6 @@ namespace Log {
          */
         virtual void logEnvironnementStatus(double envSizeTargets, double envSizeStartingPos);
 
-        virtual void logTrajDeleted(int nbTrajDeleted);
-
     };
 
 } // namespace Log

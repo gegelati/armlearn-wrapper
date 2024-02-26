@@ -161,7 +161,3 @@ void Log::ArmLearnLogger::logEnvironnementStatus(double envSizeTargets, double e
     *this << std::setw(colWidth) << envSizeTargets;
     *this << std::setw(colWidth) << envSizeStartingPos;
 }
-
-void Log::ArmLearnLogger::logTrajDeleted(int nbTrajDeleted){
-    *this << std::setw(colWidth) << nbTrajDeleted;
-}

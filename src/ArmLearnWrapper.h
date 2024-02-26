@@ -123,8 +123,8 @@ protected:
     /// vector that store all the informations of each episode
     std::vector<std::vector<int32_t>> allValidationInfos;
 
-    /// Vector that contain the indices of the trajectories do delete if trainingParams.controlTrajectoriesDeletion is true
-    std::vector<int> trajToDelete;
+    /// Vector that contain the indices of the trajectories and their best score. Used if trajectory deletion is activated
+    std::vector<std::pair<int, double>> scoreTrajectories;
 
     /// True if gegelati is running else an other algorithm : SAC for now
     bool gegelatiRunning = true;
@@ -243,14 +243,8 @@ public:
     /// @brief Clear a given proportion of the current set of training targets 
     void clearPropTrainingTrajectories();
 
-    /// Return the number of trajectories deleted if trainingParams.controlTrajectoriesDeletion is true
-    int getNbTrajectoriesDeleted();
-
-    // Delete the tractories in the trajToDelete vector
-    void deleteTrajectory();
-
-    // Add the indices given to the trajToDelete vector
-    void addToDeleteTraj(int j);
+    // Add the indices and scoresgiven to the scoreTrajectories vector
+    void addToScoreTrajectories(int index, double score);
 
 
     ///@brief Inherited from LearningEnvironment.

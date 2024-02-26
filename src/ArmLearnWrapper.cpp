@@ -371,36 +371,8 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
 }
 
 
-void ArmLearnWrapper::addToDeleteTraj(int index){
-    trajToDelete.push_back(index);
-}
-
-int ArmLearnWrapper::getNbTrajectoriesDeleted(){
-    return trajToDelete.size();
-}
-
-void ArmLearnWrapper::deleteTrajectory(){
-
-    // run the trajectories set backward to avoid size issues
-    for(int i = trainingTrajectories.size() - 1; i >= 0; --i) {
-
-        auto testFind = std::find(trajToDelete.begin(), trajToDelete.end(), i);
-
-        // If i is in the trajectories to delete, delete it
-        if (testFind != trajToDelete.end()){
-            auto iterToDelete = trainingTrajectories.begin();
-            std::advance(iterToDelete, i);
-
-            if (params.doRandomStartingPosition) delete iterToDelete->first;
-            delete iterToDelete->second;
-
-            trainingTrajectories.erase(iterToDelete);
-        }
-
-
-    }
-    // Clear the vector
-    trajToDelete.clear();
+void ArmLearnWrapper::addToScoreTrajectories(int index, double score){
+    scoreTrajectories.push_back(std::make_pair(index, score));
 }
 
 void ArmLearnWrapper::clearPropTrainingTrajectories(){
@@ -429,6 +401,38 @@ void ArmLearnWrapper::clearPropTrainingTrajectories(){
 
     // Delete then the pair in the vector
     trainingTrajectories.erase(trainingTrajectories.begin(), it);
+
+    //Sort list traj with the best result in first
+    std::sort(scoreTrajectories.begin(), scoreTrajectories.end(), [](const auto &a, const auto &b) {
+        return a.second > b.second;
+    });
+
+    std::vector<int> trajToDelete;
+    for(int i=0; i < nbDeletedTrajectories; i++){
+        // Either get incremental or predifined index
+        trajToDelete.push_back((params.controlTrajectoriesDeletion) ? scoreTrajectories[i].first: i);
+    }
+    
+    // run the trajectories set backward to avoid size issues
+    for(int i = trainingTrajectories.size() - 1; i >= 0; --i) {
+
+        auto testFind = std::find(trajToDelete.begin(), trajToDelete.end(), i);
+
+        // If i is in the trajectories to delete, delete it
+        if (testFind != trajToDelete.end()){
+            auto iterToDelete = trainingTrajectories.begin();
+            std::advance(iterToDelete, i);
+
+            if (params.doRandomStartingPosition) delete iterToDelete->first;
+            delete iterToDelete->second;
+
+            trainingTrajectories.erase(iterToDelete);
+        }
+
+
+    }
+    // Clear the vector
+    scoreTrajectories.clear();
 }
 
 
@@ -451,13 +455,8 @@ bool ArmLearnWrapper::isCopyable() const {
 
 void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
 
-    if(params.controlTrajectoriesDeletion){
-        // delete only the trajectories reached
-        deleteTrajectory();
-    } else {
-        // Clear a define prortion of the training targets by giving the proportion of targets reused
-        clearPropTrainingTrajectories();
-    }
+    // Clear a define prortion of the training targets by giving the proportion of targets reused
+    clearPropTrainingTrajectories();
 
     while (trainingTrajectories.size() < nbTrajectories){
 
