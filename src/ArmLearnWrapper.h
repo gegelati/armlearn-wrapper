@@ -142,7 +142,10 @@ protected:
     std::vector<std::vector<double>> dataTarget;
 
     /// Vector containing base segments to avoid collision with
-    std::vector<std::vector<double>> baseSegments = {{68, 90, 9, 9}, {68, 68, 9, 95}, {15, 68, 95, 95}, {15, 15, 95, 151}};
+    std::vector<std::vector<double>> baseSegments = {
+        {68, 90, 9, 9}, {68, 68, 9, 95}, {15, 68, 95, 95}, {15, 15, 95, 151},
+        {-68, -90, 9, 9}, {-68, -68, 9, 95}, {-15, -68, 95, 95}, {-15, -15, 95, 151},
+    };
 
 public:
 

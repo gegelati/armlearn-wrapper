@@ -986,6 +986,8 @@ bool ArmLearnWrapper::motorCollision(std::vector<uint16_t> newMotorPos){
 
     uint16_t displacement = 49;
 
+    newMotorPos = {3, 1953, 1193, 1513};
+
     double angle_base = (double) newMotorPos[0] / 4096 * 360;
     double angle_shoulder = ((double) newMotorPos[1] - 1024) / 2048 * 180;
     double angle_elbow = ((double) newMotorPos[2] - 1024) / 2048 * 180;
@@ -1029,6 +1031,10 @@ bool ArmLearnWrapper::motorCollision(std::vector<uint16_t> newMotorPos){
     double coordy5 = val3_z + std::sin(angle) * 10 + std::sin(angle - M_PI/2) * -18;
     double coordy6 = val2_z + std::sin(angle - M_PI/2) * -18;
 
+    if(coordy1 < 0 || coordy2 < 0){
+        return true;
+    }
+
     std::vector<std::vector<double>> armSegments;
     armSegments.push_back({coordx1, coordx2, coordy1, coordy2});
     armSegments.push_back({coordx3, coordx2, coordy3, coordy2});
@@ -1036,12 +1042,16 @@ bool ArmLearnWrapper::motorCollision(std::vector<uint16_t> newMotorPos){
     armSegments.push_back({coordx6, coordx5, coordy6, coordy5});
 
     for(auto armSeg: armSegments){
+        for(auto val: armSeg){
+        }std::cout<<std::endl;
+
         for(auto baseSeg: baseSegments){
             if(hasCollision(armSeg, baseSeg)){
                 return true;
             }
         }
     }
+    std::cout<<std::endl;
     return false;
 
 }
@@ -1070,7 +1080,7 @@ bool ArmLearnWrapper::hasCollision(std::vector<double> armSegment, std::vector<d
         if (std::min(armSegment[2], armSegment[3]) > std::max(baseSegment[2], baseSegment[3])){
             return false;
         }
-        if (std::max(armSegment[3], armSegment[3]) < std::min(baseSegment[2], baseSegment[3])){
+        if (std::max(armSegment[2], armSegment[3]) < std::min(baseSegment[2], baseSegment[3])){
             return false;
         }
 
@@ -1081,6 +1091,8 @@ bool ArmLearnWrapper::hasCollision(std::vector<double> armSegment, std::vector<d
             return false;
         }
     }
+
+    //Long check
 
     return true;
 
