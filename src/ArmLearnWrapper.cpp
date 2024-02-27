@@ -1070,6 +1070,25 @@ bool ArmLearnWrapper::hasCollision(std::vector<double> armSegment, std::vector<d
         if (std::min(armSegment[2], armSegment[3]) > baseSegment[2]){
             return false;
         }
+
+
+        if(armSegment[0] == armSegment[1]){
+            return true;
+        }
+
+        //Calcul equation y = ax + b
+        double a = (armSegment[3] - armSegment[2]) / (armSegment[1] - armSegment[0]);
+        double b = armSegment[2] - a * armSegment[0];
+
+        double val_x = (baseSegment[2] - b)/a;
+        if (val_x > std::max(baseSegment[0], baseSegment[1])){
+            return false;
+        }
+        if (val_x < std::min(baseSegment[0], baseSegment[1])){
+            return false;
+        }
+
+
     }
     else if(baseSegment[0] == baseSegment[1]){
 
@@ -1086,9 +1105,25 @@ bool ArmLearnWrapper::hasCollision(std::vector<double> armSegment, std::vector<d
         if (std::min(armSegment[0], armSegment[1]) > baseSegment[0]){
             return false;
         }
+
+        if(armSegment[0] == armSegment[1]){
+            return (armSegment[1] == baseSegment[1]);
+        }
+
+        //Calcul equation y = ax + b
+        double a = (armSegment[3] - armSegment[2]) / (armSegment[1] - armSegment[0]);
+        double b = armSegment[2] - a * armSegment[0];
+
+        double val_y = a * baseSegment[0] + b;
+        if (val_y > std::max(baseSegment[2], baseSegment[3])){
+            return false;
+        }
+        if (val_y < std::min(baseSegment[2], baseSegment[3])){
+            return false;
+        }
     }
 
-    //Long check
+
 
     return true;
 
