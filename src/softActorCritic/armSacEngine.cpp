@@ -199,6 +199,11 @@ void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
     double result = 0;
     double success = 0;
 
+
+    std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
+    checkpoint = std::make_shared<std::chrono::time_point<
+    std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+
     // Validate for nbIterationTraining episode(s)
     for(int j = 0; j < nbIterationTesting; j++){
 
@@ -225,7 +230,9 @@ void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
     armLearnEnv->logTestingTrajectories(false);
     
 
-    std::cout<<"Testing resutlt : "<<result<<" -- Testing success rate "<<success<<std::endl;
+    std::cout<<"Testing resutlt : "<<result<<" -- Testing success rate "<<success;
+    auto testingTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
+    std::cout<<" -- Time of testing "<<testingTime<<std::endl;
 }
 
 void ArmSacEngine::chronoFromNow(){

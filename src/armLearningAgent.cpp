@@ -105,6 +105,10 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
 
 void Learn::ArmLearningAgent::testingBestRoot(uint64_t generationNumber){
 
+    std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
+    checkpoint = std::make_shared<std::chrono::time_point<
+    std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+
     auto mode = Learn::LearningMode::VALIDATION;
 
     // Create the TPGExecutionEngine for this evaluation.
@@ -120,8 +124,14 @@ void Learn::ArmLearningAgent::testingBestRoot(uint64_t generationNumber){
     std::shared_ptr<EvaluationResult> result = this->evaluateJob(
         *tee, *job, generationNumber, mode, this->learningEnvironment);
 
+
+
     std::cout<<"Testing score : "<<result->getResult();
-    std::cout << " -- Testing success rate " << std::dynamic_pointer_cast<ArmlearnEvaluationResult>(result)->getSuccess() << std::endl;
+    std::cout << " -- Testing success rate " << std::dynamic_pointer_cast<ArmlearnEvaluationResult>(result)->getSuccess();
+
+    auto testingTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
+    std::cout<<" -- Time of testing "<<testingTime<<std::endl;
+
 
 
 }

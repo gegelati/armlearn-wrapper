@@ -219,11 +219,24 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     if(printing) std::cout<<reward<<" | "<<std::endl;
     score += reward;
 
+    if(gegelatiRunning){
+        updateAndCheckCycles();
+    }
 
     if(params.testing){
         saveMotorPos();
     }
 
+}
+
+void ArmLearnWrapper::updateAndCheckCycles(){
+    auto motorPos = getMotorsPos();
+    auto testFind = std::find(memoryMotorPos.begin(), memoryMotorPos.end(), motorPos);
+    if (testFind != memoryMotorPos.end()){
+        isCycling = true;
+    } else{
+        memoryMotorPos.push_back(motorPos);
+    }
 }
 
 void ArmLearnWrapper::saveMotorPos(){
@@ -273,7 +286,7 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
 
 
     // If the arm is not moving, set terminal to true
-    if(!isMoving){
+    if(!isMoving || isCycling){
         terminal = true;
     }
 
@@ -289,9 +302,9 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
         }
     }
 
-    // If the arm is not moving anymore, the reward is multiplied by the numper of action normally to come
+    // If the arm is not moving anymore or is cycling, the reward is multiplied by the number of action normally to come
     double penaltyStopTooSoon = 1;
-    if(!isMoving && gegelatiRunning){
+    if((!isMoving || isCycling) && gegelatiRunning){
         penaltyStopTooSoon = nbMaxActions - nbActions;
     }
 
@@ -351,8 +364,10 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     terminal = false;
     nbActionsInThreshold=0;
     isMoving = true;
+    isCycling = false;
     motorSpeed = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     isValidation = (mode==Learn::LearningMode::VALIDATION);
+    memoryMotorPos.clear();
 
 
     // If we are testing the arm, we save the current trajectory

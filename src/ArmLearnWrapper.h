@@ -147,6 +147,12 @@ protected:
         {-68, -90, 9, 9}, {-68, -68, 9, 95}, {-15, -68, 95, 95}, {-15, -15, 95, 151},
     };
 
+    /// @brief memory of each motor position during an episode, used to detect cycles
+    std::vector<std::vector<uint16_t>> memoryMotorPos;
+
+    /// @brief indicate if the arm is cycling (only under Gegelati)
+    bool isCycling = false;
+
 public:
 
     /// @brief Do not know
@@ -205,7 +211,7 @@ public:
                                                     trainingTrajectories(other.trainingTrajectories),
                                                     validationTrajectories(other.validationTrajectories),
                                                     trainingValidationTrajectories(other.trainingValidationTrajectories),
-                                                    DeviceLearner(iniController()), params(other.params){
+                                                    DeviceLearner(iniController()), params(other.params) {
         if(params.progressiveRangeTarget){
             this->currentRangeTarget = other.currentRangeTarget;
         } else {
@@ -228,6 +234,9 @@ public:
 
     /// execute the action choosed
     void executeAction(std::vector<double> motorAction);
+
+    /// Update the memory of motor position and detect if gegelati is in a cycle
+    void updateAndCheckCycles();
 
     /// Save the current motor position(
     void saveMotorPos();
