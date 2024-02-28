@@ -297,7 +297,7 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
 
     // If the arm has done an unavailable move, the algorithm get a penalty
     double penaltyMoveUnavailable = 0;
-    if (givePenaltyMoveUnavailable){
+    if (givePenaltyMoveUnavailable && (!gegelatiRunning || params.isScoreResult)){
         penaltyMoveUnavailable = params.penaltyMoveUnavailable;
     }
 

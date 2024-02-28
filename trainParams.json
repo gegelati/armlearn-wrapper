@@ -33,12 +33,10 @@
 	"controlTrajectoriesDeletion": false,
 	// Proportion of trajectories (pair startingPos-Target) reused at each training generation
 	"propTrajectoriesReused": 0,
-	// Value to penalize the algorithm if an unavailable action is taken : reward = reward - penalty
-	"penaltyMoveUnavailable": 10,
 	// Penalty for moving a motor : the goal is to avoid to much speed unecessary
 	"penaltySpeed" : 0.05,
 	// Coefficient to multiply the reward with
-	"coefRewardMultiplication" : 0.01,
+	"coefRewardMultiplication" : 0.1,
 	// true to load the validation trajectories
 	"loadValidationTrajectories": false,
 	// true to save the validation trajectories
@@ -48,7 +46,9 @@
 	// Set interactive mode or not (usefull for calcul machine)
 	"interactiveMode": true,
     // if true, selection for gegelati is based on score (sum of reward), else on distance
-    "isScoreResult": false,
+	"isScoreResult": false,
+	// Value to penalize if an unavailable action is taken : reward = reward - penalty is isScoreResult is true, else score = score - penalty
+	"penaltyMoveUnavailable": 1000,
 	// Size in degree of a discrete action, and max size of a continuous action
 	"sizeAction": 3,
 	// if true, deactivate the training and only logs results
@@ -62,6 +62,8 @@
 	"useInstrDist3d": false,
 	// To use spherical coordonates instructions
 	"useInstrSphericalCoord": false,
+	// To use getPi instruction
+	"useInstrPi": true,
 
 	// If false, action change the motor position, if true action change the motor speed
 	"actionSpeed": true,
