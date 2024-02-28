@@ -153,8 +153,11 @@ public:
 	/// To use distance 3D instruction
 	bool useInstrDist3d = false;
 
-	// To use spherical coordonates instructions
+	/// To use spherical coordonates instructions
 	bool useInstrSphericalCoord = false;
+
+    /// To use getPi instruction
+	bool useInstrPi = false;
 
     /// If false, action change the motor position, if true action change the motor speed
     bool actionSpeed = false;
@@ -167,6 +170,8 @@ public:
 
     // Set a limit of time to train (in seconds), if 0 : no limit
 	uint64_t timeMaxTraining = 0;
+
+
 
     /**
      * \brief Loads a given json file and fills the parameters it contains

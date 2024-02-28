@@ -437,6 +437,10 @@ void ArmLearnWrapper::clearPropTrainingTrajectories(){
 
 
 double ArmLearnWrapper::getScore() const {
+    if (!params.isScoreResult && gegelatiRunning){
+        return score - params.penaltyMoveUnavailable;
+    }
+
     return score;
 }
 

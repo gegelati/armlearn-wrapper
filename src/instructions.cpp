@@ -51,4 +51,8 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
         set.add(*(new Instructions::LambdaInstruction<double, double>(spherical_rad)));
         set.add(*(new Instructions::LambdaInstruction<double, double>(spherical_angle)));
     }
+
+    if(params.useInstrPi){
+	    auto pi = [](double a) -> double { return M_PI; };
+    }
 }
