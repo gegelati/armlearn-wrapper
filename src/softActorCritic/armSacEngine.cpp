@@ -201,8 +201,7 @@ void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
 
 
     std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
-    checkpoint = std::make_shared<std::chrono::time_point<
-    std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+    checkpoint = std::make_shared<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
 
     // Validate for nbIterationTraining episode(s)
     for(int j = 0; j < nbIterationTesting; j++){

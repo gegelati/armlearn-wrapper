@@ -123,6 +123,9 @@ protected:
     /// vector that store all the informations of each episode
     std::vector<std::vector<int32_t>> allValidationInfos;
 
+    /// Checkpoint to get the duration of an episode (for testing logs)
+    std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
+
     /// Vector that contain the indices of the trajectories and their best score. Used if trajectory deletion is activated
     std::vector<std::pair<int, double>> scoreTrajectories;
 
