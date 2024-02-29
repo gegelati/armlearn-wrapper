@@ -54,5 +54,6 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
 
     if(params.useInstrPi){
 	    auto pi = [](double a) -> double { return M_PI; };
+        set.add(*(new Instructions::LambdaInstruction<double>(pi)));
     }
 }
