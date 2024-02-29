@@ -24,10 +24,8 @@ void ArmLearnWrapper::computeInput() {
             newMotorPos.emplace_back(value);
             indInput++;
 
-            if(printing) std::cout<<value<<" - ";
         }
     }
-    if(printing) std::cout<<" | ";
 
     // Get the cartesian coordonates of the motors
     auto newCartesianCoords = converter->computeServoToCoord(newMotorPos)->getCoord();
@@ -214,10 +212,23 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
     computeInput(); // to update  positions
 
+    // Get the cartiesion coordonates of the arm
+    std::vector<double> cartesianCoords = converter->computeServoToCoord(getMotorsPos())->getCoord();
+
+    auto target = this->currentTarget->getInput();
+
+    // Compute and return the Distance with the target
+    distance = computeSquaredError(target, cartesianCoords);
+
     nbActions++;
     reward = computeReward(givePenaltyMoveUnavailable); // Computation of reward
-    if(printing) std::cout<<reward<<" | "<<std::endl;
     score += reward;
+
+
+
+    if (!params.isScoreResult && gegelatiRunning && givePenaltyMoveUnavailable){
+        distance += params.penaltyMoveUnavailable;
+    }
 
     if(gegelatiRunning){
         updateAndCheckCycles();
@@ -247,8 +258,8 @@ void ArmLearnWrapper::saveMotorPos(){
         // If terminal or end of episode, add time (in ms), score, distance, success and number of actions
         vectorValidationInfos.push_back(static_cast<int32_t>(((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count()*1000));
         vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
-        vectorValidationInfos.push_back(static_cast<int32_t>(getDistance()));
-        vectorValidationInfos.push_back(static_cast<int32_t>((getDistance() < params.rangeTarget) ? 1: 0));
+        vectorValidationInfos.push_back(static_cast<int32_t>(distance));
+        vectorValidationInfos.push_back(static_cast<int32_t>((distance < params.rangeTarget) ? 1: 0));
         vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
 
         // Add each motor positions
@@ -265,7 +276,7 @@ void ArmLearnWrapper::saveMotorPos(){
 
 double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
 
-    // Compute que Distance with the target
+    // Compute Distance with the target
     auto err = getDistance();
 
     double range = (isValidation) ? params.rangeTarget : currentRangeTarget;
@@ -369,6 +380,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     motorSpeed = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     isValidation = (mode==Learn::LearningMode::VALIDATION);
     memoryMotorPos.clear();
+    distance = 0.0;
 
 
     // If we are testing the arm, we save the current trajectory
@@ -455,10 +467,6 @@ void ArmLearnWrapper::clearPropTrainingTrajectories(){
 
 
 double ArmLearnWrapper::getScore() const {
-    if (!params.isScoreResult && gegelatiRunning){
-        return score - params.penaltyMoveUnavailable;
-    }
-
     return score;
 }
 
@@ -987,14 +995,7 @@ double ArmLearnWrapper::getCurrentRangeTarget(){
 }
 
 double ArmLearnWrapper::getDistance(){
-
-    // Get the cartiesion coordonates of the arm
-    std::vector<double> cartesianCoords = converter->computeServoToCoord(getMotorsPos())->getCoord();
-
-    auto target = this->currentTarget->getInput();
-
-    // Compute and return the Distance with the target
-    return computeSquaredError(target, cartesianCoords);
+    return distance;
 }
 
 bool ArmLearnWrapper::motorCollision(std::vector<uint16_t> newMotorPos){

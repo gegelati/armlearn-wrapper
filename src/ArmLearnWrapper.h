@@ -32,7 +32,6 @@
 class ArmLearnWrapper : public Learn::LearningEnvironment, armlearn::learning::DeviceLearner {
 protected:
 
-    bool printing=false;
     void computeInput();
 
     double computeReward(bool givePenaltyMoveUnavailable);
@@ -69,6 +68,9 @@ protected:
 
     /// Score of the training
     double score = 0.0;
+
+    /// Distance to give to Gegelati
+    double distance = 0.0;
 
     /// Reward of the last action done
     double reward = 0.0;
