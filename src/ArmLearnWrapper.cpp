@@ -144,8 +144,11 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     // The new position of the first motor is calculated before the three others because the possibilities of the motors are different
     double inputI = (double) *(motorPos.getDataAt(typeid(double), 0).getSharedPointer<const double>());
 
-    // If the position aimed is possible, change the value
-    if(motorAction[0] + inputI >= 2  && motorAction[0] + inputI <= 4094){
+    if(params.canDo360){
+        scaledOutput[0] = static_cast<uint16_t>(motorAction[0] + inputI) % 4096;
+
+       // If the position aimed is possible, change the value
+    }else if (motorAction[0] + inputI >= 2  && motorAction[0] + inputI <= 4094){
         scaledOutput[0] = motorAction[0] + inputI;
     } else {
         // Else do not change the value.
@@ -162,7 +165,8 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
     }
 
-
+    
+    
     for (int i = 1; i < 4; i++) {
         inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
         // If the position aimed is possible, change the value

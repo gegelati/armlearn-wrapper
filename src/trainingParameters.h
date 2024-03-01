@@ -171,6 +171,9 @@ public:
     // Set a limit of time to train (in seconds), if 0 : no limit
 	uint64_t timeMaxTraining = 0;
 
+	/// if true, allow the arm to make 360% circle
+	bool canDo360 = false;
+
 
 
     /**

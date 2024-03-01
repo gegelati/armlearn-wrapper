@@ -75,5 +75,8 @@
 	"nbIterationTraining": 3,
 
 	// Set a limit of time to train (in seconds), if 0: no limit
-	"timeMaxTraining": 15
+	"timeMaxTraining": 15,
+
+	// if true, allow the arm to make 360% circle
+	"canDo360": true
 }
