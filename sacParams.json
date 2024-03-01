@@ -22,5 +22,7 @@
 	// True to unable multiple actions
 	"multipleActions": true,
 	// True to unable continuous actions. Note : actions can only be continuous if multiple actions is unable
-	"continuousActions": true
+	"continuousActions": true,
+	// Active or deactivate the false single action : SAC take multiple action but it is interpret as multiple single action by the env
+	"falseSingleAction": false
 }

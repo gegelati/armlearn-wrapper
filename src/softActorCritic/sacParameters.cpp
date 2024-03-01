@@ -98,6 +98,11 @@ void SACParameters::setParameterFromString(const std::string& param, Json::Value
         return;
     }
 
+    if (param == "falseSingleAction") {
+        falseSingleAction = (bool)value.asBool();
+        return;
+    }
+
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }

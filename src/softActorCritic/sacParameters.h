@@ -99,6 +99,8 @@ public:
     /// True to unable continuous actions. Note : actions can only be continuous if multiple actions is unable
     bool continuousActions = true;
 
+	/// Active or deactivate the false single action : SAC take multiple action but it is interpret as multiple single action by the env
+	bool falseSingleAction = false;
 
     /**
      * \brief Loads a given json file and fills the parameters it contains

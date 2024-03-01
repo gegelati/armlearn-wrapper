@@ -14,7 +14,9 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
     uint64_t actionTaken;
     double singleReward;
     double result=0;
+    uint16_t nbNullAction = 0;
     uint64_t nbActions = 0;
+    std::vector<float> sendActionVector;
 
     // Reset the environnement
     armLearnEnv->reset(seed, mode, iterationNumber);
@@ -23,13 +25,14 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
     bool terminated = false;
     torch::Tensor state = getTensorState();
 
-
     // Do iterations while the episode is not terminated
     while (!terminated && nbActions < maxNbActions) {
 
         // Get the continuous action
         actionTensor = learningAgent.chooseAction(state);
 
+        // reset reward
+        singleReward = 0;
 
         if(!sacParams.multipleActions){
             // actionTensor return float between -1 and 1. 
@@ -45,6 +48,14 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
 
             // Do the action
             armLearnEnv->doAction(actionTaken);
+
+                
+            // Get the reward
+            singleReward = armLearnEnv->getReward();
+            
+            // Incremente action counter
+            nbActions++;
+
         } else {
 
             auto actionTaken = actionTensor;
@@ -52,23 +63,56 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
                 actionTaken = torch::round(actionTensor * 3 / 2);
             }
 
+            // If no motor are moved, then action empty is send
+            nbNullAction = 0;
+
             // Convert actionTensor to an actionVector
             std::vector<float> actionVector(actionTaken.data_ptr<float>(), actionTaken.data_ptr<float>() + actionTaken.numel());
 
-            // Do a continuous action
-            armLearnEnv->doActionContinuous(actionVector);
+            if(sacParams.falseSingleAction){
+                for(int i=0; i < actionVector.size() && !terminated && nbActions < maxNbActions; i++){
+
+                    if(actionVector[i] != 0){
+                        // Do a continuous action
+                        sendActionVector = {0.0, 0.0, 0.0, 0.0};
+                        sendActionVector[i] = actionVector[i];
+
+                        armLearnEnv->doActionContinuous(sendActionVector);
+
+                        // Get the reward
+                        singleReward += armLearnEnv->getReward();
+
+                        // Get terminated state
+                        terminated = armLearnEnv->isTerminal();
+
+                        // Incremente action counter
+                        nbActions++;
+                    } else {
+                        nbNullAction++;
+                    }
+
+                }
+            } else if (!sacParams.falseSingleAction || nbNullAction == actionVector.size()){
+                
+                // Do a continuous action
+                armLearnEnv->doActionContinuous(actionVector);
+
+                // Get the reward
+                singleReward += armLearnEnv->getReward();
+
+                // Get terminated state
+                terminated = armLearnEnv->isTerminal();
+
+                // Incremente action counter
+                nbActions++;
+            }
+
 
         }
 
 
         // Get the new state
         newState = getTensorState();
-
-        // Get the reward
-        singleReward = armLearnEnv->getReward();
-        
-        // Incremente action counter
-        nbActions++;
 
         // Get terminated state
         terminated = armLearnEnv->isTerminal();
@@ -91,8 +135,6 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
 
         // Set state to newState
         state = newState;
-
-        //std::cout<<"Action : "<<nbActions<<" - Reward :"<<armLearnEnv->getDistance()<<" - outAction : "<< actionTensor.item<float>()<< "- Acton Send"<< actionTaken<<std::endl;
 
         // Add the reward to the result
         result += singleReward;
