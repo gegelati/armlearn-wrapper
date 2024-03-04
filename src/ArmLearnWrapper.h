@@ -76,7 +76,7 @@ protected:
     double reward = 0.0;
 
     /// Number of actions done in the episode
-    size_t nbActions = 0;
+    size_t nbActionsDone = 0;
     
     int nbActionsInThreshold=0;
 

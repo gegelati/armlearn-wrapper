@@ -224,7 +224,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     // Compute and return the Distance with the target
     distance = computeSquaredError(target, cartesianCoords);
 
-    nbActions++;
+    nbActionsDone++;
     reward = computeReward(givePenaltyMoveUnavailable); // Computation of reward
     score += reward;
 
@@ -257,14 +257,14 @@ void ArmLearnWrapper::updateAndCheckCycles(){
 void ArmLearnWrapper::saveMotorPos(){
     // Push back the motor position
     allMotorPos.push_back(getMotorsPos());
-    if(terminal || nbActions == nbMaxActions){
+    if(terminal || nbActionsDone == nbMaxActions){
 
         // If terminal or end of episode, add time (in ms), score, distance, success and number of actions
         vectorValidationInfos.push_back(static_cast<int32_t>(((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count()*1000));
         vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
         vectorValidationInfos.push_back(static_cast<int32_t>(distance));
         vectorValidationInfos.push_back(static_cast<int32_t>((distance < params.rangeTarget) ? 1: 0));
-        vectorValidationInfos.push_back(static_cast<int32_t>(nbActions));
+        vectorValidationInfos.push_back(static_cast<int32_t>(nbActionsDone));
 
         // Add each motor positions
         for(auto motor_value: allMotorPos){
@@ -285,9 +285,6 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
 
     double range = (isValidation) ? params.rangeTarget : currentRangeTarget;
 
-    /// Compute the number of actions taken in the episode divide by the maximum number of actions takeable in an episode
-    /// This ratio is multiplied by a coefficient that allow to choose the impact of this ratio on the reward
-    //double valNbIterations = params.coefRewardNbIterations * (static_cast<double>(nbActions) / nbMaxActions);
 
     // Tempory reward to force to stop close to the objective
     if (err < range){
@@ -321,7 +318,7 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
     // If the arm is not moving anymore or is cycling, the reward is multiplied by the number of action normally to come
     double penaltyStopTooSoon = 1;
     if((!isMoving || isCycling) && gegelatiRunning){
-        penaltyStopTooSoon = nbMaxActions - nbActions;
+        penaltyStopTooSoon = nbMaxActions - nbActionsDone;
     }
 
     // If the arm has done an unavailable move, the algorithm get a penalty
@@ -376,7 +373,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     // Init environnement parameters
     reward = 0.0;
     score = 0.0;
-    nbActions = 0;
+    nbActionsDone = 0;
     terminal = false;
     nbActionsInThreshold=0;
     isMoving = true;
