@@ -4,11 +4,13 @@
 #include <string>
 #include <cfloat>
 #include <inttypes.h>
+#include <filesystem>
 #include <unistd.h>
 
 #include <gegelati.h>
 
 #include "resultTester.h"
+#include "instructions.h"
 
 #include "ArmLearnWrapper.h"
 
@@ -21,36 +23,26 @@ int main() {
     }
     */
 
+    // This is important for the singularity image
+    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
+
+    TrainingParameters trainingParams;
+    trainingParams.loadParametersFromJson((slashToAdd + "params/trainParams.json").c_str());
+
+
+    // Set the parameters for the learning process.
+    // Loads them from "params.json" file
+    Learn::LearningParameters params;
+    File::ParametersParser::loadParametersFromJson((slashToAdd + "params/params.json").c_str(), params);
+
     // Create the instruction set for programs
-    Instructions::Set set;
-    auto minus = [](double a, double b) -> double { return a - b; };
-    auto add = [](double a, double b) -> double { return a + b; };
-    auto times = [](double a, double b) -> double { return a * b; };
-    auto divide = [](double a, double b) -> double { return a / b; };
-    auto cond = [](double a, double b) -> double { return a < b ? -a : a; };
-    auto cos = [](double a) -> double { return std::cos(a); };
-    auto sin = [](double a) -> double { return std::sin(a); };
+	Instructions::Set set;
+	fillInstructionSet(set, trainingParams);
 
-    set.add(*(new Instructions::LambdaInstruction<double, double>(minus)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(add)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(times)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(divide)));
-    set.add(*(new Instructions::LambdaInstruction<double, double>(cond)));
-    set.add(*(new Instructions::LambdaInstruction<double>(cos)));
-    set.add(*(new Instructions::LambdaInstruction<double>(sin)));
+    ArmLearnWrapper le(params.maxNbActionsPerEval, trainingParams, true);
 
-    TrainingParameters params;
-    ArmLearnWrapper le(1000, params, true);
-
-
-    auto * validationGoal = new armlearn::Input<double>({300, 50, 50});
-    auto validationStartingPos = le.getInitStartingPos();
-    le.customTrajectory(validationGoal, validationStartingPos);
-    le.reset();
-
-/*
     // Instantiate the environment that will embed the LearningEnvironment
-    Environment env(set, le.getDataSources(), 8);
+    Environment env(set, le.getDataSources(), params.nbRegisters);
 
     // Instantiate the TPGGraph that we will load
     auto tpg = TPG::TPGGraph(env);
@@ -62,7 +54,7 @@ int main() {
 
     // Create an importer for the best graph and imports it
     std::cout << "Import graph"<< std::endl;
-    File::TPGGraphDotImporter dotImporter(ROOT_DIR "/dat/best.dot", env, tpg);
+    File::TPGGraphDotImporter dotImporter((slashToAdd + trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
     dotImporter.importGraph();
 
     // takes the first root of the graph, anyway out_best has only 1 root (the best)
@@ -75,12 +67,12 @@ int main() {
 
     //runEvals(root,tee,le);
 
-    runRealArmByHand(root,tee,le);
+    //runRealArmByHand(root,tee,le);
 
-    // runRealArmAuto(root, tee, le);
+    runRealArmAuto(root, tee, le);
 
     //printPolicyStats(root,env);
-    */
+    
     // cleanup
     for (unsigned int i = 0; i < set.getNbInstructions(); i++) {
         delete (&set.getInstruction(i));
@@ -165,14 +157,14 @@ void runRealArmAuto(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, Ar
 
     // open pliers here
     auto* goal1 = new armlearn::Input<double>({220, 25, 200});
-    auto* goal2 = new armlearn::Input<double>({220, 25, 15});
+    //auto* goal2 = new armlearn::Input<double>({220, 25, 15});
     // grab here
-    auto* goal3 = new armlearn::Input<double>({220, 25, 200});
-    auto* goal4 = new armlearn::Input<double>({150, 150, 200});
-    auto* goal5 = new armlearn::Input<double>({25, 250, 200});
-    auto* goal6 = new armlearn::Input<double>({25, 250, 20});
+    //auto* goal3 = new armlearn::Input<double>({220, 25, 200});
+    //auto* goal4 = new armlearn::Input<double>({150, 150, 200});
+    //auto* goal5 = new armlearn::Input<double>({25, 250, 200});
+    //auto* goal6 = new armlearn::Input<double>({25, 250, 20});
     // release here
-    auto* goal7 = new armlearn::Input<double>({25, 200, 200});
+    //auto* goal7 = new armlearn::Input<double>({25, 200, 200});
 
 
     // open pliers
@@ -182,7 +174,7 @@ void runRealArmAuto(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, Ar
     path.addPoint(*motorPosOpen);
 
     goToPos(root, tee, le, path, goal1);
-    goToPos(root, tee, le, path, goal2);
+    /*goToPos(root, tee, le, path, goal2);
 
     // grab
     auto motorPosGrab = new std::vector<uint16_t>(le.getMotorsPos());
@@ -201,7 +193,7 @@ void runRealArmAuto(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, Ar
     le.setInitStartingPos(*motorPosRelease);
     path.addPoint(*motorPosRelease);
 
-    goToPos(root, tee, le, path, goal7);
+    goToPos(root, tee, le, path, goal7);*/
 
     path.addPoint(SLEEP_POSITION);
 
@@ -312,10 +304,21 @@ void goToPos(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnW
     auto validationStartingPos = le.getInitStartingPos();
     le.customTrajectory(target, validationStartingPos);
     le.reset();
-    for(int i=0; i<=500; i++) {
+
+    auto motorPos = new const std::vector<uint16_t>(le.getMotorsPos());
+    path.addPoint(*motorPos);
+
+    int counterTraj = 0;
+
+    // Impossible action to start with
+    uint64_t savedAction = 100;
+    for(int i=0; i<=1500; i++) {
         uint64_t action = ((const TPG::TPGAction *) tee.executeFromRoot(*root).back())->getActionID();
         le.doAction(action);
-        if (i % 50 == 0) {
+        if (counterTraj >= 10 && action != savedAction) {
+            counterTraj = 0;
+            savedAction = action;
+
             auto motorPos = new const std::vector<uint16_t>(le.getMotorsPos());
             path.addPoint(*motorPos);
         }
