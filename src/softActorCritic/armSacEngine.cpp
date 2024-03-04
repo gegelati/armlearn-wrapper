@@ -92,7 +92,9 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
                     }
 
                 }
-            } else if (!sacParams.falseSingleAction || nbNullAction == actionVector.size()){
+            } 
+
+            if (!sacParams.falseSingleAction || nbNullAction == actionVector.size()){
                 
                 // Do a continuous action
                 armLearnEnv->doActionContinuous(actionVector);
