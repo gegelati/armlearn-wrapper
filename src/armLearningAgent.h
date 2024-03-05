@@ -30,6 +30,9 @@ namespace Learn {
 
         bool doUpdateLimits;
         bool doTrainingValidation;
+
+        /// Vector that contain the best results of the five last generation
+        std::vector<double> fiveLastBest;
         
       public:
         /**

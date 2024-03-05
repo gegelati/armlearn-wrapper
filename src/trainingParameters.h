@@ -171,6 +171,9 @@ public:
     // Set a limit of time to train (in seconds), if 0 : no limit
 	uint64_t timeMaxTraining = 0;
 
+    // When testing a root, a test will be made on the root above this number of iteration, if the score of the root is to low, the root is canceled
+    uint64_t nbIterationRootCanceled = 10000;
+
 	/// if true, allow the arm to make 360% circle
 	bool canDo360 = false;
 

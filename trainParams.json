@@ -77,6 +77,9 @@
 	// Set a limit of time to train (in seconds), if 0: no limit
 	"timeMaxTraining": 15,
 
+    // When testing a root, a test will be made on the root above this number of iteration, if the score of the root is to low, the root is canceled
+    "nbIterationRootCanceled": 1000,
+
 	// if true, allow the arm to make 360% circle
-	"canDo360": true
+	"canDo360": false
 }

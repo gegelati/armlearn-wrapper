@@ -220,6 +220,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "nbIterationRootCanceled"){
+        nbIterationRootCanceled = (uint64_t)value.asUInt64();
+        return;
+    }
+
     if (param == "canDo360"){
         canDo360 = (bool)value.asBool();
         return;

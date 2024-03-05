@@ -30,6 +30,12 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     std::advance(iter, results.size() - 1);
     double bestResult = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getDistance();
 
+    // Update five last best score
+    fiveLastBest.push_back(bestResult);
+    if (generationNumber >= 5){
+        fiveLastBest.erase(fiveLastBest.begin());
+    }
+
     for(auto pair: std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getTrajScores()){
         ((ArmLearnWrapper&)learningEnvironment).addToScoreTrajectories(pair.first, pair.second);
     }
@@ -151,6 +157,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
         return previousEval;
     }
 
+    bool cancelThisRoot = false;
+
     double success = 0.0;
 
     double distance = 0.0;
@@ -163,7 +171,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     uint64_t nbIteration = (mode == LearningMode::TRAINING) ? trainingParams.nbIterationTraining : this->params.nbIterationsPerPolicyEvaluation;
 
     // Evaluate nbIteration times
-    for (auto iterationNumber = 0; iterationNumber < nbIteration; iterationNumber++) {
+    for (auto iterationNumber = 0; iterationNumber < nbIteration && !cancelThisRoot; iterationNumber++) {
 
         if(trainingParams.testing){
             std::cout<<"Episode "<<iterationNumber+1<<"/"<<nbIteration<<"      "<<std::flush;
@@ -200,6 +208,17 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
         if(((ArmLearnWrapper&)le).getDistance() < trainingParams.rangeTarget){
             success += 1;
         }
+
+        // If we past the generation 5 and iteration number is above 10
+        if (generationNumber > 5 && iterationNumber > trainingParams.nbIterationRootCanceled && mode == LearningMode::TRAINING){
+
+            // If the current mean distance times 3 is above the mean current best, then the root is canceled
+            if (distance/(iterationNumber+1) > 2*std::accumulate(fiveLastBest.begin(), fiveLastBest.end(), 0.0)/fiveLastBest.size()){
+                cancelThisRoot = true;
+                nbIteration = iterationNumber + 1;
+            }
+        }
+
 
         // Push back the id with the score/distance
         trajectoriesScore.push_back(std::make_pair(iterationNumber, (trainingParams.isScoreResult) ? -1 * ((ArmLearnWrapper&)le).getDistance(): le.getScore()));
