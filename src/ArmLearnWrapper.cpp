@@ -135,7 +135,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         motorAction = motorSpeed;
     }
 
-
+    int nbMotorMoving = 0;
     bool givePenaltyMoveUnavailable = false;
 
     // Scale the positions : this return a vector of int between 0 and 4096 corresponding to the step
@@ -150,6 +150,9 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
        // If the position aimed is possible, change the value
     }else if (motorAction[0] + inputI >= 2  && motorAction[0] + inputI <= 4094){
         scaledOutput[0] = motorAction[0] + inputI;
+        if(motorAction[0] != 0){
+            nbMotorMoving++;
+        }
     } else {
         // Else do not change the value.
         // The arm is not moving
@@ -172,6 +175,10 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         // If the position aimed is possible, change the value
         if(motorAction[i] + inputI >= 1025 && motorAction[i] + inputI <= 3071){
             scaledOutput[i] = motorAction[i]  + inputI;
+
+        if(motorAction[i] != 0){
+            nbMotorMoving++;
+        }
         } else {
             // Else do not change the value.
             // The arm is not moving
@@ -225,7 +232,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     distance = computeSquaredError(target, cartesianCoords);
 
     nbActionsDone++;
-    reward = computeReward(givePenaltyMoveUnavailable); // Computation of reward
+    reward = computeReward(givePenaltyMoveUnavailable, nbMotorMoving); // Computation of reward
     score += reward;
 
     if(gegelatiRunning){
@@ -233,7 +240,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
         double range = (isValidation) ? params.rangeTarget : currentRangeTarget;
         if(-1 * score < range){
-            score = nbMaxActions - nbActionsDone;
+            score = (nbMaxActions - nbActionsDone) * params.coefRewardMultiplication;
         }
     }
 
@@ -281,7 +288,7 @@ void ArmLearnWrapper::saveMotorPos(){
     }
 }
 
-double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
+double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable, int nbMotorMoving) {
 
     // Compute Distance with the target
     auto err = getDistance();
@@ -336,6 +343,8 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable) {
             penaltySpeed += abs(speed);
         }
         penaltySpeed *= params.penaltySpeed;
+    } else if (nbMotorMoving > 1){
+        penaltySpeed = (nbMotorMoving - 1) * params.penaltySpeed;
     }
 
     // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)

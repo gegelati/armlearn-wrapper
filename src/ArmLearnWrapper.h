@@ -34,7 +34,7 @@ protected:
 
     void computeInput();
 
-    double computeReward(bool givePenaltyMoveUnavailable);
+    double computeReward(bool givePenaltyMoveUnavailable, int nbMotorMoving);
 
     TrainingParameters& params;
 
