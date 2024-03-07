@@ -228,10 +228,13 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     reward = computeReward(givePenaltyMoveUnavailable); // Computation of reward
     score += reward;
 
+    if(gegelatiRunning){
+        score = -1 * getDistance();
 
-
-    if (!params.isScoreResult && gegelatiRunning && givePenaltyMoveUnavailable){
-        distance += params.penaltyMoveUnavailable;
+        double range = (isValidation) ? params.rangeTarget : currentRangeTarget;
+        if(-1 * score < range){
+            score = nbMaxActions - nbActionsDone;
+        }
     }
 
     if(gegelatiRunning){
