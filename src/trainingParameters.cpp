@@ -165,8 +165,8 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "isScoreResult"){
-        isScoreResult = (bool)value.asBool();
+    if (param == "bonusNbIteration"){
+        bonusNbIteration = (bool)value.asBool();
         return;
     }
 

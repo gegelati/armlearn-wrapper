@@ -138,8 +138,8 @@ public:
     /// Size in degree of a discrete action, and max size of a continuous action
     double sizeAction = 1;
 
-    /// if true, selection for gegelati is based on score (sum of reward), else on distance
-    bool isScoreResult = false;
+    /// if true, selection for gegelati is based on distance but with adding a bonus for the number of iterations to reach the target
+    bool bonusNbIteration = false;
 
     /// if true, deactivate the training and only logs results
 	bool testing = false;

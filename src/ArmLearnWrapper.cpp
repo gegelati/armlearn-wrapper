@@ -238,10 +238,13 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     if(gegelatiRunning){
         score = -1 * getDistance();
 
-        double range = (isValidation) ? params.rangeTarget : currentRangeTarget;
-        if(-1 * score < range){
-            score = (nbMaxActions - nbActionsDone) * params.coefRewardMultiplication;
+        if(params.bonusNbIteration){
+            double range = (isValidation) ? params.rangeTarget : currentRangeTarget;
+            if(-1 * score < range){
+                score = (nbMaxActions - nbActionsDone) * params.coefRewardMultiplication;
+            }
         }
+
     }
 
     if(gegelatiRunning){
@@ -333,7 +336,7 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable, int nbMot
 
     // If the arm has done an unavailable move, the algorithm get a penalty
     double penaltyMoveUnavailable = 0;
-    if (givePenaltyMoveUnavailable && (!gegelatiRunning || params.isScoreResult)){
+    if (givePenaltyMoveUnavailable && !gegelatiRunning){
         penaltyMoveUnavailable = params.penaltyMoveUnavailable;
     }
 

@@ -213,15 +213,15 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
         if (generationNumber > 5 && iterationNumber > trainingParams.nbIterationRootCanceled && mode == LearningMode::TRAINING){
 
             // If the current mean distance times 3 is above the mean current best, then the root is canceled
-            if (distance/(iterationNumber+1) > 2*std::accumulate(fiveLastBest.begin(), fiveLastBest.end(), 0.0)/fiveLastBest.size()){
+            if (score/(iterationNumber+1) > 2*std::accumulate(fiveLastBest.begin(), fiveLastBest.end(), 0.0)/fiveLastBest.size()){
                 cancelThisRoot = true;
                 nbIteration = iterationNumber + 1;
             }
         }
 
 
-        // Push back the id with the score/distance
-        trajectoriesScore.push_back(std::make_pair(iterationNumber, (trainingParams.isScoreResult) ? -1 * ((ArmLearnWrapper&)le).getDistance(): le.getScore()));
+        // Push back the id with the score
+        trajectoriesScore.push_back(std::make_pair(iterationNumber, le.getScore()));
     }
 
     if(trainingParams.testing){
@@ -234,8 +234,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
             score / (double)nbIteration,
             success / (double)nbIteration,
             distance / (double)nbIteration,
-            trajectoriesScore, nbIteration,
-            trainingParams.isScoreResult));
+            trajectoriesScore, nbIteration));
 
     // Combine it with previous one if any
     if (previousEval != nullptr) {
