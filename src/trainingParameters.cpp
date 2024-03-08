@@ -170,6 +170,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "meanScoreWithStd"){
+        meanScoreWithStd = (bool)value.asBool();
+        return;
+    }
+
     if (param == "testing"){
         testing = (bool)value.asBool();
         return;

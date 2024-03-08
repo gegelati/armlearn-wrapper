@@ -141,6 +141,9 @@ public:
     /// if true, selection for gegelati is based on distance but with adding a bonus for the number of iterations to reach the target
     bool bonusNbIteration = false;
 
+    /// if true, mean score of root is based on standard deviation and mean instead of juste the mean of episode.
+    bool meanScoreWithStd = false;
+
     /// if true, deactivate the training and only logs results
 	bool testing = false;
 

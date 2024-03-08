@@ -224,6 +224,17 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
         trajectoriesScore.push_back(std::make_pair(iterationNumber, le.getScore()));
     }
 
+    double meanScore = score / (double)nbIteration;
+    if(trainingParams.meanScoreWithStd){
+        double sumVar = 0.0;
+        for (const auto& pair : trajectoriesScore) {
+            double diff = pair.second - meanScore;
+            sumVar += diff * diff;
+        }
+        double std = std::sqrt(sumVar / (double)nbIteration);
+        meanScore -= std;
+    }
+
     if(trainingParams.testing){
         ((ArmLearnWrapper&)le).logTestingTrajectories(true);
     }
@@ -231,7 +242,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     // Create the EvaluationResult
     auto evaluationResult =
         std::shared_ptr<Learn::ArmlearnEvaluationResult>(new Learn::ArmlearnEvaluationResult(
-            score / (double)nbIteration,
+            meanScore,
             success / (double)nbIteration,
             distance / (double)nbIteration,
             trajectoriesScore, nbIteration));
