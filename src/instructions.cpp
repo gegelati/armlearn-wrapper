@@ -46,7 +46,7 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
     }
 
     if(params.useInstrSphericalCoord){
-        auto spherical_rad = [](double a, double b)-> double { return a * a + b * b; };
+        auto spherical_rad = [](double a, double b)-> double { return std::sqrt(a * a + b * b); };
         auto spherical_angle = [](double a, double b)-> double { return std::atan(a / b); };
         set.add(*(new Instructions::LambdaInstruction<double, double>(spherical_rad)));
         set.add(*(new Instructions::LambdaInstruction<double, double>(spherical_angle)));
