@@ -634,6 +634,12 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
         size_t index = rng.getUnsignedInt64(0, dataTarget.size());
         auto cartesianGoal = dataTarget[index];
 
+        // If above current limit (and not progressiveModeMotor), repeat until a goal in the wanted zone is choosen
+        while(!params.progressiveModeMotor && computeSquaredError(converter->computeServoToCoord(initStartingPos)->getCoord(), cartesianGoal) > currentMaxLimitStartingPos){
+            index = rng.getUnsignedInt64(0, dataTarget.size());
+            cartesianGoal = dataTarget[index];
+        }
+
         // Get a random motor positions
         motorPos = randomMotorPos(cartesianGoal, validation, false);
 
@@ -642,9 +648,6 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
 
         // Compute the distance the new starting position and the initial one
         distance = computeSquaredError(converter->computeServoToCoord(initStartingPos)->getCoord(), newStartingPos);
-
-        // Distance is not good if it is above the current limit and bellow the current range target
-        distanceIsNotGood = (distance > currentMaxLimitStartingPos);
 
         // Hand is not good if the target is bellow 0 on z axis
         handNotGood = (params.realSimulation && motorCollision(motorPos));
@@ -656,12 +659,7 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
             dataTarget.erase(it);
         }
 
-    } while ((!validation && distanceIsNotGood && !params.progressiveModeMotor) || handNotGood);
-
-    // Delete used index
-    auto it = dataTarget.begin();
-    std::advance(it, index);
-    dataTarget.erase(it);
+    } while ((!validation && !params.progressiveModeMotor) || handNotGood);
 
     return new std::vector<uint16_t>(motorPos);
 
@@ -686,6 +684,12 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
         index = rng.getUnsignedInt64(0, dataTarget.size());
         cartesianGoal = dataTarget[index];
 
+        // If above current limit (and not progressiveModeMotor), repeat until a goal in the wanted zone is choosen
+        while(!params.progressiveModeMotor && computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), cartesianGoal) > currentMaxLimitTarget){
+            index = rng.getUnsignedInt64(0, dataTarget.size());
+            cartesianGoal = dataTarget[index];
+        }
+
         // Get a random motor positions
         motorPos = randomMotorPos(cartesianGoal, validation, true);
 
@@ -696,7 +700,7 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
         distance = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
 
         // Distance is not good if it is above the current limit and bellow the current range target
-        distanceIsNotGood = (distance > currentMaxLimitTarget || distance < currentRangeTarget);
+        distanceIsNotGood = (distance < currentRangeTarget);
 
         // Hand is not good if the target is bellow 0 on z axis
         handNotGood = (params.realSimulation && motorCollision(motorPos) );
@@ -709,11 +713,6 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
         }
 
     } while ((!validation && distanceIsNotGood && !params.progressiveModeMotor) || handNotGood);
-
-    // Delete used index
-    auto it = dataTarget.begin();
-    std::advance(it, index);
-    dataTarget.erase(it);
 
     // Create the input to return
     return new armlearn::Input<double>(
