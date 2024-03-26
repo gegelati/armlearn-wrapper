@@ -85,7 +85,8 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/graphPruner.cpp)
 
 # Delete softActorCritic files for know
 file(GLOB 
@@ -122,11 +123,24 @@ add_executable(armMultipleTraining ${armgegelati_files})
 target_link_libraries(armMultipleTraining ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
 target_compile_definitions(armMultipleTraining PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
 
+list(REMOVE_ITEM
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp)
+list(APPEND
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/graphPruner.cpp)
+
+
+# armMultipleTraining: Create Graph Pruner
+add_executable(armGraphPruner ${armgegelati_files})
+target_link_libraries(armGraphPruner ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
+target_compile_definitions(armGraphPruner PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+
 
 # armGrabGegelati: Control the robotic arm with gegelati.
 list(REMOVE_ITEM
         armgegelati_files
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/graphPruner.cpp)
 list(APPEND
         armgegelati_files
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.cpp
