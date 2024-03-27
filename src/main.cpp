@@ -69,11 +69,12 @@ int main() {
     std::cout << "Number of threads: " << params.nbThreads << std::endl;
 
     // Generate validation targets.
-    if(params.doValidation){
+    if(params.doValidation && !trainingParams.loadValidationTrajectories){
         armLearnEnv.updateValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
     }
 
-    if(trainingParams.progressiveModeTargets){
+
+    if(trainingParams.doTrainingValidation){
         // Update/Generate the first training validation trajectories
         armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
     }
@@ -131,7 +132,7 @@ int main() {
 
     if(trainingParams.testing){
         auto &tpg = *la.getTPGGraph();
-        Environment env(set, armLearnEnv.getDataSources(), 8);
+        Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
         File::TPGGraphDotImporter dotImporter((slashToAdd + trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
     } else {
@@ -156,6 +157,7 @@ int main() {
 
             // Update/Generate the training trajectories
             armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
+
 
             //print the previous graphs
             char buff[16];

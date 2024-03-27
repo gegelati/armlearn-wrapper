@@ -603,13 +603,22 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(std::vector<double> cartes
 
         validMotorPos = device->toValidPosition(newMotorPos);
 
+        // If cartesian progresive motor, do not sample uniformly
+        if(!validation && params.progressiveModeTargets && !params.progressiveModeMotor){
+            return validMotorPos;
+        }
+
         cartesianPos = converter->computeServoToCoord(validMotorPos)->getCoord();
 
         distance = computeSquaredError(cartesianPos, cartesianGoal);
+
+        // If cartesian progresive motor, do not sample uniformly
         if(distance < minDistance){
             keepMotorPos = validMotorPos;
             minDistance = distance;
         }
+
+
     }
 
     return keepMotorPos;
@@ -635,7 +644,7 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
         auto cartesianGoal = dataTarget[index];
 
         // If above current limit (and not progressiveModeMotor), repeat until a goal in the wanted zone is choosen
-        while(!params.progressiveModeMotor && computeSquaredError(converter->computeServoToCoord(initStartingPos)->getCoord(), cartesianGoal) > currentMaxLimitStartingPos){
+        while(!validation && !params.progressiveModeMotor && computeSquaredError(converter->computeServoToCoord(initStartingPos)->getCoord(), cartesianGoal) > currentMaxLimitStartingPos){
             index = rng.getUnsignedInt64(0, dataTarget.size());
             cartesianGoal = dataTarget[index];
         }
@@ -685,22 +694,23 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
         cartesianGoal = dataTarget[index];
 
         // If above current limit (and not progressiveModeMotor), repeat until a goal in the wanted zone is choosen
-        while(!params.progressiveModeMotor && computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), cartesianGoal) > currentMaxLimitTarget){
+        /*while(!validation && !params.progressiveModeMotor && computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), cartesianGoal)*000.1 > currentMaxLimitTarget){
             index = rng.getUnsignedInt64(0, dataTarget.size());
             cartesianGoal = dataTarget[index];
-        }
+            std::cout<<"2"<<std::endl;
+        }*/
+
 
         // Get a random motor positions
         motorPos = randomMotorPos(cartesianGoal, validation, true);
 
         // Compute the cartesian coordonates of those motor positions
         newCartesianCoords = converter->computeServoToCoord(motorPos)->getCoord();
-
         // Compute the distance to browse
         distance = computeSquaredError(converter->computeServoToCoord(startingPos)->getCoord(), newCartesianCoords);
 
         // Distance is not good if it is above the current limit and bellow the current range target
-        distanceIsNotGood = (distance < currentRangeTarget);
+        distanceIsNotGood = (distance > currentMaxLimitTarget || distance < currentRangeTarget);
 
         // Hand is not good if the target is bellow 0 on z axis
         handNotGood = (params.realSimulation && motorCollision(motorPos) );

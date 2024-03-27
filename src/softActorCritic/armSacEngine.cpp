@@ -242,6 +242,7 @@ void ArmSacEngine::validateTrainingOneGeneration(uint16_t nbIterationTrainingVal
 void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
     double result = 0;
     double success = 0;
+    double distance = 0;
 
 
     std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
@@ -260,7 +261,7 @@ void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
 
         result += runOneEpisode(seed, Learn::LearningMode::VALIDATION, j);
         // Get distance
-        //distance += armLearnEnv->getScore();
+        distance += armLearnEnv->getDistance();
 
         if (armLearnEnv->getDistance() < trainingParams.rangeTarget){
             success++;
@@ -269,11 +270,12 @@ void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
     // get the mean result and mean success
     result /= nbIterationTesting;
     success /= nbIterationTesting;
+    distance /= nbIterationTesting;
 
     armLearnEnv->logTestingTrajectories(false);
     
 
-    std::cout<<"Testing resutlt : "<<result<<" -- Testing success rate "<<success;
+    std::cout<<"Testing resutlt : "<<distance<<" -- Testing success rate "<<success;
     auto testingTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
     std::cout<<" -- Time of testing "<<testingTime<<std::endl;
 }

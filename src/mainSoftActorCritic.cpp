@@ -50,7 +50,7 @@ int main() {
     bool doTrainingValidation = (trainingParams.doTrainingValidation && doUpdateLimits);
 
     // Generate validation targets.
-    if(gegelatiParams.doValidation){
+    if(gegelatiParams.doValidation && !trainingParams.loadValidationTrajectories){
         armLearnEnv.updateValidationTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
     }
 
