@@ -195,8 +195,20 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
     
-    if (param == "useInstrSphericalCoord"){
-        useInstrSphericalCoord = (bool)value.asBool();
+    if (param == "useInstrSphericalCoordRad"){
+        useInstrSphericalCoordRad = (bool)value.asBool();
+        return;
+    }
+
+
+    if (param == "useInstrSphericalCoordAngle"){
+        useInstrSphericalCoordAngle = (bool)value.asBool();
+        return;
+    }
+
+    
+    if (param == "useInstrConst"){
+        useInstrConst = (bool)value.asBool();
         return;
     }
 

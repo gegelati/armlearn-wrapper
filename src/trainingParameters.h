@@ -157,7 +157,13 @@ public:
 	bool useInstrDist3d = false;
 
 	/// To use spherical coordonates instructions
-	bool useInstrSphericalCoord = false;
+	bool useInstrSphericalCoordRad = false;
+
+	/// To use spherical coordonates instructions
+	bool useInstrSphericalCoordAngle = false;
+
+	/// To use spherical coordonates instructions
+	bool useInstrConst = false;
 
     /// To use getPi instruction
 	bool useInstrPi = false;

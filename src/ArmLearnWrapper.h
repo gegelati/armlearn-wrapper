@@ -127,6 +127,7 @@ protected:
 
     /// Checkpoint to get the duration of an episode (for testing logs)
     std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
+    
 
     /// Vector that contain the indices of the trajectories and their best score. Used if trajectory deletion is activated
     std::vector<std::pair<int, double>> scoreTrajectories;
@@ -157,6 +158,10 @@ protected:
 
     /// @brief indicate if the arm is cycling (only under Gegelati)
     bool isCycling = false;
+
+    double timeEnv = 0;
+    std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpointEnv;
+    
 
 public:
 

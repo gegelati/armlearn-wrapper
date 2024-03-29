@@ -50,6 +50,8 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
 
 void ArmLearnWrapper::doAction(uint64_t actionID) {
 
+    checkpointEnv = std::make_shared<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+
     std::vector<double> motorAction;
     double step  = params.sizeAction;
 
@@ -107,6 +109,9 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
 }
 
 void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
+
+
+    checkpointEnv = std::make_shared<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
 
     // Get the action
     std::vector<double> motorAction;
@@ -255,6 +260,8 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         saveMotorPos();
     }
 
+    timeEnv += ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpointEnv)).count();
+
 }
 
 void ArmLearnWrapper::updateAndCheckCycles(){
@@ -273,7 +280,7 @@ void ArmLearnWrapper::saveMotorPos(){
     if(terminal || nbActionsDone == nbMaxActions){
 
         // If terminal or end of episode, add time (in ms), score, distance, success and number of actions
-        vectorValidationInfos.push_back(static_cast<int32_t>(((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count()*1000));
+        vectorValidationInfos.push_back(static_cast<int32_t>((((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() - timeEnv)*1000));
         vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
         vectorValidationInfos.push_back(static_cast<int32_t>(distance));
         vectorValidationInfos.push_back(static_cast<int32_t>((distance < params.rangeTarget) ? 1: 0));
@@ -397,6 +404,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     isValidation = (mode==Learn::LearningMode::VALIDATION);
     memoryMotorPos.clear();
     distance = 0.0;
+    timeEnv = 0.0;
 
 
     // If we are testing the arm, we save the current trajectory
@@ -978,6 +986,8 @@ void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati){
         // Fermeture du fichier
         outputFile.close();
 
+    } else {
+        std::cout<<"File dont exist : "<<fileName<<std::endl;
     }
     allValidationInfos.clear();}
 

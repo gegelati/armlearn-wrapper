@@ -15,8 +15,6 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
     auto ln = [](double a)->double {return std::log(a); };
 	auto exp = [](double a)->double {return std::exp(a); };
 
-    auto multByConst = [](Data::Constant c) -> double { return (double)c ; };
-    set.add(*(new Instructions::LambdaInstruction<Data::Constant>(multByConst)));
 
     set.add(*(new Instructions::LambdaInstruction<double, double>(minus)));
     set.add(*(new Instructions::LambdaInstruction<double, double>(add)));
@@ -29,14 +27,14 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
     set.add(*(new Instructions::LambdaInstruction<double>(ln)));
     set.add(*(new Instructions::LambdaInstruction<double>(exp)));
 	
+    if(params.useInstrConst){
+        auto multByConst = [](Data::Constant c) -> double { return (double)c ; };
+        set.add(*(new Instructions::LambdaInstruction<Data::Constant>(multByConst)));
+    }
 
     if(params.useInstrDist2d){
-        auto dist2d_xy = [](const double a[3], const double b[3])->double { return std::sqrt(std::pow(a[0] - b[0], 2) + std::pow(a[1] - b[1], 2)); };
-        auto dist2d_xz = [](const double a[3], const double b[3])->double { return std::sqrt(std::pow(a[0] - b[0], 2) + std::pow(a[2] - b[2], 2)); };
-        auto dist2d_yz = [](const double a[3], const double b[3])->double { return std::sqrt(std::pow(a[1] - b[1], 2) + std::pow(a[2] - b[2], 2)); };
-        set.add(*(new Instructions::LambdaInstruction<const double[3], const double[3]>(dist2d_xy)));
-        set.add(*(new Instructions::LambdaInstruction<const double[3], const double[3]>(dist2d_xz)));
-        set.add(*(new Instructions::LambdaInstruction<const double[3], const double[3]>(dist2d_yz)));
+        auto dist2d = [](double a, double b, double c, double d)->double { return std::sqrt(std::pow(a - b, 2) + std::pow(c - d, 2)); };
+        set.add(*(new Instructions::LambdaInstruction<double, double, double, double>(dist2d)));
     }
 
     if(params.useInstrDist3d){
@@ -45,10 +43,13 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
         set.add(*(new Instructions::LambdaInstruction<double, double, double, double, double, double>(dist3d)));
     }
 
-    if(params.useInstrSphericalCoord){
+    if(params.useInstrSphericalCoordRad){
         auto spherical_rad = [](double a, double b)-> double { return a * a + b * b; };
-        auto spherical_angle = [](double a, double b)-> double { return std::atan(a / b); };
         set.add(*(new Instructions::LambdaInstruction<double, double>(spherical_rad)));
+    }
+
+    if(params.useInstrSphericalCoordAngle){
+        auto spherical_angle = [](double a, double b)-> double { return std::atan(a / b); };
         set.add(*(new Instructions::LambdaInstruction<double, double>(spherical_angle)));
     }
 
