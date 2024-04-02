@@ -28,7 +28,7 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     }
     auto iter = results.begin();
     std::advance(iter, results.size() - 1);
-    double bestResult = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getDistance();
+    double bestResult = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getResult();
 
     // Update five last best score
     fiveLastBest.push_back(bestResult);

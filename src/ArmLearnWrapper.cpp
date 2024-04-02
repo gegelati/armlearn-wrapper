@@ -790,8 +790,10 @@ void ArmLearnWrapper::customTrajectory(armlearn::Input<double> *newGoal, std::ve
 }
 
 bool ArmLearnWrapper::updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation){
-    // If the best TPG is above the range for upgrade
-    if (bestResult < currentRangeTarget){
+    // Do not work with SAC anymore
+
+    // If the best TPG has a positive score
+    if (bestResult > 0){
 
         // Incremente the counter for upgrading the max current limit
         counterIterationUpgrade += 1;
