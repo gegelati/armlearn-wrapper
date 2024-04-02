@@ -217,6 +217,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "useInstrCosSinLn"){
+        useInstrCosSinLn = (bool)value.asBool();
+        return;
+    }
+
     if (param == "actionSpeed"){
         actionSpeed = (bool)value.asBool();
         return;

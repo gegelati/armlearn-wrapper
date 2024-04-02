@@ -168,6 +168,11 @@ public:
     /// To use getPi instruction
 	bool useInstrPi = false;
 
+
+	// To use Cos, Sin and Ln functions that seems useless after the ablation study
+    bool useInstrCosSinLn = false;
+
+
     /// If false, action change the motor position, if true action change the motor speed
     bool actionSpeed = false;
 

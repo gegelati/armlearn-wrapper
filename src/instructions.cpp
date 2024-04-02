@@ -9,10 +9,6 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
     auto times = [](double a, double b) -> double { return a * b; };
     auto divide = [](double a, double b) -> double { return a / b; };
     auto cond = [](double a, double b) -> double { return a < b ? -a : a; };
-    auto cos = [](double a) -> double { return std::cos(a); };
-    auto sin = [](double a) -> double { return std::sin(a); };
-    
-    auto ln = [](double a)->double {return std::log(a); };
 	auto exp = [](double a)->double {return std::exp(a); };
 
 
@@ -21,12 +17,18 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
     set.add(*(new Instructions::LambdaInstruction<double, double>(times)));
     set.add(*(new Instructions::LambdaInstruction<double, double>(divide)));
     set.add(*(new Instructions::LambdaInstruction<double, double>(cond)));
-    set.add(*(new Instructions::LambdaInstruction<double>(cos)));
-    set.add(*(new Instructions::LambdaInstruction<double>(sin)));
-
-    set.add(*(new Instructions::LambdaInstruction<double>(ln)));
     set.add(*(new Instructions::LambdaInstruction<double>(exp)));
 	
+    if(params.useInstrCosSinLn){
+        auto cos = [](double a) -> double { return std::cos(a); };
+        auto sin = [](double a) -> double { return std::sin(a); };
+        auto ln = [](double a)->double {return std::log(a); };
+
+        set.add(*(new Instructions::LambdaInstruction<double>(cos)));
+        set.add(*(new Instructions::LambdaInstruction<double>(sin)));
+        set.add(*(new Instructions::LambdaInstruction<double>(ln)));
+    }
+
     if(params.useInstrConst){
         auto multByConst = [](Data::Constant c) -> double { return (double)c ; };
         set.add(*(new Instructions::LambdaInstruction<Data::Constant>(multByConst)));
