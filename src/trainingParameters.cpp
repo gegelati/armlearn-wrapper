@@ -217,8 +217,8 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "useInstrCosSinLn"){
-        useInstrCosSinLn = (bool)value.asBool();
+    if (param == "useInstrSinLn"){
+        useInstrSinLn = (bool)value.asBool();
         return;
     }
 
