@@ -279,10 +279,10 @@ void ArmLearnWrapper::saveMotorPos(){
     allMotorPos.push_back(getMotorsPos());
     if(terminal || nbActionsDone == nbMaxActions){
 
-        // If terminal or end of episode, add time (in ms), score, distance, success and number of actions
-        vectorValidationInfos.push_back(static_cast<int32_t>((((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() - timeEnv)*1000));
-        vectorValidationInfos.push_back(static_cast<int32_t>(getScore()));
-        vectorValidationInfos.push_back(static_cast<int32_t>(distance));
+        // If terminal or end of episode, add time (in micro s), score, distance, success and number of actions
+        vectorValidationInfos.push_back(static_cast<int32_t>((((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() - timeEnv)*1000000));
+        vectorValidationInfos.push_back(static_cast<int32_t>(1000*getScore()));
+        vectorValidationInfos.push_back(static_cast<int32_t>(1000*distance));
         vectorValidationInfos.push_back(static_cast<int32_t>((distance < params.rangeTarget) ? 1: 0));
         vectorValidationInfos.push_back(static_cast<int32_t>(nbActionsDone));
 
@@ -676,8 +676,12 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
             dataTarget.erase(it);
         }
 
-    } while ((!validation && !params.progressiveModeMotor) || handNotGood);
+        std::cout<<"a"<<" - "<<((!validation && !params.progressiveModeMotor) || handNotGood)<<" - "<<!validation<<" - "<<!params.progressiveModeMotor<<" - "<<handNotGood<<std::endl;
 
+
+    } while (handNotGood);
+
+    std::cout<<"b"<<std::endl;
     return new std::vector<uint16_t>(motorPos);
 
 }
