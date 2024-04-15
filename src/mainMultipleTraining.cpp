@@ -121,6 +121,7 @@ int main(){
             std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
             bool timeLimitReached = false;
 
+
             // Train for params.nbGenerations generations
             for (uint64_t i = 0; i < globalParams.nbGenerations && !timeLimitReached; i++) {
                 armLearnEnv.setgeneration(i);
@@ -143,6 +144,9 @@ int main(){
                     timeLimitReached = (((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() > trainingParams.timeMaxTraining);
                 }
 
+                if(seed == 0){
+                    break;
+                }
             }
 
 
