@@ -35,38 +35,33 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     if (generationNumber >= 5){
         fiveLastBest.erase(fiveLastBest.begin());
     }
-
     for(auto pair: std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getTrajScores()){
         ((ArmLearnWrapper&)learningEnvironment).addToScoreTrajectories(pair.first, pair.second);
     }
-
     // Remove worst performing roots
     decimateWorstRoots(results);
-    // Update the best
-    this->updateEvaluationRecords(results);
-
-    for (auto logger : loggers) {
-        logger.get().logAfterDecimate();
-    }
 
     // Clear best results
     bestTrainingResult.clear();
-
     // Utilisez un itérateur pour parcourir la std::multimap d'origine à partir de la fin
     auto it = results.rbegin();
     for (int i = 0; i < 5 && it != results.rend(); ++i, ++it) {
         // Ajoutez les éléments à la nouvelle std::multimap
         bestTrainingResult.insert(*it);
     }
-
     // Does a validation or not according to the parameter doValidation
     if (params.doValidation) {
         auto validationResults  = this->evaluateAllRoots(generationNumber, LearningMode::VALIDATION);
-
         
         for (auto logger : loggers) {
             logger.get().logAfterValidate(validationResults);
         }
+        // Update the best
+        this->updateEvaluationRecords(validationResults);
+    } else{
+        
+        // Update the best
+        this->updateEvaluationRecords(results);
     }
 
     // Training Validation
