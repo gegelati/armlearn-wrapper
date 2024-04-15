@@ -671,17 +671,14 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
 
         if(handNotGood){
             // Delete index because it will never be correct
-            auto it = dataTarget.begin();
+            auto it = dataTarget.begin();   
             std::advance(it, index);
             dataTarget.erase(it);
         }
 
-        std::cout<<"a"<<" - "<<((!validation && !params.progressiveModeMotor) || handNotGood)<<" - "<<!validation<<" - "<<!params.progressiveModeMotor<<" - "<<handNotGood<<std::endl;
-
 
     } while (handNotGood);
 
-    std::cout<<"b"<<std::endl;
     return new std::vector<uint16_t>(motorPos);
 
 }
