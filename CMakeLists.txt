@@ -86,7 +86,14 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/graphPruner.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/graphPruner.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenInf.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenSac.cpp)
 
 # Delete softActorCritic files for know
 file(GLOB 
@@ -128,7 +135,34 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp)
 list(APPEND
         armgegelati_files
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/graphPruner.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenInf.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h)
+
+
+# armMultipleTraining: Create Graph Pruner
+add_executable(armCodeGen ${armgegelati_files})
+target_link_libraries(armCodeGen ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
+target_compile_definitions(armCodeGen PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+
+
+
+
+# armGrabGegelati: Control the robotic arm with gegelati.
+list(REMOVE_ITEM
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenInf.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h)
+list(APPEND
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/graphPruner.cpp)
 
 
 # armMultipleTraining: Create Graph Pruner
@@ -140,7 +174,7 @@ target_compile_definitions(armGraphPruner PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}"
 # armGrabGegelati: Control the robotic arm with gegelati.
 list(REMOVE_ITEM
         armgegelati_files
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/graphPruner.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/graphPruner.cpp)
 list(APPEND
         armgegelati_files
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.cpp
@@ -173,9 +207,32 @@ endforeach()
 # armSoftActorCritic: Training SoftActorCritic on the ArmLearnWrapper learning environment
 add_executable(armSoftActorCritic ${armgegelati_files})
 
+
 target_link_libraries(armSoftActorCritic ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
 target_compile_definitions(armSoftActorCritic PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
 
+
+
+list(APPEND
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenSac.cpp)
+
+        
+list(REMOVE_ITEM
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp)
+
+# armSoftActorCritic: Training SoftActorCritic on the ArmLearnWrapper learning environment
+add_executable(armCodeGenSac ${armgegelati_files})
+
+
+target_link_libraries(armCodeGenSac ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
+target_compile_definitions(armCodeGenSac PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")        
 
 
 # *******************************************
