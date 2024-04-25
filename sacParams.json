@@ -1,8 +1,8 @@
 {
 	// Learning rate of the models
-	"lr": 0.0003,
+	"lr": 0.001,
 	/// Gamma for bellman equation
-	"gamma": 0.9,
+	"gamma": 0.99,
 	// Reward scale 
 	"rewardScale": 2,
 	// Gradient Step
@@ -22,7 +22,7 @@
 	// True to unable multiple actions
 	"multipleActions": true,
 	// True to unable continuous actions. Note : actions can only be continuous if multiple actions is unable
-	"continuousActions": true,
+	"continuousActions": false,
 	// Active or deactivate the false single action : SAC take multiple action but it is interpret as multiple single action by the env
 	"falseSingleAction": false
 }
