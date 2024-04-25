@@ -63,29 +63,44 @@ private:
                                 Json::Value const& value);
 
 public:
+    /// Choose between stopping in or reaching the objectives
+    bool reachingObjectives = false;
+
+    /// True if training validation is used for random starting pos and random target pos
+    bool doTrainingValidation = false;
+
+    /// Use the progressive mode for choosing randomly the targets. If true, progressiveModeMotor is ignored
+    bool progressiveRangeTarget = false;
+
+    /// If True, progressive mode is done by increasing motor position, instead it is the euclidian distance that increase, is ignored if progressiveRangeTarget is true
+    bool progressiveModeMotor = false;
+
     /// True if the starting positions are set randomly
-    bool doRandomStartingPosition = true;
+    bool doRandomStartingPosition = false;
 
     /// True if the sphere will grow progressivly
-    bool progressiveModeTargets = true;
+    bool progressiveModeTargets = false;
 
     /// Init size of the sphere within which the target will be instantiate
     double maxLengthTargets = 30.0;
 
     /// True if the sphere will grow progressivly
-    bool progressiveModeStartingPos = true;
+    bool progressiveModeStartingPos = false;
 
     /// Init size of the sphere within which the target will be instantiate
     double maxLengthStartingPos = 30.0;
 
-    /// Upgrade coefficient of the sphere
-    double coefficientUpgrade = 1.2;
+    /// Upgrade coefficient of the sphere with multiplication
+    double coefficientUpgradeMult = 1.2;
+
+    /// Upgrade coefficient of the sphere with addition
+    double coefficientUpgradeAdd = 20;
 
     /// Number of consecuitive iterations before upgrading the sphere
     int nbIterationsUpgrade = 3;
 
-    /// Threshold that the best TPG has to surpass to increment the upgrade coefficient
-    double thresholdUpgrade = -3.0;
+    /// rangeTarget that the best TPG has to surpass to increment the upgrade coefficient
+    double rangeTarget = -3.0;
 
     /// True to start with a previous TPG
     bool startPreviousTPG = false;
@@ -96,8 +111,17 @@ public:
     /// Proportion of targets reused at each generation
     double propTrajectoriesReused = 1;
 
-    /// Proportion of targets reused at each generation
-    double coefRewardNbIterations = 0;
+    /// True to activate a control over the deletion of trajectories
+    bool controlTrajectoriesDeletion = false;
+
+    /// Value to penalize the algorithm if an unavailable action is taken : reward = reward - penalty
+    double penaltyMoveUnavailable = 0;
+
+	/// Penalty for moving a motor : the goal is to avoid to much speed unecessary
+	double penaltySpeed = 0;
+
+    /// Coefficient to multiply the reward with
+    double coefRewardMultiplication = 1;
 
     /// true to load the validation trajectories
     bool loadValidationTrajectories = false;
@@ -110,6 +134,67 @@ public:
 
     /// Set interactive mode or not (usefull for calcul machine)
     bool interactiveMode = false;
+
+    /// Size in degree of a discrete action, and max size of a continuous action
+    double sizeAction = 1;
+
+    /// if true, selection for gegelati is based on distance but with adding a bonus for the number of iterations to reach the target
+    bool bonusNbIteration = false;
+
+    /// if true, mean score of root is based on standard deviation and mean instead of juste the mean of episode.
+    bool meanScoreWithStd = false;
+
+    /// if true, deactivate the training and only logs results
+	bool testing = false;
+
+    /// path to store the testing output
+    std::string testPath = "outLogs/";
+
+	/// To use distance 2D instruction
+	bool useInstrDist2d = false;
+
+	/// To use distance 3D instruction
+	bool useInstrDist3d = false;
+
+	/// To use spherical coordonates instructions
+	bool useInstrSphericalCoordRad = false;
+
+	/// To use spherical coordonates instructions
+	bool useInstrSphericalCoordAngle = false;
+
+	/// To use spherical coordonates instructions
+	bool useInstrConst = false;
+
+    /// To use getPi instruction
+	bool useInstrPi = false;
+
+
+	// To use Sin and Ln functions that seems useless after the ablation study
+    bool useInstrSinLn = false;
+
+
+    /// If false, action change the motor position, if true action change the motor speed
+    bool actionSpeed = false;
+
+    /// True to stop coordonate/target bellow 0 on z axis and collision
+    bool realSimulation = true;
+
+    // Number of training iteration (nbIterationsPerPolicyEvaluation will be only for validation/training validation)
+	uint64_t nbIterationTraining = 1;
+
+    // Set a limit of time to train (in seconds), if 0 : no limit
+	uint64_t timeMaxTraining = 0;
+
+    // When testing a root, a test will be made on the root above this number of iteration, if the score of the root is to low, the root is canceled
+    uint64_t nbIterationRootCanceled = 10000;
+
+	/// if true, allow the arm to make 360% circle
+	bool canDo360 = false;
+
+    /// Kill the algorithm if a collision is encountered. TPGs are automatically killed
+	bool killIfCollision = false;
+
+
 
     /**
      * \brief Loads a given json file and fills the parameters it contains

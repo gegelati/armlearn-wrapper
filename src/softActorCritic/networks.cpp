@@ -13,9 +13,9 @@ torch::Tensor Networks::Critic::forward(torch::Tensor state, torch::Tensor actio
 
     // Calcul and return the qvalue
     auto q_value = hiddenLayer1(input);
-    q_value = torch::nn::functional::relu(q_value);
+    q_value = norm1(torch::nn::functional::relu(q_value));
     q_value = hiddenLayer2(q_value);
-    q_value = torch::nn::functional::relu(q_value);
+    q_value = norm2(torch::nn::functional::relu(q_value));
     q_value = outputLayer(q_value);
 
     return q_value;
@@ -25,25 +25,25 @@ torch::optim::Adam* Networks::Critic::getPtrOptimizer(){
     return &optimizer;
 }
 
-void Networks::Critic::loadCheckpoint(){
+void Networks::Critic::loadCheckpoint(std::string path){
     torch::serialize::InputArchive inputArchive;
-    inputArchive.load_from(ROOT_DIR "/models/" + name + ".pt");
+    inputArchive.load_from(path + name + ".pt");
     load(inputArchive);
 }
 
-void Networks::Critic::saveCheckpoint(){
+void Networks::Critic::saveCheckpoint(std::string path){
     torch::serialize::OutputArchive outputArchive;
     save(outputArchive);
-    outputArchive.save_to(ROOT_DIR "/models/" + name + ".pt");
+    outputArchive.save_to(path + name + ".pt");
 }
 
 torch::Tensor Networks::Value::forward(torch::Tensor state){
 
     // Calcul and return the value
     auto value = hiddenLayer1(state);
-    value = torch::nn::functional::relu(value);
+    value = norm1(torch::nn::functional::relu(value));
     value = hiddenLayer2(value);
-    value = torch::nn::functional::relu(value);
+    value = norm2(torch::nn::functional::relu(value));
     value = outputLayer(value);
 
     return value;
@@ -53,16 +53,16 @@ torch::optim::Adam* Networks::Value::getPtrOptimizer(){
     return &optimizer;
 }
 
-void Networks::Value::loadCheckpoint(){
+void Networks::Value::loadCheckpoint(std::string path){
     torch::serialize::InputArchive inputArchive;
-    inputArchive.load_from(ROOT_DIR "/models/" + name + ".pt");
+    inputArchive.load_from(path + name + ".pt");
     load(inputArchive);
 }
 
-void Networks::Value::saveCheckpoint(){
+void Networks::Value::saveCheckpoint(std::string path){
     torch::serialize::OutputArchive outputArchive;
     save(outputArchive);
-    outputArchive.save_to(ROOT_DIR "/models/" + name + ".pt");
+    outputArchive.save_to(path + name + ".pt");
 }
 
 
@@ -71,9 +71,9 @@ std::pair<torch::Tensor, torch::Tensor> Networks::Actor::forward(torch::Tensor s
 
     // Calcul mu and sigma
     auto prob = hiddenLayer1(state);
-    prob = torch::nn::functional::relu(prob);
+    prob = norm1(torch::nn::functional::relu(prob));
     prob = hiddenLayer2(prob);
-    prob = torch::nn::functional::relu(prob);
+    prob = norm2(torch::nn::functional::relu(prob));
     auto mu = muOutputLayer(prob);
     auto sigma = sigmaOutputLayer(prob);
 
@@ -118,14 +118,14 @@ torch::optim::Adam* Networks::Actor::getPtrOptimizer(){
 }
 
 
-void Networks::Actor::loadCheckpoint(){
+void Networks::Actor::loadCheckpoint(std::string path){
     torch::serialize::InputArchive inputArchive;
-    inputArchive.load_from(ROOT_DIR "/models/" + name + ".pt");
+    inputArchive.load_from(path + name + ".pt");
     load(inputArchive);
 }
 
-void Networks::Actor::saveCheckpoint(){
+void Networks::Actor::saveCheckpoint(std::string path){
     torch::serialize::OutputArchive outputArchive;
     save(outputArchive);
-    outputArchive.save_to(ROOT_DIR "/models/" + name + ".pt");
+    outputArchive.save_to(path + name + ".pt");
 }

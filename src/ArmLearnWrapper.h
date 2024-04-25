@@ -31,11 +31,14 @@
 */
 class ArmLearnWrapper : public Learn::LearningEnvironment, armlearn::learning::DeviceLearner {
 protected:
+
+    int valKillCollision = 0;
+
     void computeInput();
 
-    double computeReward();
+    double computeReward(bool givePenaltyMoveUnavailable, int nbMotorMoving);
 
-    TrainingParameters params;
+    TrainingParameters& params;
 
     /// true if the the environnement is terminated
     bool terminal = false;
@@ -51,24 +54,35 @@ protected:
     Data::PrimitiveTypeArray<double> motorPos;
 
     /// Current hand of the arm position
-    Data::PrimitiveTypeArray<double> cartesianPos;
+    Data::PrimitiveTypeArray<double> cartesianHand;
 
-    /// Current arm and goal distance vector
-    Data::PrimitiveTypeArray<double> cartesianDif;
+    /// Current goal position
+    Data::PrimitiveTypeArray<double> cartesianTarget;
+
+    /// Current goal position
+    Data::PrimitiveTypeArray<double> cartesianDiff;
+    
+    /// Current motor speed
+    Data::PrimitiveTypeArray<double> dataMotorSpeed;
 
     /// converter used to covnert motorPos to cartesionPos
     armlearn::kinematics::Converter *converter;
 
     /// Score of the training
-    double score = 0;
+    double score = 0.0;
+
+    /// Distance to give to Gegelati
+    double distance = 0.0;
 
     /// Reward of the last action done
-    double reward = 0;
+    double reward = 0.0;
 
     /// Number of actions done in the episode
-    size_t nbActions = 0;
-
+    size_t nbActionsDone = 0;
+    
     int nbActionsInThreshold=0;
+
+    bool isMoving=true;
 
     /// Maximum number of actions doable in an episode 
     int nbMaxActions;
@@ -88,32 +102,68 @@ protected:
     /// Current Starting position of the arm
     std::vector<uint16_t> *currentStartingPos;
 
-    /// Iterator of the vactor of training trajectories
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator trainingIterator;
-
     /// Vector with Starting positions in keys and Targets positions in values used for the training
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> trainingTrajectories;
-
-
-    /// Iterator of the vactor of training validation trajectories
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator trainingValidationIterator;
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<double>*>> trainingTrajectories;
 
     /// Vector with Starting positions in keys and Targets positions in values used for the training validation
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> trainingValidationTrajectories;
-
-
-    /// Iterator of the vactor of validation trajectories
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>>::iterator validationIterator;
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<double>*>> trainingValidationTrajectories;
 
     /// Vector with Starting positions in keys and Targets positions in values used for the validation
-    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<int16_t>*>> validationTrajectories;
+    std::vector<std::pair<std::vector<uint16_t>*, armlearn::Input<double>*>> validationTrajectories;
         
     /// Current generation
     int generation = 0;
 
     /// Target currently used to move the arm.
-    armlearn::Input<int16_t> *currentTarget;
+    armlearn::Input<double> *currentTarget;
 
+
+    /// Vector that store all the motors positions of an episode
+    std::vector<std::vector<uint16_t>> allMotorPos;
+
+    /// Vector that store all the informations of an episode
+    std::vector<int32_t> vectorValidationInfos;
+
+    /// vector that store all the informations of each episode
+    std::vector<std::vector<int32_t>> allValidationInfos;
+
+    /// Checkpoint to get the duration of an episode (for testing logs)
+    std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
+    
+
+    /// Vector that contain the indices of the trajectories and their best score. Used if trajectory deletion is activated
+    std::vector<std::pair<int, double>> scoreTrajectories;
+
+    /// True if gegelati is running else an other algorithm : SAC for now
+    bool gegelatiRunning = true;
+
+    /// Motor speed : Use only if trainingParams.actionSpeed is true. speed is in motorPoint/iteration
+    std::vector<double> motorSpeed = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
+    /// Current range target to reach
+    double currentRangeTarget = 5;
+
+    /// True if this is validation, else false
+    bool isValidation = true;
+
+    /// Vector that register all the possible goal to seek for in cartesian coordonates
+    std::vector<std::vector<double>> dataTarget;
+
+    /// Vector containing base segments to avoid collision with
+    std::vector<std::vector<double>> baseSegments = {
+        {68, 90, 9, 9}, {68, 68, 9, 95}, {15, 68, 95, 95}, {15, 15, 95, 151},
+        {-68, -90, 9, 9}, {-68, -68, 9, 95}, {-15, -68, 95, 95}, {-15, -15, 95, 151},
+    };
+
+    /// @brief memory of each motor position during an episode, used to detect cycles
+    std::vector<std::vector<uint16_t>> memoryMotorPos;
+
+    /// @brief indicate if the arm is cycling (only under Gegelati)
+    bool isCycling = false;
+
+    double timeEnv = 0;
+    std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpointEnv;
+    
 
 public:
 
@@ -145,27 +195,40 @@ public:
      * \param[in] handServosTrained boolean controlling whether the 2 servos
      * controlling the hand of the robotic arm are trained.
      */
-    ArmLearnWrapper(int nbMaxActions, TrainingParameters params, bool handServosTrained = false)
-            : LearningEnvironment((handServosTrained) ? 13 : 9), handServosTrained(handServosTrained),
-              trainingIterator(), validationIterator(), trainingValidationIterator(),
-              nbMaxActions(nbMaxActions), motorPos(6), cartesianPos(3), cartesianDif(3),
+    ArmLearnWrapper(int nbMaxActions, TrainingParameters& params, bool gegelatiRunning, bool handServosTrained = false)
+            : LearningEnvironment((handServosTrained) ? 13 : 9), gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
+              nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3), dataMotorSpeed((params.actionSpeed) ? 4:0),
+              trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params) {
-        if (params.progressiveModeStartingPos) this->currentMaxLimitStartingPos=params.maxLengthStartingPos;
-        if (params.progressiveModeTargets) this->currentMaxLimitTarget=params.maxLengthTargets;
+        if(params.progressiveRangeTarget){
+            this->currentRangeTarget = params.maxLengthTargets;
+        } else {
+            if (params.progressiveModeStartingPos) this->currentMaxLimitStartingPos=params.maxLengthStartingPos;
+            if (params.progressiveModeTargets) this->currentMaxLimitTarget=params.maxLengthTargets;
+            this->currentRangeTarget = params.rangeTarget;
+        }
+
+        rng.setSeed(params.seed);
+
+        loadTargetCSV();
     }
 
     /**
     * \brief Copy constructor for the armLearnWrapper.
-    */
-    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions),
-                                                    trainingIterator(other.trainingIterator),
-                                                    validationIterator(other.validationIterator), 
-                                                    trainingValidationIterator(other.trainingValidationIterator),
-                                                    nbMaxActions(other.nbMaxActions), motorPos(other.motorPos),
-                                                    cartesianPos(other.cartesianPos), cartesianDif(other.cartesianDif),
+    */ 
+    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions), 
+                                                    nbMaxActions(other.nbMaxActions), motorPos(other.motorPos), gegelatiRunning(other.gegelatiRunning),
+                                                    cartesianHand(other.cartesianHand), cartesianTarget(other.cartesianTarget), cartesianDiff(other.cartesianDiff),
+                                                    dataMotorSpeed(other.dataMotorSpeed),
+                                                    trainingTrajectories(other.trainingTrajectories),
+                                                    validationTrajectories(other.validationTrajectories),
+                                                    trainingValidationTrajectories(other.trainingValidationTrajectories),
                                                     DeviceLearner(iniController()), params(other.params) {
-        this->reset(0);
-        computeInput();
+        if(params.progressiveRangeTarget){
+            this->currentRangeTarget = other.currentRangeTarget;
+        } else {
+            this->currentRangeTarget = params.rangeTarget;
+        }               
     }
 
     /// @brief Destructor
@@ -181,8 +244,17 @@ public:
     /// Do a multi continuous action.
     void doActionContinuous(std::vector<float> actions);
 
+    /// execute the action choosed
+    void executeAction(std::vector<double> motorAction);
+
+    /// Update the memory of motor position and detect if gegelati is in a cycle
+    void updateAndCheckCycles();
+
+    /// Save the current motor position(
+    void saveMotorPos();
+
     /// @brief Inherited via LearningEnvironment
-    void reset(size_t seed = 0, Learn::LearningMode mode = Learn::LearningMode::TRAINING) override;
+    void reset(size_t seed = 0, Learn::LearningMode mode = Learn::LearningMode::TRAINING, uint16_t iterationNumber = 0, uint64_t generationNumber = 0) override;
 
     /**
      * @brief Inherited via LearningEnvironment, create the state vector
@@ -192,12 +264,11 @@ public:
     /// @brief Clear a given proportion of the current set of training targets 
     void clearPropTrainingTrajectories();
 
+    // Add the indices and scoresgiven to the scoreTrajectories vector
+    void addToScoreTrajectories(int index, double score);
 
 
-    /**
-     * @brief Inherited from LearningEnvironment.
-     *
-     */
+    ///@brief Inherited from LearningEnvironment.
     double getScore() const override;
 
     /// @brief Return the reward for the last action done;
@@ -242,7 +313,7 @@ public:
     /**
      * @brief Create and return a random position with the motors
      */
-    std::vector<uint16_t> randomMotorPos();
+    std::vector<uint16_t> randomMotorPos(std::vector<double> cartesianGoal, bool validation, bool isTarget);
 
     /**
      * @brief Create and return a random starting position for the arm
@@ -260,18 +331,23 @@ public:
      * @param[in] validation true if the target is for the validation, else false
      * @param[in] maxLength distance max that the arm will have to browse in the trajectory
      */
-    armlearn::Input<int16_t>* randomGoal(std::vector<uint16_t> startingPos, bool validation);
+    armlearn::Input<double>* randomGoal(std::vector<uint16_t> startingPos, bool validation);
+
+    /**
+     * @brief Load the CSV containing equilibrate random positions
+     */
+    void loadTargetCSV();
 
     /**
      * @brief Puts a custom goal in the first slot of the trainingTargets list.
      */ 
-    void customTrajectory(armlearn::Input<int16_t> *newGoal, std::vector<uint16_t> startingPos, bool validation = false);
+    void customTrajectory(armlearn::Input<double> *newGoal, std::vector<uint16_t> startingPos, bool validation = false);
 
     /**
      * @brief Check if the current limits for starting position and targets have to be updated based on the bestResult
      * If the limits are updated, the trajectories are updated based on the nbIterationsPerPolicyEvaluation 
      */ 
-    void updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation);
+    bool updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation);
 
     /**
      * @brief Returns a string logging the goal (to use e.g. when there is a goal change)
@@ -298,6 +374,9 @@ public:
 
     /// Load the validation trajectories from a ValidationTrajectories.txt file
     void loadValidationTrajectories();
+
+    // Log the trajectories store in allValidationInfos vector
+    void logTestingTrajectories(bool usingGegelati);
 
     /**
      * @brief Inherited via DeviceLearner
@@ -331,6 +410,32 @@ public:
 
     /// Get currentMaxLimitStartingPos
     double getCurrentMaxLimitStartingPos();
+
+    /// Get currentRangeTarget
+    double getCurrentRangeTarget();
+
+    /// Get distance from the arm to the target
+    double getDistance();
+
+    void setGegelatiRunning(bool isRunning);
+
+    void setIsMoving(bool isMoving);
+
+    bool getIsMoving();
+
+    /**
+     * @brief Return True if one of the motor has collision or is bellow 0 on z axis
+     * 
+     * @param[in] newMotorPos Position in motor point of the different motors
+     */
+    bool motorCollision(std::vector<uint16_t> newMotorPos);
+
+    bool hasCollision(std::vector<double> armSegment, std::vector<double> baseSegment);
+
+    
+    void setTerminal(bool newTerminal);
+
+    void incrValKillCollision();
 };
 
 #endif

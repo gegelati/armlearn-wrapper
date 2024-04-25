@@ -3,25 +3,30 @@
 #include <numeric>
 
 #include "armLearnLogger.h"
+#include "armlearnEvaluationResult.h"
 
 void Log::ArmLearnLogger::logResults(
     std::multimap<std::shared_ptr<Learn::EvaluationResult>,
                   const TPG::TPGVertex*>& results)
 {
     auto iter = results.begin();
-    double min = iter->first->getResult();
     std::advance(iter, results.size() - 1);
-    double max = iter->first->getResult();
+    double maxReward = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getResult();
     
-    double avg = std::accumulate(
+    double maxDistance = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getDistance();
+
+    
+    double avgReward = std::accumulate(
         results.begin(), results.end(), 0.0,
         [](double acc,
            std::pair<std::shared_ptr<Learn::EvaluationResult>,
                      const TPG::TPGVertex*>
-               pair) -> double { return acc + pair.first->getResult(); });
-    avg /= (double)results.size();
-    *this << std::setw(colWidth) << min << std::setw(colWidth) << avg
-          << std::setw(colWidth) << max;
+               pair) -> double { return acc + std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(pair.first)->getResult(); });
+    avgReward /= (double)results.size();
+
+
+    *this << std::setw(colWidth) << avgReward << std::setw(colWidth) << maxReward
+          << std::setw(colWidth) << maxDistance;
 }
 
 void Log::ArmLearnLogger::logHeader()
@@ -42,21 +47,27 @@ void Log::ArmLearnLogger::logHeader()
     // Second line of header
     //*this << std::right;
     *this << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "NbVert"
-          << std::setw(colWidth) << "Min" << std::setw(colWidth) << "Avg"
-          << std::setw(colWidth) << "Max";
+          << std::setw(colWidth) << "tRewAvg" << std::setw(colWidth) << "tRewMax"
+          << std::setw(colWidth) << "tDistMax";
     if (doValidation) {
-        *this << std::setw(colWidth) << "Min" << std::setw(colWidth) << "Avg"
-              << std::setw(colWidth) << "Max";
+        *this << std::setw(colWidth) << "vRewAvg" << std::setw(colWidth) << "vRewMax"
+              << std::setw(colWidth) << "vDistMax"<< std::setw(colWidth) << "vSuccess";
     }
 
     if (doTrainingValidation) {
-        *this << std::setw(colWidth) << "Min" << std::setw(colWidth) << "Avg"
-              << std::setw(colWidth) << "Max";
-    
+        *this << std::setw(colWidth) << "tvRewAvg" << std::setw(colWidth) << "tvRewMax"
+              << std::setw(colWidth) << "tvDistmax";
+    }
 
+    if (doUpdateLimits){
         *this << std::setw(colWidth) << "S_Targ"; 
         *this << std::setw(colWidth) << "S_StartP";
     }
+
+    if (doControlTrajDeletion){
+        *this << std::setw(colWidth) << "T_Del"; 
+    }
+        
 
     *this << std::setw(colWidth) << "T_mutat" << std::setw(colWidth)
           << "T_eval";
@@ -112,6 +123,13 @@ void Log::ArmLearnLogger::logAfterValidate(
     // being in this method means validation is active, and so we are sure we
     // can log results
     logResults(results);
+
+    auto iter = results.begin();
+    std::advance(iter, results.size() - 1);
+    double maxSuccess = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getSuccess();
+    *this << std::setw(colWidth) << maxSuccess; 
+
+    chronoFromNow();
 }
 
 void Log::ArmLearnLogger::logAfterTrainingValidate(

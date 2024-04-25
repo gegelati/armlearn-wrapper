@@ -1,10 +1,12 @@
 {
 	// Learning rate of the models
-	"lr": 0.0005,
+	"lr": 0.001,
 	/// Gamma for bellman equation
 	"gamma": 0.99,
 	// Reward scale 
 	"rewardScale": 2,
+	// Gradient Step
+	"gradientStep": 1,
 	// Size of the buffer
 	"sizeBuffer": 100000,
 	// Batch size of training iterations
@@ -16,9 +18,11 @@
 	// Size of the second layer of the models
 	"sizeHL2" : 256,
 	// True to load the models
-	"loadModels": false,
+	"loadModels": true,
 	// True to unable multiple actions
-	"multipleActions": false,
+	"multipleActions": true,
 	// True to unable continuous actions. Note : actions can only be continuous if multiple actions is unable
-	"continuousActions": false
+	"continuousActions": false,
+	// Active or deactivate the false single action : SAC take multiple action but it is interpret as multiple single action by the env
+	"falseSingleAction": false
 }

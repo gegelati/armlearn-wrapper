@@ -53,6 +53,11 @@ void SACParameters::setParameterFromString(const std::string& param, Json::Value
         return;
     }
 
+    if (param == "gradientStep"){
+        gradientStep = (int)value.asUInt();
+        return;
+    }
+
     if (param == "sizeBuffer") {
         sizeBuffer = (int)value.asUInt();
         return;
@@ -92,6 +97,12 @@ void SACParameters::setParameterFromString(const std::string& param, Json::Value
         continuousActions = (bool)value.asBool();
         return;
     }
+
+    if (param == "falseSingleAction") {
+        falseSingleAction = (bool)value.asBool();
+        return;
+    }
+
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }

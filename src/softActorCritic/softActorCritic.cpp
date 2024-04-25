@@ -1,4 +1,5 @@
 #include <torch/torch.h>
+#include <filesystem>
 #include <iostream>
 
 #include "softActorCritic.h"
@@ -36,8 +37,10 @@ void SoftActorCritic::updateNetworkParameter(double currentTau){
 
 void SoftActorCritic::learn(){
     // Do not learn if memoryIndex is under the batch size
-    if (memory.getMemoryIndex() < params.batchSize)
+    if (memory.getMemoryIndex() < params.batchSize || memory.getMemoryIndex() % params.gradientStep != 0)
         return;
+
+    
 
     // Get random data
     auto indexes = memory.sampleBufferIndex(params.batchSize);
@@ -119,20 +122,29 @@ void SoftActorCritic::learn(){
 
 void SoftActorCritic::loadModels(){
     std::cout<<" ----- Loading Models ----- "<<std::endl;
-    actorNet.loadCheckpoint();
-    criticNet1.loadCheckpoint();
-    criticNet2.loadCheckpoint();
-    valueNet.loadCheckpoint();
-    targetValueNet.loadCheckpoint();
+    std::string path = (std::filesystem::exists("/params/trainParams.json")) ? "/outLogs/models/best_model/": "outLogs/models/best_model/";
+    actorNet.loadCheckpoint(path);
+    criticNet1.loadCheckpoint(path);
+    criticNet2.loadCheckpoint(path);
+    valueNet.loadCheckpoint(path);
+    targetValueNet.loadCheckpoint(path);
 }
 
-void SoftActorCritic::saveModels(){
+void SoftActorCritic::saveModels(uint64_t genenrationNumber, bool bestModel){
     //std::cout<<" ----- Saving Models ----- "<<std::endl;
-    actorNet.saveCheckpoint();
-    criticNet1.saveCheckpoint();
-    criticNet2.saveCheckpoint();
-    valueNet.saveCheckpoint();
-    targetValueNet.saveCheckpoint();
+    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
+    std::string path = (slashToAdd + "outLogs/models/save_" + std::to_string(genenrationNumber) + "/").c_str();
+    if(bestModel){
+        path = (slashToAdd + "outLogs/models/best_model/").c_str();
+    }
+    if(!std::filesystem::exists(path)){
+        std::filesystem::create_directory(path);
+    }
+    actorNet.saveCheckpoint(path);
+    criticNet1.saveCheckpoint(path);
+    criticNet2.saveCheckpoint(path);
+    valueNet.saveCheckpoint(path);
+    targetValueNet.saveCheckpoint(path);
 }
 
     
