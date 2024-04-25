@@ -251,6 +251,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         canDo360 = (bool)value.asBool();
         return;
     }
+
+    if (param == "killIfCollision"){
+        killIfCollision = (bool)value.asBool();
+        return;
+    }
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }

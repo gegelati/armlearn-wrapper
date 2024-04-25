@@ -191,6 +191,9 @@ public:
 	/// if true, allow the arm to make 360% circle
 	bool canDo360 = false;
 
+    /// Kill the algorithm if a collision is encountered. TPGs are automatically killed
+	bool killIfCollision = false;
+
 
 
     /**

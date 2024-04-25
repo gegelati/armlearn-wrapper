@@ -95,6 +95,13 @@ class ArmSacEngine{
          */
         double runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint16_t iterationNumber);
 
+
+        /**
+         * @brief Do only one action on the environment
+         * Without training
+         */
+        std::vector<float> doOneActionInference();
+
         /**
          * @brief Train one generation
          * 

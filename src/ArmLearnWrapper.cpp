@@ -203,6 +203,13 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     if(params.realSimulation && motorCollision(scaledOutput)){
 
         // only active for gegelati because SAC is not deterministic
+        if(params.killIfCollision){
+            valKillCollision++;
+            if(valKillCollision == 5){
+                isMoving=false;
+            }
+        }
+
         if(gegelatiRunning){
             isMoving=false;
         }
@@ -212,6 +219,11 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         for (int i = 0; i < 4; i++) {
             inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
             scaledOutput[i] = inputI;
+        }
+    } else{
+        valKillCollision--;
+        if (valKillCollision < 0){
+            valKillCollision = 0;
         }
     }
 
@@ -405,6 +417,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     memoryMotorPos.clear();
     distance = 0.0;
     timeEnv = 0.0;
+    valKillCollision = 0;
 
 
     // If we are testing the arm, we save the current trajectory
@@ -1008,6 +1021,10 @@ std::vector<uint16_t> ArmLearnWrapper::getMotorsPos() {
     return motorPos;
 }
 
+void ArmLearnWrapper::setGegelatiRunning(bool isRunning){
+    gegelatiRunning = isRunning;
+}
+
 void ArmLearnWrapper::setgeneration(int newGeneration){
     generation = newGeneration;
 }
@@ -1189,4 +1206,21 @@ bool ArmLearnWrapper::hasCollision(std::vector<double> armSegment, std::vector<d
     return true;
 
 
+}
+
+void ArmLearnWrapper::setIsMoving(bool newIsMoving){
+    isMoving = isMoving;
+    isCycling = false;
+}
+
+bool ArmLearnWrapper::getIsMoving(){
+    return isMoving && !isCycling;
+}
+
+void ArmLearnWrapper::setTerminal(bool newTerminal){
+    terminal = newTerminal;
+}
+
+void ArmLearnWrapper::incrValKillCollision(){
+    valKillCollision++;
 }

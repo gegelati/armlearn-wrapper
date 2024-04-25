@@ -32,6 +32,8 @@
 class ArmLearnWrapper : public Learn::LearningEnvironment, armlearn::learning::DeviceLearner {
 protected:
 
+    int valKillCollision = 0;
+
     void computeInput();
 
     double computeReward(bool givePenaltyMoveUnavailable, int nbMotorMoving);
@@ -415,6 +417,11 @@ public:
     /// Get distance from the arm to the target
     double getDistance();
 
+    void setGegelatiRunning(bool isRunning);
+
+    void setIsMoving(bool isMoving);
+
+    bool getIsMoving();
 
     /**
      * @brief Return True if one of the motor has collision or is bellow 0 on z axis
@@ -425,7 +432,10 @@ public:
 
     bool hasCollision(std::vector<double> armSegment, std::vector<double> baseSegment);
 
+    
+    void setTerminal(bool newTerminal);
 
+    void incrValKillCollision();
 };
 
 #endif

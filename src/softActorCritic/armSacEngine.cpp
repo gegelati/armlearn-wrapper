@@ -145,6 +145,24 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
     return result;
 }
 
+std::vector<float> ArmSacEngine::doOneActionInference(){
+    
+    torch::Tensor state = getTensorState();
+    // Get the continuous action
+    torch::Tensor actionTensor = learningAgent.chooseAction(state);
+
+    auto actionTaken = actionTensor;
+    if (!sacParams.continuousActions){
+        actionTaken = torch::round(actionTensor * 3 / 2);
+    }
+
+    
+    // Convert actionTensor to an actionVector
+    std::vector<float> actionVector(actionTaken.data_ptr<float>(), actionTaken.data_ptr<float>() + actionTaken.numel());
+
+    return actionVector;
+}
+
 
 
 void ArmSacEngine::trainOneGeneration(uint16_t nbIterationTraining){
