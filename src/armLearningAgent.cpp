@@ -141,6 +141,22 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     TPG::TPGExecutionEngine& tee, const Job& job, uint64_t generationNumber,
     Learn::LearningMode mode, LearningEnvironment& le) const
 {
+ 
+ 
+    // Get the tpg execution engine with the right class
+    if(!dynamic_cast<MARL::MarlTpgExecutionEngine*>(&tee)){
+        throw std::runtime_error("tee should be a MarlTpgExecutionEngine object but "
+                                 "seems to be a simple TPGExecutionEngine object");
+    }
+    MARL::MarlTpgExecutionEngine* marlTee = dynamic_cast<MARL::MarlTpgExecutionEngine*>(&tee);
+
+    // Get the learning environment with the right class
+    if(!dynamic_cast<MARL::MarlLearningEnvironment*>(&le)){
+        throw std::runtime_error("le should be a MarlLearningEnvironment object but "
+                                 "seems to be a simple LearningEnvironment object");
+    }
+    MARL::MarlLearningEnvironment* marlLe = dynamic_cast<MARL::MarlLearningEnvironment*>(&le);
+ 
     // Only consider the first root of jobs as we are not in adversarial mode
     const TPG::TPGVertex* root = job.getRoot();
 
@@ -184,12 +200,21 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
         uint64_t nbActions = 0;
         while (!le.isTerminal() &&
                nbActions < this->params.maxNbActionsPerEval) {
-            // Get the action
-            uint64_t actionID =
-                ((const TPG::TPGAction*)tee.executeFromRoot(*root).back())
-                    ->getActionID();
+
+            // Get the actions
+            std::map<std::uint64_t, std::pair<std::uint64_t, double>> actions 
+                = marlTee->executeFromRoot(*root, marlLe->getInitActions());
+
+
+            std::vector<std::uint64_t> actionsID;
+            // Browse the map to get the actions ID
+            for (const auto& obj :actions) {
+                actionsID.push_back(obj.second.first);
+            }
+
+
             // Do it
-            le.doAction(actionID);
+            marlLe->doActions(actionsID);
             // Count actions
             nbActions++;
 

@@ -20,7 +20,7 @@ namespace Learn {
      * Because of parallelism, determinism of the LearningProcess could easiliy
      * be lost, but this implementation must remain deterministic at all costs.
      */
-    class ArmLearningAgent : public ParallelLearningAgent
+    class ArmLearningAgent : public MARL::MarlLearningAgent
     {
       private:
         std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> bestTrainingResult;
@@ -44,14 +44,11 @@ namespace Learn {
          * \param[in] iSet Set of Instruction used to compose Programs in the
          *            learning process.
          * \param[in] p The LearningParameters for the LearningAgent.
-         * \param[in] factory The TPGFactory used to create the TPGGraph. A
-         * default TPGFactory is used if none is provided.
          */
         ArmLearningAgent(
-            LearningEnvironment& le, const Instructions::Set& iSet,
-            const LearningParameters& p, TrainingParameters& trainingParams,
-            const TPG::TPGFactory& factory = TPG::TPGFactory())
-            : ParallelLearningAgent(le, iSet, p, factory), trainingParams(trainingParams) {
+            MARL::MarlLearningEnvironment& le, const Instructions::Set& iSet,
+            const LearningParameters& p, TrainingParameters& trainingParams)
+            : MARL::MarlLearningAgent(le, iSet, p), trainingParams(trainingParams) {
               this->doUpdateLimits = (this->trainingParams.progressiveModeTargets || this->trainingParams.progressiveModeStartingPos);
               this->doTrainingValidation = (this->trainingParams.doTrainingValidation && this->doUpdateLimits);
             };

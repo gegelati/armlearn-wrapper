@@ -29,7 +29,7 @@
 * The simulation is stopped after something like 1000 frames, and we
 * take the negative distance arm-target as score.
 */
-class ArmLearnWrapper : public Learn::LearningEnvironment, armlearn::learning::DeviceLearner {
+class ArmLearnWrapper : public MARL::MarlLearningEnvironment, armlearn::learning::DeviceLearner {
 protected:
 
     int valKillCollision = 0;
@@ -196,7 +196,7 @@ public:
      * controlling the hand of the robotic arm are trained.
      */
     ArmLearnWrapper(int nbMaxActions, TrainingParameters& params, bool gegelatiRunning, bool handServosTrained = false)
-            : LearningEnvironment((handServosTrained) ? 13 : 9), gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
+            : MARL::MarlLearningEnvironment(std::vector<size_t>{3, 3, 3, 3}, std::vector<size_t>{1, 1, 1, 1}), gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
               nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3), dataMotorSpeed((params.actionSpeed) ? 4:0),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params) {
@@ -216,7 +216,7 @@ public:
     /**
     * \brief Copy constructor for the armLearnWrapper.
     */ 
-    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions), 
+    ArmLearnWrapper(const ArmLearnWrapper &other) : MARL::MarlLearningEnvironment(other.vectActions, other.initActions), 
                                                     nbMaxActions(other.nbMaxActions), motorPos(other.motorPos), gegelatiRunning(other.gegelatiRunning),
                                                     cartesianHand(other.cartesianHand), cartesianTarget(other.cartesianTarget), cartesianDiff(other.cartesianDiff),
                                                     dataMotorSpeed(other.dataMotorSpeed),
@@ -239,7 +239,7 @@ public:
 
 
     /// @brief Inherited via LearningEnvironment
-    void doAction(uint64_t actionID) override;
+    virtual void doActions(std::vector<std::uint64_t> actionsID) override;
 
     /// Do a multi continuous action.
     void doActionContinuous(std::vector<float> actions);
