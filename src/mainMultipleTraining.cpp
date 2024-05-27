@@ -47,30 +47,34 @@ int main(){
 
     for(int indexConf = 0; indexConf < nbTrainingConfig; indexConf++){
 
-        
+        std::string pathConf = (slashToAdd + "outLogs/config_"+ std::to_string(indexConf) + "/").c_str();
+
+        if(!std::filesystem::exists(pathConf)){
+            std::filesystem::create_directory(pathConf);
+            std::filesystem::create_directory((pathConf + "params/").c_str());
+            std::filesystem::copy(repoConfig + "trainParams_" + std::to_string(indexConf) + ".json", (pathConf + "params/").c_str());
+            std::filesystem::copy(repoConfig + "params_" + std::to_string(indexConf) + ".json", (pathConf + "params/").c_str());
+        }
+
 
         for(int seed = 0; seed < nbSeed; seed++){
 
             // Create file with config and tout le tralala
-            std::string path = (slashToAdd + "outLogs/config_"+ std::to_string(indexConf) + "_" + std::to_string(seed) + "/").c_str();
+            std::string path = (pathConf + "seed_" + std::to_string(seed) + "/").c_str();
             if(!std::filesystem::exists(path)){
                 std::filesystem::create_directory(path);
                 std::filesystem::create_directory((path + "outLogs/").c_str());
                 std::filesystem::create_directory((path + "outLogs/dotfiles/").c_str());
-                std::filesystem::create_directory((path + "params/").c_str());
-
-                std::filesystem::copy(repoConfig + "trainParams_" + std::to_string(indexConf) + ".json", (path + "params/").c_str());
-                std::filesystem::copy(repoConfig + "params_" + std::to_string(indexConf) + ".json", (path + "params/").c_str());
             }
 
             std::cout<<"\nActually working with config " << indexConf << " and seed "<< seed<<"\n"<<std::endl;
 
             TrainingParameters trainingParams;
-            trainingParams.loadParametersFromJson((path + "params/trainParams_" + std::to_string(indexConf) + ".json").c_str());
+            trainingParams.loadParametersFromJson((pathConf + "params/trainParams_" + std::to_string(indexConf) + ".json").c_str());
 
             // Params of this config
             Learn::LearningParameters params;
-            File::ParametersParser::loadParametersFromJson((repoConfig + "params_" + std::to_string(indexConf) + ".json").c_str(), params);
+            File::ParametersParser::loadParametersFromJson((pathConf + "params/params_" + std::to_string(indexConf) + ".json").c_str(), params);
 
             // Create the instruction set for programs
             Instructions::Set set;
@@ -168,13 +172,6 @@ int main(){
 
             // close log file also
             stats.close();
-
-            auto &tpg = *la.getTPGGraph();
-            Environment env(set, armLearnEnv.getDataSources(), 8);
-            File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
-            trainingParams.testPath = (path + "outLogs").c_str();
-            trainingParams.testing = true;
-            la.testingBestRoot(globalParams.nbIterationsPerPolicyEvaluation);
 
             // cleanup
             for (unsigned int i = 0; i < set.getNbInstructions(); i++) {

@@ -12,7 +12,7 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
 
     
     // Populate Sequentially
-    Mutator::TPGMutator::populateTPG(*this->tpg, this->archive,
+    MARL::MarlTPGMutator::populateTPG(*this->tpg, this->archive,
                                      this->params.mutation, this->rng,
                                      maxNbThreads);
     for (auto logger : loggers) {
@@ -203,7 +203,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
             // Get the actions
             std::map<std::uint64_t, std::pair<std::uint64_t, double>> actions 
-                = marlTee->executeFromRoot(*root, marlLe->getInitActions());
+                = marlTee->executeFromRoot(*root, marlLe->getInitActions(), this->params);
 
 
             std::vector<std::uint64_t> actionsID;
