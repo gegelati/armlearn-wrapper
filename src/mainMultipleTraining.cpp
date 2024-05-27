@@ -148,8 +148,8 @@ int main(){
                     timeLimitReached = (((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() > trainingParams.timeMaxTraining);
                 }
 
-                if(seed == 0){
-                    break;
+                if(timeLimitReached){
+                    std::cout<<"reason 1"<<std::endl;
                 }
             }
 
