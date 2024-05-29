@@ -181,8 +181,15 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
     uint64_t nbIteration = (mode == LearningMode::TRAINING) ? trainingParams.nbIterationTraining : this->params.nbIterationsPerPolicyEvaluation;
 
+    
+    double propActivatedRoots = 0.0;
+
     // Evaluate nbIteration times
     for (auto iterationNumber = 0; iterationNumber < nbIteration && !cancelThisRoot; iterationNumber++) {
+
+
+        double propActivatedRootsOneEp = 0.0;
+
 
         if(trainingParams.testing){
             std::cout<<"Episode "<<iterationNumber+1<<"/"<<nbIteration<<"      "<<std::flush;
@@ -206,6 +213,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
                 = marlTee->executeFromRoot(*root, marlLe->getInitActions(), this->params);
 
 
+            propActivatedRootsOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getPropActivateEdge();
+
             std::vector<std::uint64_t> actionsID;
             // Browse the map to get the actions ID
             for (const auto& obj :actions) {
@@ -219,6 +228,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
             nbActions++;
 
         }
+
+        propActivatedRoots += propActivatedRootsOneEp / nbActions;
 
         // Update score
         score += le.getScore();
@@ -265,6 +276,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
             meanScore,
             success / (double)nbIteration,
             distance / (double)nbIteration,
+            propActivatedRoots / (double)nbIteration,
             trajectoriesScore, nbIteration));
 
     // Combine it with previous one if any

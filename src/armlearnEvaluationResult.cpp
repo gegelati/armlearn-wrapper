@@ -11,6 +11,10 @@ double Learn::ArmlearnEvaluationResult::getDistance() const{
     return this->distance;
 }
 
+double Learn::ArmlearnEvaluationResult::getPropActivatedRoots() const{
+    return this->propActivatedRoots;
+}
+
 std::vector<std::pair<int, double>> Learn::ArmlearnEvaluationResult::getTrajScores(){
     return this->trajScores;
 }
@@ -44,6 +48,11 @@ Learn::EvaluationResult& Learn::ArmlearnEvaluationResult::operator+=(
         this->distance = this->distance * (double)this->nbEvaluation +
                        otherConverted.distance * (double)otherConverted.nbEvaluation;
         this->distance /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
+
+        // Weighted addition of propActivatedRoots
+        this->propActivatedRoots = this->propActivatedRoots * (double)this->nbEvaluation +
+                       otherConverted.propActivatedRoots * (double)otherConverted.nbEvaluation;
+        this->propActivatedRoots /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
 
         // Addition ot nbEvaluation
         this->nbEvaluation += otherConverted.nbEvaluation;

@@ -51,7 +51,8 @@ void Log::ArmLearnLogger::logHeader()
           << std::setw(colWidth) << "tDistMax";
     if (doValidation) {
         *this << std::setw(colWidth) << "vRewAvg" << std::setw(colWidth) << "vRewMax"
-              << std::setw(colWidth) << "vDistMax"<< std::setw(colWidth) << "vSuccess";
+              << std::setw(colWidth) << "vDistMax"<< std::setw(colWidth) << "vSuccess"
+              << std::setw(colWidth) << "vPropAct";
     }
 
     if (doTrainingValidation) {
@@ -128,6 +129,8 @@ void Log::ArmLearnLogger::logAfterValidate(
     std::advance(iter, results.size() - 1);
     double maxSuccess = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getSuccess();
     *this << std::setw(colWidth) << maxSuccess; 
+    double maxPropActivate = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getPropActivatedRoots();
+    *this << std::setw(colWidth) << maxPropActivate; 
 
     chronoFromNow();
 }

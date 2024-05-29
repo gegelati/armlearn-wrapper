@@ -25,6 +25,7 @@ namespace Learn {
         /// The scores of the roots, in the order in which they participated.
         double distance = 0;
         double success = 0;
+        double propActivatedRoots = 0;
 
         std::vector<std::pair<int, double>> trajScores;
 
@@ -38,17 +39,20 @@ namespace Learn {
          * get these scores. Default is 1 as we can guess user only did 1
          * iteration.
          */
-        ArmlearnEvaluationResult(const double score, const double success, const double distance, std::vector<std::pair<int, double>> trajScores, const size_t& nbEval)
+        ArmlearnEvaluationResult(const double score, const double success, const double distance, const double propActivatedRoots,std::vector<std::pair<int, double>> trajScores, const size_t& nbEval)
             : EvaluationResult(score, nbEval)
         {
           this->success = success;
           this->distance = distance;
+          this->propActivatedRoots = propActivatedRoots;
           this->trajScores = trajScores;
         }
 
         double getSuccess() const;
 
         double getDistance() const;
+
+        double getPropActivatedRoots() const;
 
         std::vector<std::pair<int, double>> getTrajScores();
 
