@@ -182,13 +182,15 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     uint64_t nbIteration = (mode == LearningMode::TRAINING) ? trainingParams.nbIterationTraining : this->params.nbIterationsPerPolicyEvaluation;
 
     
-    double propActivatedRoots = 0.0;
+    double nbActivatedTeam = 0.0;
+    double nbActivatedAction = 0.0;
 
     // Evaluate nbIteration times
     for (auto iterationNumber = 0; iterationNumber < nbIteration && !cancelThisRoot; iterationNumber++) {
 
 
-        double propActivatedRootsOneEp = 0.0;
+        double nbActivatedTeamOneEp = 0.0;
+        double nbActivatedActionOneEp = 0.0;
 
 
         if(trainingParams.testing){
@@ -213,7 +215,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
                 = marlTee->executeFromRoot(*root, marlLe->getInitActions(), this->params);
 
 
-            propActivatedRootsOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getPropActivateEdge();
+            nbActivatedTeamOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateTeam();
+            nbActivatedActionOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateAction();
 
             std::vector<std::uint64_t> actionsID;
             // Browse the map to get the actions ID
@@ -229,7 +232,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
         }
 
-        propActivatedRoots += propActivatedRootsOneEp / nbActions;
+        nbActivatedTeam += nbActivatedTeamOneEp / nbActions;
+        nbActivatedAction += nbActivatedActionOneEp / nbActions;
 
         // Update score
         score += le.getScore();
@@ -276,7 +280,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
             meanScore,
             success / (double)nbIteration,
             distance / (double)nbIteration,
-            propActivatedRoots / (double)nbIteration,
+            nbActivatedTeam / (double)nbIteration,
+            nbActivatedAction / (double)nbIteration,
             trajectoriesScore, nbIteration));
 
     // Combine it with previous one if any

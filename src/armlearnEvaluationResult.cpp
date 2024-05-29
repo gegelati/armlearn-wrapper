@@ -11,8 +11,12 @@ double Learn::ArmlearnEvaluationResult::getDistance() const{
     return this->distance;
 }
 
-double Learn::ArmlearnEvaluationResult::getPropActivatedRoots() const{
-    return this->propActivatedRoots;
+double Learn::ArmlearnEvaluationResult::getNbActivatedTeam() const{
+    return this->nbActivatedTeam;
+}
+
+double Learn::ArmlearnEvaluationResult::getNbActivatedAction() const{
+    return this->nbActivatedAction;
 }
 
 std::vector<std::pair<int, double>> Learn::ArmlearnEvaluationResult::getTrajScores(){
@@ -50,9 +54,14 @@ Learn::EvaluationResult& Learn::ArmlearnEvaluationResult::operator+=(
         this->distance /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
 
         // Weighted addition of propActivatedRoots
-        this->propActivatedRoots = this->propActivatedRoots * (double)this->nbEvaluation +
-                       otherConverted.propActivatedRoots * (double)otherConverted.nbEvaluation;
-        this->propActivatedRoots /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
+        this->nbActivatedTeam = this->nbActivatedTeam * (double)this->nbEvaluation +
+                       otherConverted.nbActivatedTeam * (double)otherConverted.nbEvaluation;
+        this->nbActivatedTeam /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
+
+        // Weighted addition of propActivatedRoots
+        this->nbActivatedAction = this->nbActivatedAction * (double)this->nbEvaluation +
+                       otherConverted.nbActivatedAction * (double)otherConverted.nbEvaluation;
+        this->nbActivatedAction /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
 
         // Addition ot nbEvaluation
         this->nbEvaluation += otherConverted.nbEvaluation;
