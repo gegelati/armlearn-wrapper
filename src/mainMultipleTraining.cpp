@@ -92,6 +92,7 @@ int main(){
                 armLearnEnv.loadValidationTrajectories();
             }
 
+
             if(trainingParams.progressiveModeTargets){
                 // Update/Generate the first training validation trajectories
                 armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
@@ -130,6 +131,10 @@ int main(){
             for (uint64_t i = 0; i < globalParams.nbGenerations && !timeLimitReached; i++) {
                 armLearnEnv.setgeneration(i);
 
+
+                if(seed < 3){
+                    break;
+                }   
 
                 // Update/Generate the training trajectories
                 armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
