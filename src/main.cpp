@@ -117,7 +117,7 @@ int main() {
     if(trainingParams.startPreviousTPG){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, armLearnEnv.getDataSources(), 8);
-        File::TPGGraphDotImporter dotImporter((slashToAdd + "outLogs/dotfiles/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
+        MARL::MarlTPGGraphDotImporter dotImporter((slashToAdd + "outLogs/dotfiles/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
     }
 
     // Save the validation trajectories
@@ -133,7 +133,7 @@ int main() {
     if(trainingParams.testing){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
-        File::TPGGraphDotImporter dotImporter((slashToAdd + trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
+        MARL::MarlTPGGraphDotImporter dotImporter((slashToAdd + trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
     } else {
 
@@ -144,7 +144,7 @@ int main() {
         Log::LAPolicyStatsLogger logStats(la, stats);
 
         // Create an exporter for all graphs
-        File::TPGGraphDotExporter dotExporter((slashToAdd + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
+        MARL::MarlTPGGraphDotExporter dotExporter((slashToAdd + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
 
         std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
         std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());

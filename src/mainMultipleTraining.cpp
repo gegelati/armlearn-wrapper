@@ -120,7 +120,7 @@ int main(){
             Log::LAPolicyStatsLogger logStats(la, stats);
 
             // Create an exporter for all graphs
-            File::TPGGraphDotExporter dotExporter((path + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
+            MARL::MarlTPGGraphDotExporter dotExporter((path + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
 
             std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
             std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
@@ -147,10 +147,6 @@ int main(){
                     // Set true if the time is above the limit
                     timeLimitReached = (((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() > trainingParams.timeMaxTraining);
                 }
-
-                if(timeLimitReached){
-                    std::cout<<"reason 1"<<std::endl;
-                }
             }
 
 
@@ -172,6 +168,14 @@ int main(){
 
             // close log file also
             stats.close();
+
+
+            auto &tpg = *la.getTPGGraph();
+            Environment env(set, armLearnEnv.getDataSources(), 8);
+            MARL::MarlTPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
+            trainingParams.testPath = (path + "outLogs").c_str();
+            trainingParams.testing = true;
+            la.testingBestRoot(globalParams.nbIterationsPerPolicyEvaluation);
 
             // cleanup
             for (unsigned int i = 0; i < set.getNbInstructions(); i++) {
