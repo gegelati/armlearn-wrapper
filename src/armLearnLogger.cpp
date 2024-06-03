@@ -52,7 +52,8 @@ void Log::ArmLearnLogger::logHeader()
     if (doValidation) {
         *this << std::setw(colWidth) << "vRewAvg" << std::setw(colWidth) << "vRewMax"
               << std::setw(colWidth) << "vDistMax"<< std::setw(colWidth) << "vSuccess"
-              << std::setw(colWidth) << "vNbTeam"<< std::setw(colWidth) << "vNbAction";
+              << std::setw(colWidth) << "vNbTeamR"<< std::setw(colWidth) << "vNbTeam"
+              << std::setw(colWidth) << "vNbAction";
     }
 
     if (doTrainingValidation) {
@@ -129,6 +130,9 @@ void Log::ArmLearnLogger::logAfterValidate(
     std::advance(iter, results.size() - 1);
     double maxSuccess = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getSuccess();
     *this << std::setw(colWidth) << maxSuccess; 
+    double maxNbTeamActivateRatio = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getNbActivatedTeamRatio();
+    *this << std::setw(colWidth) << maxNbTeamActivateRatio; 
+
     double maxNbTeamActivate = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getNbActivatedTeam();
     *this << std::setw(colWidth) << maxNbTeamActivate; 
 

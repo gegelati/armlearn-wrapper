@@ -184,6 +184,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     
     double nbActivatedTeam = 0.0;
     double nbActivatedAction = 0.0;
+    double nbActivatedTeamRatio = 0.0;
 
     // Evaluate nbIteration times
     for (auto iterationNumber = 0; iterationNumber < nbIteration && !cancelThisRoot; iterationNumber++) {
@@ -191,6 +192,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
         double nbActivatedTeamOneEp = 0.0;
         double nbActivatedActionOneEp = 0.0;
+        double nbActivatedTeamRatioOneEp = 0.0;
 
 
         if(trainingParams.testing){
@@ -215,6 +217,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
                 = marlTee->executeFromRoot(*root, marlLe->getInitActions(), this->params);
 
 
+            nbActivatedTeamRatioOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateTeamRatio();
             nbActivatedTeamOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateTeam();
             nbActivatedActionOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateAction();
 
@@ -232,6 +235,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
         }
 
+        nbActivatedTeamRatio += nbActivatedTeamRatioOneEp / nbActions;
         nbActivatedTeam += nbActivatedTeamOneEp / nbActions;
         nbActivatedAction += nbActivatedActionOneEp / nbActions;
 
@@ -282,6 +286,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
             distance / (double)nbIteration,
             nbActivatedTeam / (double)nbIteration,
             nbActivatedAction / (double)nbIteration,
+            nbActivatedTeamRatio / (double)nbIteration,
             trajectoriesScore, nbIteration));
 
     // Combine it with previous one if any

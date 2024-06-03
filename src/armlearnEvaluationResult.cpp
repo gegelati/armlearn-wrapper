@@ -15,6 +15,11 @@ double Learn::ArmlearnEvaluationResult::getNbActivatedTeam() const{
     return this->nbActivatedTeam;
 }
 
+double Learn::ArmlearnEvaluationResult::getNbActivatedTeamRatio() const{
+    return this->nbActivatedTeamRatio;
+}
+
+
 double Learn::ArmlearnEvaluationResult::getNbActivatedAction() const{
     return this->nbActivatedAction;
 }
@@ -57,6 +62,11 @@ Learn::EvaluationResult& Learn::ArmlearnEvaluationResult::operator+=(
         this->nbActivatedTeam = this->nbActivatedTeam * (double)this->nbEvaluation +
                        otherConverted.nbActivatedTeam * (double)otherConverted.nbEvaluation;
         this->nbActivatedTeam /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
+
+        // Weighted addition of propActivatedRoots
+        this->nbActivatedTeamRatio = this->nbActivatedTeamRatio * (double)this->nbEvaluation +
+                       otherConverted.nbActivatedTeamRatio * (double)otherConverted.nbEvaluation;
+        this->nbActivatedTeamRatio /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
 
         // Weighted addition of propActivatedRoots
         this->nbActivatedAction = this->nbActivatedAction * (double)this->nbEvaluation +
