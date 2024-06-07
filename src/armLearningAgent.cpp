@@ -212,20 +212,26 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
         while (!le.isTerminal() &&
                nbActions < this->params.maxNbActionsPerEval) {
 
-            // Get the actions
-            std::map<std::uint64_t, std::pair<std::uint64_t, double>> actions 
-                = marlTee->executeFromRoot(*root, marlLe->getInitActions(), this->params);
-
-
-            nbActivatedTeamRatioOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateTeamRatio();
-            nbActivatedTeamOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateTeam();
-            nbActivatedActionOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateAction();
-
             std::vector<std::uint64_t> actionsID;
-            // Browse the map to get the actions ID
-            for (const auto& obj :actions) {
-                actionsID.push_back(obj.second.first);
+            if((dynamic_cast<const MARL::MarlTPGTeam*>(root))){
+                // Get the actions
+                std::map<std::uint64_t, std::pair<std::uint64_t, double>> actions 
+                    = marlTee->executeFromRoot(*root, marlLe->getInitActions(), this->params);
+
+
+                nbActivatedTeamRatioOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateTeamRatio();
+                nbActivatedTeamOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateTeam();
+                nbActivatedActionOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateAction();
+
+                // Browse the map to get the actions ID
+                for (const auto& obj :actions) {
+                    actionsID.push_back(obj.second.first);
+                }
+            }else{
+                actionsID = marlLe->getInitActions();
             }
+
+
 
 
             // Do it

@@ -178,6 +178,7 @@ int main() {
 
         // Keep best policy
         la.keepBestPolicy();
+        la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
         dotExporter.setNewFilePath((slashToAdd + "outLogs/out_best.dot").c_str());
         dotExporter.print();
 
