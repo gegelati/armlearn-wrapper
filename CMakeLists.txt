@@ -85,6 +85,7 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainPPO.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/graphPruner.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
@@ -105,6 +106,18 @@ foreach(sacFile ${sacFiles})
     list(REMOVE_ITEM
             armgegelati_files
             ${sacFile})
+endforeach()
+
+# Delete PPO files for know
+file(GLOB 
+        ppoFiles
+        ./src/ppo/*.cpp
+        ./src/ppo/*.h)
+
+foreach(ppoFile ${ppoFiles})
+    list(REMOVE_ITEM
+            armgegelati_files
+            ${ppoFile})
 endforeach()
 
 
@@ -193,6 +206,38 @@ list(REMOVE_ITEM
         armgegelati_files
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.h)
+
+
+list(APPEND
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainPPO.cpp)
+
+foreach(ppoFile ${ppoFiles})
+        list(APPEND
+                armgegelati_files
+                ${ppoFile})
+endforeach()
+
+# armSoftActorCritic: Training SoftActorCritic on the ArmLearnWrapper learning environment
+add_executable(armPPO ${armgegelati_files})
+
+
+target_link_libraries(armPPO ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
+target_compile_definitions(armPPO PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+
+
+list(REMOVE_ITEM
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainPPO.cpp)
+
+
+foreach(ppoFile ${ppoFiles})
+        list(REMOVE_ITEM
+                armgegelati_files
+                ${ppoFile})
+endforeach()
+
+
 
 list(APPEND
         armgegelati_files
