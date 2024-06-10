@@ -122,7 +122,8 @@ void SoftActorCritic::learn(){
 
 void SoftActorCritic::loadModels(){
     std::cout<<" ----- Loading Models ----- "<<std::endl;
-    std::string path = (std::filesystem::exists("/params/trainParams.json")) ? "/outLogs/models/best_model/": "outLogs/models/best_model/";
+    std::string slashToAdd = (std::filesystem::exists(params.pathModel)) ? "": "/";
+    std::string path = (slashToAdd + params.pathModel + "/models/best_model/").c_str();
     actorNet.loadCheckpoint(path);
     criticNet1.loadCheckpoint(path);
     criticNet2.loadCheckpoint(path);
@@ -132,10 +133,10 @@ void SoftActorCritic::loadModels(){
 
 void SoftActorCritic::saveModels(uint64_t genenrationNumber, bool bestModel){
     //std::cout<<" ----- Saving Models ----- "<<std::endl;
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
-    std::string path = (slashToAdd + "outLogs/models/save_" + std::to_string(genenrationNumber) + "/").c_str();
+    std::string slashToAdd = (std::filesystem::exists(params.pathModel)) ? "": "/";
+    std::string path = (slashToAdd + params.pathModel + "/models/save_" + std::to_string(genenrationNumber) + "/").c_str();
     if(bestModel){
-        path = (slashToAdd + "outLogs/models/best_model/").c_str();
+        path = (slashToAdd + params.pathModel + "/models/best_model/").c_str();
     }
     if(!std::filesystem::exists(path)){
         std::filesystem::create_directory(path);

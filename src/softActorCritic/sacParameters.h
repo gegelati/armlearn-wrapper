@@ -93,6 +93,9 @@ public:
     /// True to load the models
     bool loadModels = false;
 
+    /// Path to models
+    std::string pathModel = "outLogs";
+
     /// True to unable multiple actions
     bool multipleActions = true;
 
