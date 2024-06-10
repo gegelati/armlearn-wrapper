@@ -51,7 +51,7 @@ class PPO
          */
         void remember(torch::Tensor state, std::pair<torch::Tensor, torch::Tensor> actionNCritic, double reward, bool done);
 
-        std::vector<torch::Tensor> expectedReturns(std::vector<torch::Tensor> rewards, std::vector<torch::Tensor> dones, std::vector<torch::Tensor> vals);
+        torch::Tensor expectedReturns(std::vector<torch::Tensor> rewards, std::vector<torch::Tensor> dones, std::vector<torch::Tensor> vals);
 
         /// @brief Learn function
         void learn();

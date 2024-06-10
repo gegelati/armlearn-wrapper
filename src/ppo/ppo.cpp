@@ -25,7 +25,7 @@ void PPO::remember(torch::Tensor state, std::pair<torch::Tensor, torch::Tensor> 
         );
 }
 
-std::vector<torch::Tensor> PPO::expectedReturns(std::vector<torch::Tensor> rewards, std::vector<torch::Tensor> dones, std::vector<torch::Tensor> vals){
+torch::Tensor PPO::expectedReturns(std::vector<torch::Tensor> rewards, std::vector<torch::Tensor> dones, std::vector<torch::Tensor> vals){
     // Compute the returns.
     torch::Tensor gae = torch::zeros({1}, torch::kFloat64);
     std::vector<torch::Tensor> returns(rewards.size(), torch::zeros({1}, torch::kFloat64));
@@ -37,7 +37,15 @@ std::vector<torch::Tensor> PPO::expectedReturns(std::vector<torch::Tensor> rewar
         gae = delta + params.gamma*params.lambda*(1-dones[i])*gae;
         returns[i] = gae + vals[i];
     }
-    return returns;
+
+    torch::Tensor t_returns = torch::cat(returns).detach();
+
+    if(params.standardize){
+        t_returns = ((t_returns - torch::mean(t_returns)) / 
+                torch::std(t_returns) + 10e-7);
+    }
+
+    return t_returns;
 }
 
 void PPO::learn(){
@@ -45,8 +53,8 @@ void PPO::learn(){
     buffer.storeValue(net.forward(buffer.getStateMemory()[params.sizeBuffer-1]).second);
 
     torch::Tensor log_probs = torch::cat(buffer.getLogProbsMemory()).detach();
-    torch::Tensor returns = torch::cat(expectedReturns(buffer.getRewardMemory(), buffer.getTerminalMemory(), buffer.getValueMemory())).detach();
-    torch::Tensor values = torch::cat(buffer.getLogProbsMemory()).detach();
+    torch::Tensor returns = expectedReturns(buffer.getRewardMemory(), buffer.getTerminalMemory(), buffer.getValueMemory());
+    torch::Tensor values = torch::cat(buffer.getValueMemory()).detach();
     torch::Tensor actions = torch::cat(buffer.getActionMemory());
     torch::Tensor states = torch::cat(buffer.getStateMemory());
     torch::Tensor rewards = torch::cat(buffer.getRewardMemory());

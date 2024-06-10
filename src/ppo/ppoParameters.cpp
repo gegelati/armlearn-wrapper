@@ -93,6 +93,12 @@ if (param == "clip") {
         return;
     }
 
+    if (param == "standardize") {
+        standardize = (bool)value.asBool();
+        return;
+    }
+
+
     if (param == "loadModels") {
         loadModels = (bool)value.asBool();
         return;

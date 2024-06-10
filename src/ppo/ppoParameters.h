@@ -96,6 +96,9 @@ public:
     /// Size of the second layer of the models
     int sizeHL2 = 256;
 
+    /// To standardize or not the expected return
+    bool standardize = false;
+
     /// True to load the models
     bool loadModels = false;
     /// Path to models
