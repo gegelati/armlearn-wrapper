@@ -47,30 +47,34 @@ int main(){
 
     for(int indexConf = 0; indexConf < nbTrainingConfig; indexConf++){
 
-        
+        std::string pathConf = (slashToAdd + "outLogs/config_"+ std::to_string(indexConf) + "/").c_str();
+
+        if(!std::filesystem::exists(pathConf)){
+            std::filesystem::create_directory(pathConf);
+            std::filesystem::create_directory((pathConf + "params/").c_str());
+            std::filesystem::copy(repoConfig + "trainParams_" + std::to_string(indexConf) + ".json", (pathConf + "params/").c_str());
+            std::filesystem::copy(repoConfig + "params_" + std::to_string(indexConf) + ".json", (pathConf + "params/").c_str());
+        }
+
 
         for(int seed = 0; seed < nbSeed; seed++){
 
             // Create file with config and tout le tralala
-            std::string path = (slashToAdd + "outLogs/config_"+ std::to_string(indexConf) + "_" + std::to_string(seed) + "/").c_str();
+            std::string path = (pathConf + "seed_" + std::to_string(seed) + "/").c_str();
             if(!std::filesystem::exists(path)){
                 std::filesystem::create_directory(path);
                 std::filesystem::create_directory((path + "outLogs/").c_str());
                 std::filesystem::create_directory((path + "outLogs/dotfiles/").c_str());
-                std::filesystem::create_directory((path + "params/").c_str());
-
-                std::filesystem::copy(repoConfig + "trainParams_" + std::to_string(indexConf) + ".json", (path + "params/").c_str());
-                std::filesystem::copy(repoConfig + "params_" + std::to_string(indexConf) + ".json", (path + "params/").c_str());
             }
 
             std::cout<<"\nActually working with config " << indexConf << " and seed "<< seed<<"\n"<<std::endl;
 
             TrainingParameters trainingParams;
-            trainingParams.loadParametersFromJson((path + "params/trainParams_" + std::to_string(indexConf) + ".json").c_str());
+            trainingParams.loadParametersFromJson((pathConf + "params/trainParams_" + std::to_string(indexConf) + ".json").c_str());
 
             // Params of this config
             Learn::LearningParameters params;
-            File::ParametersParser::loadParametersFromJson((repoConfig + "params_" + std::to_string(indexConf) + ".json").c_str(), params);
+            File::ParametersParser::loadParametersFromJson((pathConf + "params/params_" + std::to_string(indexConf) + ".json").c_str(), params);
 
             // Create the instruction set for programs
             Instructions::Set set;
@@ -87,6 +91,7 @@ int main(){
                 }
                 armLearnEnv.loadValidationTrajectories();
             }
+
 
             if(trainingParams.progressiveModeTargets){
                 // Update/Generate the first training validation trajectories
@@ -115,7 +120,7 @@ int main(){
             Log::LAPolicyStatsLogger logStats(la, stats);
 
             // Create an exporter for all graphs
-            File::TPGGraphDotExporter dotExporter((path + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
+            MARL::MarlTPGGraphDotExporter dotExporter((path + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
 
             std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
             std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
@@ -125,7 +130,6 @@ int main(){
             // Train for params.nbGenerations generations
             for (uint64_t i = 0; i < globalParams.nbGenerations && !timeLimitReached; i++) {
                 armLearnEnv.setgeneration(i);
-
 
                 // Update/Generate the training trajectories
                 armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
@@ -142,10 +146,6 @@ int main(){
                 if(trainingParams.timeMaxTraining > 0){
                     // Set true if the time is above the limit
                     timeLimitReached = (((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() > trainingParams.timeMaxTraining);
-                }
-
-                if(seed == 0){
-                    break;
                 }
             }
 
@@ -169,9 +169,10 @@ int main(){
             // close log file also
             stats.close();
 
+
             auto &tpg = *la.getTPGGraph();
             Environment env(set, armLearnEnv.getDataSources(), 8);
-            File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
+            MARL::MarlTPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
             trainingParams.testPath = (path + "outLogs").c_str();
             trainingParams.testing = true;
             la.testingBestRoot(globalParams.nbIterationsPerPolicyEvaluation);

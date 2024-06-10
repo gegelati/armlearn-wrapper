@@ -126,9 +126,9 @@ void Learn::ArmLearningAgent::testingBestRoot(uint64_t generationNumber){
         *tee, *job, generationNumber, mode, this->learningEnvironment);
 
 
-
-    std::cout<<"Testing score : "<<result->getResult();
-    std::cout << " -- Testing success rate " << std::dynamic_pointer_cast<ArmlearnEvaluationResult>(result)->getSuccess();
+    std::cout<<"Testing Distance : "<<std::dynamic_pointer_cast<ArmlearnEvaluationResult>(result)->getDistance();
+    std::cout<<" -- Testing score : "<<result->getResult();
+    std::cout << " -- Testing success rate : " << std::dynamic_pointer_cast<ArmlearnEvaluationResult>(result)->getSuccess();
 
     auto testingTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
     std::cout<<" -- Time of testing "<<testingTime<<std::endl;
