@@ -110,6 +110,12 @@ namespace Learn {
 
         virtual std::queue<std::shared_ptr<Learn::Job>> makeJobs(
         Learn::LearningMode mode, TPG::TPGGraph* tpgGraph) override;
+
+
+        std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> keepBestPolicies(uint64_t nbPolicies);
+
+        void createPopulationFromResults(std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> results);
     };
+
 } // namespace Learn
 #endif

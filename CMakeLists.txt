@@ -86,6 +86,7 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainFederated.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/graphPruner.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
@@ -120,6 +121,21 @@ target_compile_definitions(armGegelati PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
 list(REMOVE_ITEM
         armgegelati_files
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/main.cpp)
+
+list(APPEND
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainFederated.cpp)
+
+
+# armFederated: Create multiple trainings
+add_executable(armFederated ${armgegelati_files})
+target_link_libraries(armFederated ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
+target_compile_definitions(armFederated PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+
+list(REMOVE_ITEM
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainFederated.cpp)
+
 list(APPEND
         armgegelati_files
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp)

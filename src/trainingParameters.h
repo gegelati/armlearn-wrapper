@@ -194,6 +194,8 @@ public:
     /// Kill the algorithm if a collision is encountered. TPGs are automatically killed
 	bool killIfCollision = false;
 
+	/// to test single action on marl gegelati
+	bool testSingleAction = true;
 
 
     /**

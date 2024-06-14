@@ -55,15 +55,68 @@ void ArmLearnWrapper::doActions(std::vector<std::uint64_t> actions) {
     std::vector<double> motorAction = {0, 0, 0, 0, 0, 0};
     double step  = params.sizeAction;
 
-    for(int actionID=0; actionID < actions.size(); actionID++){
-        motorAction[actionID] = step * ((double)actions[actionID] - 1); // -1 because action is either 0, 1 or 2 and became -1, 0 or +1 motor step
-    } 
+    if(params.testSingleAction){
+        // Get the action
+        switch (actions[0]) {
+            case 0:
+                motorAction = {step, 0, 0, 0, 0, 0};
+                break;
+            case 1:
+                motorAction = {0, step, 0, 0, 0, 0};
+                break;
+            case 2:
+                motorAction = {0, 0, step, 0, 0, 0};
+                break;
+            case 3:
+                motorAction = {0, 0, 0, step, 0, 0};
+                break;
+            case 4:
+                motorAction = {-step, 0, 0, 0, 0, 0};
+                break;
+            case 5:
+                motorAction = {0, -step, 0, 0, 0, 0};
+                break;
+            case 6:
+                motorAction = {0, 0, -step, 0, 0, 0};
+                break;
+            case 7:
+                motorAction = {0, 0, 0, -step, 0, 0};
+                break;
+            case 8:
+                motorAction = {0, 0, 0, 0, 0, 0};
+                if(gegelatiRunning && !params.actionSpeed){
+                    isMoving=false;
+                }
+                break;
 
-    if(motorAction == std::vector<double>{0, 0, 0, 0, 0, 0}){
-        if(gegelatiRunning && !params.actionSpeed){
-            isMoving=false;
+                // Following cases only when the hand is trained
+            case 9:
+                motorAction = {0, 0, 0, 0, step, 0};
+                break;
+            case 10:
+                motorAction = {0, 0, 0, 0, 0, step};
+                break;
+            case 11:
+                motorAction = {0, 0, 0, 0, -step, 0};
+                break;
+            case 12:
+                motorAction = {0, 0, 0, 0, 0, -step};
+                break;
+            }
+    }
+    else{
+        for(int actionID=0; actionID < actions.size(); actionID++){
+            motorAction[actionID] = step * ((double)actions[actionID] - 1); // -1 because action is either 0, 1 or 2 and became -1, 0 or +1 motor step
+        } 
+
+        if(motorAction == std::vector<double>{0, 0, 0, 0, 0, 0}){
+            if(gegelatiRunning && !params.actionSpeed){
+                isMoving=false;
+            }
         }
     }
+
+
 
     
 

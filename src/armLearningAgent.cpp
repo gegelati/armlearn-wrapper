@@ -10,9 +10,8 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
         logger.get().logNewGeneration(generationNumber);
     }
 
-    
     // Populate Sequentially
-    MARL::MarlTPGMutator::populateTPG(*this->tpg, this->archive,
+    MARL::MarlTPGMutator::populateTPG(*dynamic_cast<MARL::MarlTPGGraph*>(this->tpg.get()), this->archive,
                                      this->params.mutation, this->rng,
                                      maxNbThreads);
     for (auto logger : loggers) {
@@ -29,7 +28,6 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     auto iter = results.begin();
     std::advance(iter, results.size() - 1);
     double bestResult = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getResult();
-
     // Update five last best score
     fiveLastBest.push_back(bestResult);
     if (generationNumber >= 5){
@@ -211,6 +209,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
         uint64_t nbActions = 0;
         while (!le.isTerminal() &&
                nbActions < this->params.maxNbActionsPerEval) {
+            
+
 
             std::vector<std::uint64_t> actionsID;
             if((dynamic_cast<const MARL::MarlTPGTeam*>(root))){
@@ -227,13 +227,17 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
                 for (const auto& obj :actions) {
                     actionsID.push_back(obj.second.first);
                 }
-            }else{
+            }else if((dynamic_cast<const MARL::MarlTPGAction*>(root))){
                 actionsID = marlLe->getInitActions();
+                const MARL::MarlTPGAction* actionRoot = (dynamic_cast<const MARL::MarlTPGAction*>(root));
+                actionsID[actionRoot->getActionID()] = actionRoot->getActionValue();
+            }else {
+                throw std::runtime_error("Root should be either MARL Team or MARL Action");
             }
 
 
 
-
+            
             // Do it
             marlLe->doActions(actionsID);
             // Count actions
@@ -325,4 +329,72 @@ std::queue<std::shared_ptr<Learn::Job>> Learn::ArmLearningAgent::makeJobs(
     }
 
     return jobs;
+}
+
+std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> Learn::ArmLearningAgent::keepBestPolicies(uint64_t nbPolicies)
+{
+    // Some actions may be encountered but not removed while scanning the
+    // results map they should be re-inserted to the list before leaving the
+    // method.
+    std::multimap<std::shared_ptr<EvaluationResult>, const TPG::TPGVertex*>
+        preservedActionRoots;
+
+    std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> results;
+
+    while(this->tpg->getNbRootVertices() != nbPolicies){
+
+        auto currentNbRoots = this->tpg->getNbRootVertices();
+        auto i = 0;
+        results = this->evaluateAllRoots(params.nbGenerations+1, LearningMode::TRAINING);
+
+        while (i < currentNbRoots - nbPolicies && results.size() > 0) {
+            // If the root is an action, do not remove it!
+            const TPG::TPGVertex* root = results.begin()->second;
+
+            tpg->removeVertex(*results.begin()->second);
+            // Removed stored result (if any)
+            this->resultsPerRoot.erase(results.begin()->second);
+
+            results.erase(results.begin());
+
+            // Increment loop counter
+            i++;
+        }
+        // Restore root actions
+        results.insert(preservedActionRoots.begin(), preservedActionRoots.end());
+
+        for(auto pair: results){ 
+            auto a = pair.second->getOutgoingEdges().back()->getDestination();
+        }
+
+    }
+
+    return results;
+}
+
+void Learn::ArmLearningAgent::createPopulationFromResults(std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> results){
+
+    // Delete all roots except actions
+    std::vector<const TPG::TPGVertex*> rootToDelete;
+
+    for(const TPG::TPGVertex* root : this->tpg->getRootVertices()){
+        if(dynamic_cast<const TPG::TPGAction*>(root)== nullptr){
+            rootToDelete.push_back(root);
+        }
+    }
+    for(const TPG::TPGVertex* root: rootToDelete){
+        this->tpg->removeVertex(*root);
+    }
+
+    std::cout<<this->tpg->getNbRootVertices()<<std::endl;
+
+    for(auto pair: results){ 
+        auto a = pair.second->getOutgoingEdges().back()->getDestination();
+
+        //this->tpg->addNewTeam(*pair.second);
+    }
+    std::cout<<this->tpg->getNbRootVertices()<<std::endl;
+
+
+
 }

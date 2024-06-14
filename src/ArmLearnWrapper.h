@@ -196,7 +196,10 @@ public:
      * controlling the hand of the robotic arm are trained.
      */
     ArmLearnWrapper(int nbMaxActions, TrainingParameters& params, bool gegelatiRunning, bool handServosTrained = false)
-            : MARL::MarlLearningEnvironment(std::vector<size_t>{3, 3, 3, 3}, std::vector<size_t>{1, 1, 1, 1}), gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
+            : MARL::MarlLearningEnvironment(
+                (!params.testSingleAction) ? std::vector<size_t>{3, 3, 3, 3} : std::vector<size_t>{9}, 
+                (!params.testSingleAction) ? std::vector<size_t>{1, 1, 1, 1} : std::vector<size_t>{8}), 
+            gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
               nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3), dataMotorSpeed((params.actionSpeed) ? 4:0),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params) {

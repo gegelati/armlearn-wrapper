@@ -256,6 +256,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         killIfCollision = (bool)value.asBool();
         return;
     }
+
+    if (param == "testSingleAction"){
+        testSingleAction = (bool)value.asBool();
+        return;
+    }
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }
