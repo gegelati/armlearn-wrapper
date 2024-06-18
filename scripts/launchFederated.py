@@ -7,7 +7,10 @@ nbSeed = 0
 nbconfig = 0
 
 
-pathBuild = ""
+if(os.path.exists("params")):
+    pathBuild = ""
+else:
+    pathBuild = "/"
 pathRepoConfig = pathBuild + "params/repoConfig/"
 
 with open(pathRepoConfig + "launchMultiTraining.txt", "r") as file:
