@@ -37,6 +37,7 @@ for indexConf in range(nbconfig):
     # Copy parameter files
     shutil.copy(pathBuild + "params/repoConfig/params_" + str(indexConf) + ".json", pathConf + "params/params.json")
     shutil.copy(pathBuild + "params/repoConfig/trainParams_" + str(indexConf) + ".json", pathConf + "params/trainParams.json")
+    shutil.copy(pathBuild + "params/repoConfig/federatedParams_" + str(indexConf) + ".json", pathConf + "params/federatedParams.json")
     
 
     for indexSeed in range(nbSeed):
@@ -52,14 +53,14 @@ for indexConf in range(nbconfig):
         # Update data
         data["pathTargetCSV"] = pathBuild + "params/AllTarget.csv"
         data["pathLogs"] = pathSeed
-        data["seed"] = indexSeed * 2#data["nbFederatedTPGs"]
+        data["seed"] = indexSeed * data["federatedNbSeed"]
         data["loadValidationTrajectories"] = indexSeed != 0
         data["saveValidationTrajectories"] = indexSeed == 0
         # Save data
         with open(f'{pathConf}params/trainParams.json', 'w') as f:
             json.dump(data, f, indent=4)
 
-        print(pathConf)
+        print("Start Configuration {} with seed {}".format(indexConf, indexSeed))
 
         # Run the federated training
-        subprocess.run("ls -l; ./build/armFederated {}params/".format(pathConf), shell=True)
+        subprocess.run("./build/armFederated {}params/".format(pathConf), shell=True)
