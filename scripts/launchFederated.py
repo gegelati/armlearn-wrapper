@@ -7,7 +7,7 @@ nbSeed = 0
 nbconfig = 0
 
 
-pathBuild = "build/"
+pathBuild = ""
 pathRepoConfig = pathBuild + "params/repoConfig/"
 
 with open(pathRepoConfig + "launchMultiTraining.txt", "r") as file:
@@ -45,7 +45,6 @@ for indexConf in range(nbconfig):
         # Create seed folders
         pathSeed = pathConf + "seed_" + str(indexSeed) + "/"
         os.makedirs(pathSeed)
-        os.makedirs(pathSeed + "dotfiles/")
 
         # Load data
         with open(f'{pathConf}params/trainParams.json', 'r') as f:
@@ -63,4 +62,4 @@ for indexConf in range(nbconfig):
         print("Start Configuration {} with seed {}".format(indexConf, indexSeed))
 
         # Run the federated training
-        subprocess.run("./build/armFederated {}params/".format(pathConf), shell=True)
+        subprocess.run("./armFederated {}params/".format(pathConf), shell=True)
