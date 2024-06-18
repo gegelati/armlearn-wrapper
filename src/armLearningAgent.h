@@ -112,9 +112,12 @@ namespace Learn {
         Learn::LearningMode mode, TPG::TPGGraph* tpgGraph) override;
 
 
-        std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> keepBestPolicies(uint64_t nbPolicies);
+        std::vector<const TPG::TPGVertex *> keepBestPolicies(uint64_t nbPolicies);
 
-        void createPopulationFromResults(std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> results);
+        std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> generateDataOfRoots(
+          std::vector<const TPG::TPGVertex *>& bestRoots, LearningEnvironment& le, uint64_t nbIterations);
+
+        void createPopulationFromRoots(std::vector<const TPG::TPGVertex *> roots);
     };
 
 } // namespace Learn

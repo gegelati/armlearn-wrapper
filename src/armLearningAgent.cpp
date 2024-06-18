@@ -331,7 +331,7 @@ std::queue<std::shared_ptr<Learn::Job>> Learn::ArmLearningAgent::makeJobs(
     return jobs;
 }
 
-std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> Learn::ArmLearningAgent::keepBestPolicies(uint64_t nbPolicies)
+std::vector<const TPG::TPGVertex *> Learn::ArmLearningAgent::keepBestPolicies(uint64_t nbPolicies)
 {
     // Some actions may be encountered but not removed while scanning the
     // results map they should be re-inserted to the list before leaving the
@@ -362,23 +362,118 @@ std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> 
         }
         // Restore root actions
         results.insert(preservedActionRoots.begin(), preservedActionRoots.end());
+    } 
 
-        for(auto pair: results){ 
-            auto a = pair.second->getOutgoingEdges().back()->getDestination();
+    // Conserve only the roots, the results do not are usefull now
+    std::vector<const TPG::TPGVertex *> bestRoots;
+    for(auto pair: results){
+        bestRoots.push_back(pair.second);   
+    }
+    return bestRoots;
+}
+
+
+std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> Learn::ArmLearningAgent::generateDataOfRoots(std::vector<const TPG::TPGVertex *>& bestRoots, LearningEnvironment& le, uint64_t nbIterations){
+
+
+    // Create the TPGExecutionEngine for this evaluation.
+    // The engine uses the Archive only in training mode.
+    std::unique_ptr<TPG::TPGExecutionEngine> tee =
+        this->tpg->getFactory().createTPGExecutionEngine(
+        this->env, NULL);
+
+    // Get the tpg execution engine with the right class
+    if (!dynamic_cast<MARL::MarlTpgExecutionEngine*>(tee.get())) {
+        throw std::runtime_error("tee should be a MarlTpgExecutionEngine object but "
+                                "seems to be a simple TPGExecutionEngine object");
+    }
+    MARL::MarlTpgExecutionEngine* marlTee = dynamic_cast<MARL::MarlTpgExecutionEngine*>(tee.get());
+
+    // Get the learning environment with the right class
+    if(!dynamic_cast<MARL::MarlLearningEnvironment*>(&le)){
+        throw std::runtime_error("le should be a MarlLearningEnvironment object but "
+                                 "seems to be a simple LearningEnvironment object");
+    }
+    MARL::MarlLearningEnvironment* marlLe = dynamic_cast<MARL::MarlLearningEnvironment*>(&le);
+
+
+    // Instantiate the data map
+    std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> data;
+
+    for(const TPG::TPGVertex * root: bestRoots){
+
+        // To store the score and success
+        std::multimap<double, bool> dataRoot;
+
+        // Evaluate nbIteration times
+        for (auto iterationNumber = 0; iterationNumber < nbIterations; iterationNumber++) {
+
+            // Compute a Hash
+            Data::Hash<uint64_t> hasher;
+            uint64_t hash = hasher(1000) ^ hasher(iterationNumber); //TODO
+
+            // Reset the learning Environment
+            le.reset(hash, Learn::LearningMode::VALIDATION, iterationNumber, 1000); // TODO
+
+            uint64_t nbActions = 0;
+            while (!le.isTerminal() &&
+                nbActions < this->params.maxNbActionsPerEval) {
+                
+
+
+                std::vector<std::uint64_t> actionsID;
+                if((dynamic_cast<const MARL::MarlTPGTeam*>(root))){
+                    // Get the actions
+                    std::map<std::uint64_t, std::pair<std::uint64_t, double>> actions 
+                        = marlTee->executeFromRoot(*root, marlLe->getInitActions(), this->params);
+
+                    // Browse the map to get the actions ID
+                    for (const auto& obj :actions) {
+                        actionsID.push_back(obj.second.first);
+                    }
+                }else if((dynamic_cast<const MARL::MarlTPGAction*>(root))){
+                    actionsID = marlLe->getInitActions();
+                    const MARL::MarlTPGAction* actionRoot = (dynamic_cast<const MARL::MarlTPGAction*>(root));
+                    actionsID[actionRoot->getActionID()] = actionRoot->getActionValue();
+                }else {
+                    throw std::runtime_error("Root should be either MARL Team or MARL Action");
+                }
+
+
+
+                
+                // Do it
+                marlLe->doActions(actionsID);
+                // Count actions
+                nbActions++;
+
+            }
+
+            // Save score
+            double score = le.getScore();
+
+            // Save success
+            bool success = ((ArmLearnWrapper&)le).getDistance() < trainingParams.rangeTarget;
+
+            // Push back the id with the score
+            dataRoot.insert(std::make_pair(score, success));
         }
+        data.insert(std::make_pair(root, dataRoot));
 
     }
 
-    return results;
+    return data;
+
+
 }
 
-void Learn::ArmLearningAgent::createPopulationFromResults(std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> results){
+void Learn::ArmLearningAgent::createPopulationFromRoots(std::vector<const TPG::TPGVertex *> roots){
 
     // Delete all roots except actions
     std::vector<const TPG::TPGVertex*> rootToDelete;
 
     for(const TPG::TPGVertex* root : this->tpg->getRootVertices()){
-        if(dynamic_cast<const TPG::TPGAction*>(root)== nullptr){
+        if(dynamic_cast<const MARL::MarlTPGAction*>(root)== nullptr){
             rootToDelete.push_back(root);
         }
     }
@@ -386,15 +481,8 @@ void Learn::ArmLearningAgent::createPopulationFromResults(std::multimap<std::sha
         this->tpg->removeVertex(*root);
     }
 
-    std::cout<<this->tpg->getNbRootVertices()<<std::endl;
-
-    for(auto pair: results){ 
-        auto a = pair.second->getOutgoingEdges().back()->getDestination();
-
-        //this->tpg->addNewTeam(*pair.second);
+    std::multimap<const TPG::TPGVertex*, const TPG::TPGVertex*> addedTeams;
+    for(auto root: roots){ 
+        dynamic_cast<MARL::MarlTPGGraph*>(this->tpg.get())->graftRoot(*root, addedTeams);
     }
-    std::cout<<this->tpg->getNbRootVertices()<<std::endl;
-
-
-
 }
