@@ -63,10 +63,10 @@ namespace Log {
          * elements to.
          */
         explicit ArmLearnLogger(Learn::LearningAgent& la,
-                                bool doTrainingValidation=false, bool doUpdateLimits=false,
+                                bool doTrainingValidation=false,
                                 bool doControlTrajDeletion=true,
                                 std::ostream& out = std::cout)
-            : LALogger(la, out), doTrainingValidation(doTrainingValidation), doUpdateLimits(doUpdateLimits), doControlTrajDeletion(doControlTrajDeletion)
+            : LALogger(la, out), doTrainingValidation(doTrainingValidation), doControlTrajDeletion(doControlTrajDeletion)
         {
             // fixing float precision
             *this << std::setprecision(2) << std::fixed << std::right;
@@ -156,13 +156,6 @@ namespace Log {
          */
         virtual void logEndOfTraining() override;
 
-        /**
-         * \brief Logs the size of the environnement
-         * 
-         * \param envSizeTargets Size of the environnement for the targets
-         * \param envSizeStartingPos Size of the environnement for the starting positions
-         */
-        virtual void logEnvironnementStatus(double envSizeTargets, double envSizeStartingPos);
 
     };
 

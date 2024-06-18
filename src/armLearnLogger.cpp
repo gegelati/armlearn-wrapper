@@ -35,7 +35,7 @@ void Log::ArmLearnLogger::logHeader()
     //*this << std::left;
     *this << std::setw(2 * colWidth) << " " << std::setw(colWidth) << "Train";
     if (doValidation) {
-        *this << std::setw(2 * colWidth) << " " << std::setw(1 * colWidth)
+        *this << std::setw(2 * colWidth) << " " << std::setw(2 * colWidth)
               << "Valid";
     }
     if (doTrainingValidation) {
@@ -59,11 +59,6 @@ void Log::ArmLearnLogger::logHeader()
     if (doTrainingValidation) {
         *this << std::setw(colWidth) << "tvRewAvg" << std::setw(colWidth) << "tvRewMax"
               << std::setw(colWidth) << "tvDistmax";
-    }
-
-    if (doUpdateLimits){
-        *this << std::setw(colWidth) << "S_Targ"; 
-        *this << std::setw(colWidth) << "S_StartP";
     }
 
     if (doControlTrajDeletion){
@@ -164,10 +159,4 @@ void Log::ArmLearnLogger::logEndOfTraining()
         *this << std::setw(colWidth) << trainingValidTime;
     }
     *this << std::setw(colWidth) << getDurationFrom(*start) << std::endl;
-}
-
-void Log::ArmLearnLogger::logEnvironnementStatus(double envSizeTargets, double envSizeStartingPos)
-{
-    *this << std::setw(colWidth) << envSizeTargets;
-    *this << std::setw(colWidth) << envSizeStartingPos;
 }

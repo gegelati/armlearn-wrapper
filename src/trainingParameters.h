@@ -69,38 +69,11 @@ public:
     /// True if training validation is used for random starting pos and random target pos
     bool doTrainingValidation = false;
 
-    /// Use the progressive mode for choosing randomly the targets. If true, progressiveModeMotor is ignored
-    bool progressiveRangeTarget = false;
-
-    /// If True, progressive mode is done by increasing motor position, instead it is the euclidian distance that increase, is ignored if progressiveRangeTarget is true
-    bool progressiveModeMotor = false;
-
     /// True if the starting positions are set randomly
     bool doRandomStartingPosition = false;
 
-    /// True if the sphere will grow progressivly
-    bool progressiveModeTargets = false;
-
-    /// Init size of the sphere within which the target will be instantiate
-    double maxLengthTargets = 30.0;
-
-    /// True if the sphere will grow progressivly
-    bool progressiveModeStartingPos = false;
-
-    /// Init size of the sphere within which the target will be instantiate
-    double maxLengthStartingPos = 30.0;
-
-    /// Upgrade coefficient of the sphere with multiplication
-    double coefficientUpgradeMult = 1.2;
-
-    /// Upgrade coefficient of the sphere with addition
-    double coefficientUpgradeAdd = 20;
-
-    /// Number of consecuitive iterations before upgrading the sphere
-    int nbIterationsUpgrade = 3;
-
     /// rangeTarget that the best TPG has to surpass to increment the upgrade coefficient
-    double rangeTarget = -3.0;
+    double rangeTarget = 5;
 
     /// True to start with a previous TPG
     bool startPreviousTPG = false;
@@ -109,7 +82,7 @@ public:
     std::string namePreviousTPG = "";
 
     /// Proportion of targets reused at each generation
-    double propTrajectoriesReused = 1;
+    double propTrajectoriesReused = 0;
 
     /// True to activate a control over the deletion of trajectories
     bool controlTrajectoriesDeletion = false;
@@ -200,6 +173,11 @@ public:
 	/// to test single action on marl gegelati
 	bool testSingleAction = true;
 
+    // TODO
+	uint64_t federatedNbSeed = 1;
+
+    // TODO
+	uint64_t federatedNbPolicyKept = 1;
 
     /**
      * \brief Loads a given json file and fills the parameters it contains

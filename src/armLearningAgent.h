@@ -28,9 +28,6 @@ namespace Learn {
         /// Parameters for the trianing
         TrainingParameters& trainingParams;
 
-        bool doUpdateLimits;
-        bool doTrainingValidation;
-
         /// Vector that contain the best results of the five last generation
         std::vector<double> fiveLastBest;
         
@@ -48,10 +45,7 @@ namespace Learn {
         ArmLearningAgent(
             MARL::MarlLearningEnvironment& le, const Instructions::Set& iSet,
             const LearningParameters& p, TrainingParameters& trainingParams)
-            : MARL::MarlLearningAgent(le, iSet, p), trainingParams(trainingParams) {
-              this->doUpdateLimits = (this->trainingParams.progressiveModeTargets || this->trainingParams.progressiveModeStartingPos);
-              this->doTrainingValidation = (this->trainingParams.doTrainingValidation && this->doUpdateLimits);
-            };
+            : MARL::MarlLearningAgent(le, iSet, p), trainingParams(trainingParams) {};
 
         /**
          * \brief Evaluate all root TPGVertex of the TPGGraph.

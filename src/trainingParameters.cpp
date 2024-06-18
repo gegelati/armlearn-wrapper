@@ -47,55 +47,8 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "progressiveRangeTarget") {
-        progressiveRangeTarget = (bool)value.asBool();
-        return;
-    }
-
-    if (param == "progressiveModeMotor") {
-        // progressiveModeMotor always false if progressiveRangeTarget is true
-        progressiveModeMotor = (progressiveRangeTarget) ? false: (bool)value.asBool();
-        return;
-    }
-
-
     if (param == "doRandomStartingPosition") {
         doRandomStartingPosition = (bool)value.asBool();
-        return;
-    }
-
-    if (param == "progressiveModeTargets") {
-        progressiveModeTargets = (bool)value.asBool();
-        return;
-    }
-
-    if (param == "maxLengthTargets") {
-        maxLengthTargets = (double)value.asDouble();
-        return;
-    }
-
-    if (param == "progressiveModeStartingPos") {
-        progressiveModeStartingPos = (bool)value.asBool();
-        return;
-    }
-
-    if (param == "maxLengthStartingPos") {
-        maxLengthStartingPos = (double)value.asDouble();
-        return;
-    }
-
-    if (param == "coefficientUpgradeMult") {
-        coefficientUpgradeMult = (double)value.asDouble();
-        return;
-    }
-
-    if (param == "coefficientUpgradeAdd") {
-        coefficientUpgradeAdd = (double)value.asDouble();
-        return;
-    }
-
-    if (param == "nbIterationsUpgrade") {
-        nbIterationsUpgrade = (int)value.asUInt();
         return;
     }
 
@@ -264,6 +217,16 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
 
     if (param == "testSingleAction"){
         testSingleAction = (bool)value.asBool();
+        return;
+    }
+
+    if (param == "federatedNbSeed"){
+        federatedNbSeed = (uint64_t)value.asUInt64();
+        return;
+    }
+
+    if (param == "federatedNbPolicyKept"){
+        federatedNbPolicyKept = (uint64_t)value.asUInt64();
         return;
     }
     // we didn't recognize the symbol

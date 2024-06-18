@@ -63,7 +63,7 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     }
 
     // Training Validation
-    if (doTrainingValidation){
+    if (trainingParams.doTrainingValidation){
 
         auto trainingValidationResults = this->evaluateAllRoots(generationNumber, LearningMode::TESTING);
         for (auto logger : loggers) {
@@ -77,21 +77,6 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
         std::advance(iter, trainingValidationResults.size() - 1);
         bestResult = std::dynamic_pointer_cast<Learn::ArmlearnEvaluationResult>(iter->first)->getDistance();
 
-    }
-
-    if (doUpdateLimits){
-        // Log limits
-        if(typeid(learningEnvironment) == typeid(ArmLearnWrapper)){
-            double target = (trainingParams.progressiveRangeTarget) ? ((ArmLearnWrapper&)learningEnvironment).getCurrentRangeTarget() : ((ArmLearnWrapper&)learningEnvironment).getCurrentMaxLimitTarget();
-            for (auto logger : loggers) {
-                if(typeid(logger.get()) == typeid(Log::ArmLearnLogger)){
-                    ((Log::ArmLearnLogger&)logger.get()).logEnvironnementStatus(target, ((ArmLearnWrapper&)learningEnvironment).getCurrentMaxLimitStartingPos());
-                }
-            }
-
-            // Update the current limits
-            ((ArmLearnWrapper&)learningEnvironment).updateCurrentLimits(bestResult, params.nbIterationsPerPolicyEvaluation);
-        }
     }
 
 
@@ -413,7 +398,7 @@ std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> Learn::ArmLea
             uint64_t hash = hasher(1000) ^ hasher(iterationNumber); //TODO
 
             // Reset the learning Environment
-            le.reset(hash, Learn::LearningMode::VALIDATION, iterationNumber, 1000); // TODO
+            le.reset(hash, Learn::LearningMode::TESTING, iterationNumber, 1000); // TODO
 
             uint64_t nbActions = 0;
             while (!le.isTerminal() &&

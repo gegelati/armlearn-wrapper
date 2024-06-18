@@ -64,13 +64,6 @@ void trainLearningAgent(
 
 std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>>& data){
 
-
-    for(auto pair: data){
-        for(auto pair2 : pair.second){
-            std::cout<<" - "<<pair2.second;
-        }std::cout<<std::endl;
-    }
-
     std::vector<const TPG::TPGVertex*> survivingRoots;
     std::vector<bool> successCleared;
 
@@ -111,7 +104,6 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
                         successSelectedRoot.push_back(pairScoreSuccess.second);
                     }
                 }
-                std::cout<<doubleFaultError<<" - ";
 
             }
         }
@@ -119,7 +111,7 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
         survivingRoots.push_back(selectedRoot.first);
         for(uint64_t i = 0; i < successCleared.size(); i++){
             successCleared[i] = (successCleared[i] || successSelectedRoot[i]);
-        }std::cout<<std::endl;
+        }
     }
 
 
@@ -172,12 +164,6 @@ int main(int argc, char* argv[]) {
         armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
     }
 
-    // If a validation target is done
-    bool doUpdateLimits = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
-    bool doValidationTarget = (trainingParams.doTrainingValidation && doUpdateLimits);
-
-    std::cout<<trainingParams.saveValidationTrajectories<<"-"<<trainingParams.loadValidationTrajectories<<std::endl;
-
     // Save the validation trajectories
     if (trainingParams.saveValidationTrajectories){
         armLearnEnv.saveValidationTrajectories(pathParams);
@@ -191,15 +177,11 @@ int main(int argc, char* argv[]) {
     std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> data;
     std::vector<std::shared_ptr<Learn::ArmLearningAgent>> listLa;
 
-
-    int nbSeeds = 5;
-    int nbPoliciesKept = 5;
-
     int indexFile = 0;
 
     std::string path = (slashToAdd + trainingParams.pathLogs).c_str();
 
-    for(int indexSeed = 0; indexSeed < nbSeeds; indexSeed++){
+    for(int indexSeed = 0; indexSeed < trainingParams.federatedNbSeed; indexSeed++){
 
         // Generate files
         std::string pathConf = (path + "seed_" + std::to_string(indexSeed) + "/").c_str();
@@ -209,13 +191,14 @@ int main(int argc, char* argv[]) {
         // Instantiate and init the learning agent
         listLa.push_back(std::make_shared<Learn::ArmLearningAgent>(armLearnEnv, set, params, trainingParams));
         std::shared_ptr<Learn::ArmLearningAgent> la = listLa.back();
-        la->init(trainingParams.seed);
+        std::cout<<trainingParams.seed + indexSeed<<std::endl;
+        la->init(trainingParams.seed + indexSeed);
 
         //Creation of the Output stream on cout and on the file
         auto nameLogs = (!trainingParams.testing) ? "logsGegelati" : "garbage";
         std::ofstream fichier((pathConf + nameLogs + ".ods").c_str(), std::ios::out);
-        auto logFile = *new Log::ArmLearnLogger(*la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion,fichier);
-        auto logCout = *new Log::ArmLearnLogger(*la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion);
+        auto logFile = *new Log::ArmLearnLogger(*la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion,fichier);
+        auto logCout = *new Log::ArmLearnLogger(*la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion);
 
         trainLearningAgent(*la, armLearnEnv, pathConf, 
             trainingParams.nbIterationTraining, trainingParams.timeMaxTraining, 
@@ -225,7 +208,7 @@ int main(int argc, char* argv[]) {
         armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
 
         // Keep the best policies
-        auto bestRoots = la->keepBestPolicies(nbPoliciesKept);
+        auto bestRoots = la->keepBestPolicies(trainingParams.federatedNbPolicyKept);
         MARL::MarlTPGGraphDotExporter dotExporter((pathConf + "/out_best.dot").c_str(), *la->getTPGGraph(), params.mutation.marl.useInternProgram);
         dotExporter.print();
 
@@ -235,10 +218,6 @@ int main(int argc, char* argv[]) {
 
         data.insert(seedData.begin(), seedData.end());
     }
-    
-    // Etude des résultats
-    params.mutation.tpg.nbRoots = 2000;
-    params.ratioDeletedRoots = 0.99;
 
     // Sélection des nouvelles roots
     auto selectedRoots = selectSurvivingRoots(data);
@@ -247,6 +226,10 @@ int main(int argc, char* argv[]) {
     std::string pathConf = (path + "final/").c_str();
     std::filesystem::create_directory(pathConf);
     std::filesystem::create_directory(pathConf+ "dotfiles/");
+
+
+    // Load params for the federated learning agent
+    File::ParametersParser::loadParametersFromJson((slashToAdd + pathParams + "/federatedParams.json").c_str(), params);
 
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
@@ -258,8 +241,8 @@ int main(int argc, char* argv[]) {
     //Creation of the Output stream on cout and on the file
     auto nameLogs = (!trainingParams.testing) ? "logsGegelati" : "garbage";
     std::ofstream fichier((pathConf + nameLogs + ".ods").c_str(), std::ios::out);
-    auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion,fichier);
-    auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion);
+    auto logFile = *new Log::ArmLearnLogger(la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion,fichier);
+    auto logCout = *new Log::ArmLearnLogger(la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion);
 
     // Training
     trainLearningAgent(la, armLearnEnv, pathConf, 

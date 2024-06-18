@@ -87,15 +87,6 @@ protected:
     /// Maximum number of actions doable in an episode 
     int nbMaxActions;
 
-    /// Limit for the creation of of random targets
-    double currentMaxLimitTarget = 10000;
-
-    /// Limit for the creation of of random Starting position
-    double currentMaxLimitStartingPos = 10000;
-
-    /// Counter used to know if the currents limits have to be upgraded
-    uint16_t counterIterationUpgrade = 0;
-
     /// Initial starting position of the arm
     std::vector<uint16_t> initStartingPos = BACKHOE_POSITION;
 
@@ -139,9 +130,6 @@ protected:
 
     /// Motor speed : Use only if trainingParams.actionSpeed is true. speed is in motorPoint/iteration
     std::vector<double> motorSpeed = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-
-    /// Current range target to reach
-    double currentRangeTarget = 5;
 
     /// True if this is validation, else false
     bool isValidation = true;
@@ -203,13 +191,6 @@ public:
               nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3), dataMotorSpeed((params.actionSpeed) ? 4:0),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params) {
-        if(params.progressiveRangeTarget){
-            this->currentRangeTarget = params.maxLengthTargets;
-        } else {
-            if (params.progressiveModeStartingPos) this->currentMaxLimitStartingPos=params.maxLengthStartingPos;
-            if (params.progressiveModeTargets) this->currentMaxLimitTarget=params.maxLengthTargets;
-            this->currentRangeTarget = params.rangeTarget;
-        }
 
         rng.setSeed(params.seed);
 
@@ -225,12 +206,7 @@ public:
                                                     trainingTrajectories(other.trainingTrajectories),
                                                     validationTrajectories(other.validationTrajectories),
                                                     trainingValidationTrajectories(other.trainingValidationTrajectories),
-                                                    DeviceLearner(iniController()), params(other.params) {
-        if(params.progressiveRangeTarget){
-            this->currentRangeTarget = other.currentRangeTarget;
-        } else {
-            this->currentRangeTarget = params.rangeTarget;
-        }               
+                                                    DeviceLearner(iniController()), params(other.params) {         
     }
 
     /// @brief Destructor
@@ -315,7 +291,7 @@ public:
     /**
      * @brief Create and return a random position with the motors
      */
-    std::vector<uint16_t> randomMotorPos(std::vector<double> cartesianGoal, bool validation, bool isTarget);
+    std::vector<uint16_t> randomMotorPos(std::vector<double> cartesianGoal);
 
     /**
      * @brief Create and return a random starting position for the arm
@@ -323,7 +299,7 @@ public:
      * @param[in] coefSize coefficient between 0 and 1 suse to be check that the random starting position generated as a distance bigger than coefSize * limit
      * @param[in] validation true if the target is for the validation, else false
      */
-    std::vector<uint16_t>* randomStartingPos(bool validation);
+    std::vector<uint16_t>* randomStartingPos();
 
     /**
      * @brief Create and return a random targets in cartesian coordonates
@@ -333,7 +309,7 @@ public:
      * @param[in] validation true if the target is for the validation, else false
      * @param[in] maxLength distance max that the arm will have to browse in the trajectory
      */
-    armlearn::Input<double>* randomGoal(std::vector<uint16_t> startingPos, bool validation);
+    armlearn::Input<double>* randomGoal();
 
     /**
      * @brief Load the CSV containing equilibrate random positions
@@ -344,23 +320,6 @@ public:
      * @brief Puts a custom goal in the first slot of the trainingTargets list.
      */ 
     void customTrajectory(armlearn::Input<double> *newGoal, std::vector<uint16_t> startingPos, bool validation = false);
-
-    /**
-     * @brief Check if the current limits for starting position and targets have to be updated based on the bestResult
-     * If the limits are updated, the trajectories are updated based on the nbIterationsPerPolicyEvaluation 
-     */ 
-    bool updateCurrentLimits(double bestResult, int nbIterationsPerPolicyEvaluation);
-
-    /**
-     * @brief Returns a string logging the goal (to use e.g. when there is a goal change)
-     */ 
-    std::string newGoalToString() const;
-
-    /**
-     * @brief Used to print the current situation (positions of the motors)
-     */ 
-    std::string toString() const override;
-
     /**
     * @brief Executes a learning algorithm on the learning set
     */
@@ -370,7 +329,6 @@ public:
      * @brief Inherited via DeviceLearner
      */ 
     virtual void test() override {}
-
     /// Save the validation trajectories in a ValidationTrajectories.txt file
     void saveValidationTrajectories(std::string path);
 
@@ -407,21 +365,10 @@ public:
      */ 
     void setInitStartingPos(std::vector<uint16_t> newInitStartingPos);
 
-    /// Get currentMaxLimitTarget
-    double getCurrentMaxLimitTarget();
-
-    /// Get currentMaxLimitStartingPos
-    double getCurrentMaxLimitStartingPos();
-
-    /// Get currentRangeTarget
-    double getCurrentRangeTarget();
-
     /// Get distance from the arm to the target
     double getDistance();
 
     void setGegelatiRunning(bool isRunning);
-
-    void setIsMoving(bool isMoving);
 
     bool getIsMoving();
 
@@ -434,10 +381,6 @@ public:
 
     bool hasCollision(std::vector<double> armSegment, std::vector<double> baseSegment);
 
-    
-    void setTerminal(bool newTerminal);
-
-    void incrValKillCollision();
 };
 
 #endif
