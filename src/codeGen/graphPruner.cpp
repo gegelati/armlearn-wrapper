@@ -162,7 +162,7 @@ int main(int argc, char** argv ){
     auto &tpg = *la.getTPGGraph();
     Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
     File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best_cleaned.dot").c_str(), env, tpg);
-    trainingParams.testPath = (path + "outLogs").c_str();
+    trainingParams.pathLogs = (path + "outLogs").c_str();
     trainingParams.testing = true;
     la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
     

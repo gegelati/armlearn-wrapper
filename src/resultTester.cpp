@@ -54,7 +54,7 @@ int main() {
 
     // Create an importer for the best graph and imports it
     std::cout << "Import graph"<< std::endl;
-    File::TPGGraphDotImporter dotImporter((slashToAdd + trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
+    File::TPGGraphDotImporter dotImporter((slashToAdd + trainingParams.pathLogs + "/out_best.dot").c_str(), env, tpg);
     dotImporter.importGraph();
 
     // takes the first root of the graph, anyway out_best has only 1 root (the best)

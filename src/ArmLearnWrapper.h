@@ -213,7 +213,6 @@ public:
 
         rng.setSeed(params.seed);
 
-        loadTargetCSV();
     }
 
     /**
@@ -339,7 +338,7 @@ public:
     /**
      * @brief Load the CSV containing equilibrate random positions
      */
-    void loadTargetCSV();
+    void loadTargetCSV(std::string path);
 
     /**
      * @brief Puts a custom goal in the first slot of the trainingTargets list.
@@ -373,10 +372,10 @@ public:
     virtual void test() override {}
 
     /// Save the validation trajectories in a ValidationTrajectories.txt file
-    void saveValidationTrajectories();
+    void saveValidationTrajectories(std::string path);
 
     /// Load the validation trajectories from a ValidationTrajectories.txt file
-    void loadValidationTrajectories();
+    void loadValidationTrajectories(std::string path);
 
     // Log the trajectories store in allValidationInfos vector
     void logTestingTrajectories(bool usingGegelati);

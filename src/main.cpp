@@ -132,7 +132,7 @@ int main() {
     if(trainingParams.testing){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
-        MARL::MarlTPGGraphDotImporter dotImporter((slashToAdd + trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
+        MARL::MarlTPGGraphDotImporter dotImporter((slashToAdd + trainingParams.pathLogs + "/out_best.dot").c_str(), env, tpg);
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
     } else {
 

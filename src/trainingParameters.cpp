@@ -180,8 +180,13 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "testPath") {
-        testPath = (std::string)value.asString();
+    if (param == "pathLogs") {
+        pathLogs = (std::string)value.asString();
+        return;
+    }
+
+    if (param == "pathTargetCSV") {
+        pathTargetCSV = (std::string)value.asString();
         return;
     }
 

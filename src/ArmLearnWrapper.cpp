@@ -771,11 +771,9 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
         (double) (newCartesianCoords[2])}); //Z
 }
 
-void ArmLearnWrapper::loadTargetCSV() {
+void ArmLearnWrapper::loadTargetCSV(std::string path) {
 
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
-
-    std::ifstream file((slashToAdd + "params/AllTarget.csv").c_str());
+    std::ifstream file(path);
     if (!file.is_open()) {
         std::cerr << "Error: unable to open file" << std::endl;
     }
@@ -909,10 +907,10 @@ Learn::LearningEnvironment *ArmLearnWrapper::clone() const {
     return new ArmLearnWrapper(*this);
 }
 
-void ArmLearnWrapper::saveValidationTrajectories() {
+void ArmLearnWrapper::saveValidationTrajectories(std::string path) {
     // Create file
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
-    std::ofstream outFile((slashToAdd + "params/ValidationTrajectories.txt").c_str());
+    std::ofstream outFile((path + "ValidationTrajectories.txt").c_str());
+    std::cout<<path<<std::endl;
 
     if (outFile.is_open()) {
         // For each validation trajectories
@@ -934,7 +932,7 @@ void ArmLearnWrapper::saveValidationTrajectories() {
     }
 }
 
-void ArmLearnWrapper::loadValidationTrajectories() {
+void ArmLearnWrapper::loadValidationTrajectories(std::string path) {
 
 
     // Clear the trajectories
@@ -944,8 +942,7 @@ void ArmLearnWrapper::loadValidationTrajectories() {
     validationTrajectories.clear();
 
     // Get file
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
-    std::ifstream inFile((slashToAdd + "params/ValidationTrajectories.txt").c_str());
+    std::ifstream inFile((path + "ValidationTrajectories.txt").c_str());
 
     std::vector<std::vector<double>> allValues;
 
@@ -992,7 +989,7 @@ void ArmLearnWrapper::loadValidationTrajectories() {
 void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati){
 
     // Nom du fichier CSV
-    std::string fileName = (params.testPath + ((usingGegelati) ? "/outputGegelati.csv": "/outputSAC.csv")).c_str();
+    std::string fileName = (params.pathLogs + ((usingGegelati) ? "/outputGegelati.csv": "/outputSAC.csv")).c_str();
 
     // Ouverture du fichier en mode écriture
     std::ofstream outputFile(fileName);

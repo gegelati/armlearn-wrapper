@@ -173,7 +173,7 @@ int main(){
             auto &tpg = *la.getTPGGraph();
             Environment env(set, armLearnEnv.getDataSources(), 8);
             MARL::MarlTPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
-            trainingParams.testPath = (path + "outLogs").c_str();
+            trainingParams.pathLogs = (path + "outLogs").c_str();
             trainingParams.testing = true;
             la.testingBestRoot(globalParams.nbIterationsPerPolicyEvaluation);
 

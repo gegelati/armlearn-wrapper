@@ -147,8 +147,11 @@ public:
     /// if true, deactivate the training and only logs results
 	bool testing = false;
 
-    /// path to store the testing output
-    std::string testPath = "outLogs/";
+    /// path to store the output
+    std::string pathLogs = "outLogs/";
+
+    /// path to store target hull
+    std::string pathTargetCSV = "params/AllTarget.csv";
 
 	/// To use distance 2D instruction
 	bool useInstrDist2d = false;
