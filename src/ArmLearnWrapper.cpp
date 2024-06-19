@@ -605,7 +605,7 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(std::vector<double> cartes
     std::vector<uint16_t> newMotorPos, validMotorPos;
 
     std::vector<double> cartesianPos;
-    double distance = 0;
+    double distanceMotorPos = 0;
 
     for(int index=0; index < 10000; index++){
 
@@ -627,11 +627,11 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(std::vector<double> cartes
 
         cartesianPos = converter->computeServoToCoord(validMotorPos)->getCoord();
 
-        distance = computeSquaredError(cartesianPos, cartesianGoal);
+        distanceMotorPos = computeSquaredError(cartesianPos, cartesianGoal);
 
-        if(distance < minDistance){
+        if(distanceMotorPos < minDistance){
             keepMotorPos = validMotorPos;
-            minDistance = distance;
+            minDistance = distanceMotorPos;
         }
     }
 
@@ -1040,12 +1040,9 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(){
 
     bool handNotGood = false;
 
-    // Init the distance at -1 to be sure that the while condition never return true during validation
-    double distance = -1;
-
     size_t index = 0;
 
-    // Do one time then only while the distance is above the distance to browse
+    // Do one time then only while hand position is not good
     do {
         // Get random cartesian goal
         index = rng.getUnsignedInt64(0, dataTarget.size());
