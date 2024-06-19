@@ -17,21 +17,19 @@
 #include "armLearningAgent.h"
 
 
-int main(){
+int main(int argc, char* argv[]){
 
-
+    std::string pathParams = "params/";
+    if(argc > 1){
+        pathParams = argv[1];
+    }
 
 
     // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
+    std::string slashToAdd = (std::filesystem::exists(("/" + pathParams + "/trainParams.json").c_str())) ? "/": "";
 
 
-    std::string repoConfig = (slashToAdd + "params/repoConfig/").c_str();
-
-    // Set the parameters for the learning process.
-    // Loads them from "params.json" file
-    Learn::LearningParameters globalParams;
-    File::ParametersParser::loadParametersFromJson((repoConfig + "params.json").c_str(), globalParams);
+    std::string repoConfig = (slashToAdd + pathParams + "repoConfig/").c_str();
 
 
     std::ifstream file((repoConfig + "launchMultiTraining.txt").c_str());
@@ -45,9 +43,11 @@ int main(){
         file.close();
     }
 
+    std::string pathLogs = (slashToAdd + "outLogs/").c_str();
+
     for(int indexConf = 0; indexConf < nbTrainingConfig; indexConf++){
 
-        std::string pathConf = (slashToAdd + "outLogs/config_"+ std::to_string(indexConf) + "/").c_str();
+        std::string pathConf = (pathLogs + "config_"+ std::to_string(indexConf) + "/").c_str();
 
         if(!std::filesystem::exists(pathConf)){
             std::filesystem::create_directory(pathConf);
@@ -63,8 +63,7 @@ int main(){
             std::string path = (pathConf + "seed_" + std::to_string(seed) + "/").c_str();
             if(!std::filesystem::exists(path)){
                 std::filesystem::create_directory(path);
-                std::filesystem::create_directory((path + "outLogs/").c_str());
-                std::filesystem::create_directory((path + "outLogs/dotfiles/").c_str());
+                std::filesystem::create_directory((path + "dotfiles/").c_str());
             }
 
             std::cout<<"\nActually working with config " << indexConf << " and seed "<< seed<<"\n"<<std::endl;
@@ -81,21 +80,17 @@ int main(){
             fillInstructionSet(set, trainingParams);
 
             // Instantiate the LearningEnvironment
-            ArmLearnWrapper armLearnEnv(globalParams.maxNbActionsPerEval, trainingParams, true);
+            ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
+
+            armLearnEnv.loadTargetCSV(trainingParams.pathTargetCSV);
 
             // Generate validation targets.
-            if(globalParams.doValidation){
-                armLearnEnv.updateValidationTrajectories(globalParams.nbIterationsPerPolicyEvaluation);
+            if(params.doValidation){
+                armLearnEnv.updateValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
                 if(seed == 0 && indexConf == 0){
-                    armLearnEnv.saveValidationTrajectories();
+                    armLearnEnv.saveValidationTrajectories(pathParams);
                 }
-                armLearnEnv.loadValidationTrajectories();
-            }
-
-
-            if(trainingParams.progressiveModeTargets){
-                // Update/Generate the first training validation trajectories
-                armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
+                armLearnEnv.loadValidationTrajectories(pathParams);
             }
 
 
@@ -104,23 +99,19 @@ int main(){
 
             la.init(seed);
 
-            // If a validation target is done
-            bool doUpdateLimits = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
-            bool doValidationTarget = (trainingParams.doTrainingValidation && doUpdateLimits);
-
             //Creation of the Output stream on cout and on the file
             auto nameLogs = "logsGegelati";
-            std::ofstream fichier((path + "outLogs/" + nameLogs + ".ods").c_str(), std::ios::out);
-            auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion,fichier);
-            auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion);
+            std::ofstream fichier((path + nameLogs + ".ods").c_str(), std::ios::out);
+            auto logFile = *new Log::ArmLearnLogger(la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion,fichier);
+            auto logCout = *new Log::ArmLearnLogger(la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion);
 
             // File for printing best policy stat.
             std::ofstream stats;
-            stats.open((path + "outLogs/bestPolicyStats.md").c_str());
+            stats.open((path + "bestPolicyStats.md").c_str());
             Log::LAPolicyStatsLogger logStats(la, stats);
 
             // Create an exporter for all graphs
-            MARL::MarlTPGGraphDotExporter dotExporter((path + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
+            MARL::MarlTPGGraphDotExporter dotExporter((path + "dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
 
             std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
             std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
@@ -128,16 +119,16 @@ int main(){
 
 
             // Train for params.nbGenerations generations
-            for (uint64_t i = 0; i < globalParams.nbGenerations && !timeLimitReached; i++) {
+            for (uint64_t i = 0; i < params.nbGenerations && !timeLimitReached; i++) {
                 armLearnEnv.setgeneration(i);
 
                 // Update/Generate the training trajectories
                 armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
 
                 //print the previous graphs
-                char buff[16];
-                sprintf(buff, (path + "outLogs/dotfiles/out_%04d.dot").c_str(), static_cast<uint16_t>(i));
-                dotExporter.setNewFilePath(buff);
+                std::ostringstream oss;
+                oss << path << "dotfiles/out_" << std::setfill('0') << std::setw(4) << i << ".dot";
+                dotExporter.setNewFilePath(oss.str().c_str());
                 dotExporter.print();
 
                 la.trainOneGeneration(i);
@@ -152,7 +143,7 @@ int main(){
 
             // Keep best policy
             la.keepBestPolicy();
-            dotExporter.setNewFilePath((path + "outLogs/out_best.dot").c_str());
+            dotExporter.setNewFilePath((path + "out_best.dot").c_str());
             dotExporter.print();
 
             
@@ -161,7 +152,7 @@ int main(){
             ps.setEnvironment(la.getTPGGraph()->getEnvironment());
             ps.analyzePolicy(la.getBestRoot().first);
             std::ofstream bestStats;
-            bestStats.open((path + "outLogs/out_best_stats.md").c_str());
+            bestStats.open((path + "out_best_stats.md").c_str());
             bestStats << ps;
             bestStats.close();
 
@@ -172,10 +163,10 @@ int main(){
 
             auto &tpg = *la.getTPGGraph();
             Environment env(set, armLearnEnv.getDataSources(), 8);
-            MARL::MarlTPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
-            trainingParams.pathLogs = (path + "outLogs").c_str();
+            MARL::MarlTPGGraphDotImporter dotImporter((path + "out_best.dot").c_str(), env, tpg);
             trainingParams.testing = true;
-            la.testingBestRoot(globalParams.nbIterationsPerPolicyEvaluation);
+            la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
+            trainingParams.testing = false;
 
             // cleanup
             for (unsigned int i = 0; i < set.getNbInstructions(); i++) {

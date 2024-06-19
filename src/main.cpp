@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
 
         // File for printing best policy stat.
         std::ofstream stats;
-        stats.open((slashToAdd + "outLogs/bestPolicyStats.md").c_str());
+        stats.open((path + "/bestPolicyStats.md").c_str());
         Log::LAPolicyStatsLogger logStats(la, stats);
 
         // Create an exporter for all graphs

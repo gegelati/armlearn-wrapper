@@ -109,7 +109,6 @@ void Learn::ArmLearningAgent::testingBestRoot(uint64_t generationNumber){
         *tee, *job, generationNumber, mode, this->learningEnvironment);
 
 
-
     std::cout<<"Testing score : "<<result->getResult();
     std::cout << " -- Testing success rate " << std::dynamic_pointer_cast<ArmlearnEvaluationResult>(result)->getSuccess();
 
@@ -163,7 +162,6 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     double score = 0.0;
 
     uint64_t nbIteration = (mode == LearningMode::TRAINING) ? trainingParams.nbIterationTraining : this->params.nbIterationsPerPolicyEvaluation;
-
     
     double nbActivatedTeam = 0.0;
     double nbActivatedAction = 0.0;
@@ -203,7 +201,6 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
                 std::map<std::uint64_t, std::pair<std::uint64_t, double>> actions 
                     = marlTee->executeFromRoot(*root, marlLe->getInitActions(), this->params);
 
-
                 nbActivatedTeamRatioOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateTeamRatio();
                 nbActivatedTeamOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateTeam();
                 nbActivatedActionOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateAction();
@@ -221,7 +218,6 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
             }
 
 
-
             
             // Do it
             marlLe->doActions(actionsID);
@@ -233,7 +229,6 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
         nbActivatedTeamRatio += nbActivatedTeamRatioOneEp / nbActions;
         nbActivatedTeam += nbActivatedTeamOneEp / nbActions;
         nbActivatedAction += nbActivatedActionOneEp / nbActions;
-
         // Update score
         score += le.getScore();
         //std::cout<<"Score : "<<le.getScore()<<std::endl;
@@ -247,7 +242,6 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
         // Push back the id with the score
         trajectoriesScore.push_back(std::make_pair(iterationNumber, le.getScore()));
     }
-
     double meanScore = score / (double)nbIteration;
     if(trainingParams.meanScoreWithStd){
         double sumVar = 0.0;
