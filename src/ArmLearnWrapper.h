@@ -368,8 +368,6 @@ public:
     /// Get distance from the arm to the target
     double getDistance();
 
-    void setGegelatiRunning(bool isRunning);
-
     bool getIsMoving();
 
     /**

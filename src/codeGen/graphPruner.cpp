@@ -62,10 +62,7 @@ int main(int argc, char** argv ){
     dot.importGraph();
     const TPG::TPGVertex* root = dotGraph.getRootVertices().front();
 
-
-
     armLearnEnv.loadValidationTrajectories();
-
 
     // Play the game once to identify useful edges & vertices
     std::ofstream ofs ((path + "outLogs/tpg_orig.txt").c_str(), std::ofstream::out);

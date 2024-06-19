@@ -218,13 +218,10 @@ int main(int argc, char* argv[]) {
         MARL::MarlTPGGraphDotExporter dotExporter((pathConf + "/out_best.dot").c_str(), *la->getTPGGraph(), params.mutation.marl.useInternProgram);
         dotExporter.print();
 
-        std::cout<<1<<std::endl;
         // Generate the data of the policies
         auto seedData = la->generateDataOfRoots(bestRoots, armLearnEnv, params.nbIterationsPerPolicyEvaluation);
 
-        std::cout<<2<<std::endl;
         data.insert(seedData.begin(), seedData.end());
-        std::cout<<3<<std::endl;
     }
 
     // Sélection des nouvelles roots

@@ -860,10 +860,6 @@ std::vector<uint16_t> ArmLearnWrapper::getMotorsPos() {
     return motorPos;
 }
 
-void ArmLearnWrapper::setGegelatiRunning(bool isRunning){
-    gegelatiRunning = isRunning;
-}
-
 void ArmLearnWrapper::setgeneration(int newGeneration){
     generation = newGeneration;
 }
