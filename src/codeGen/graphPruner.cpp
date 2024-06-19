@@ -17,7 +17,20 @@ extern "C" {
 #include "../armLearningAgent.h"
 
 
-int main(int argc, char** argv ){
+
+int main(int argc, char* argv[]) {
+    std::cout << "Start ArmLearner application." << std::endl;
+
+    uint64_t seed = 0;
+    if(argc > 1 && std::strcmp(argv[1], "default") != 0){
+        seed = std::stoi(argv[1]);
+    }
+
+    std::string pathParams = "params/";
+    if(argc > 2){
+        pathParams = argv[2];
+    }
+
     int config = 0;
     int seed = 0;
 
@@ -155,7 +168,7 @@ int main(int argc, char** argv ){
 
 
     Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
-    la.init(trainingParams.seed);
+    la.init(seed);
     auto &tpg = *la.getTPGGraph();
     Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
     File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best_cleaned.dot").c_str(), env, tpg);

@@ -44,24 +44,25 @@ void getKey(std::atomic<bool>& exit) {
 int main(int argc, char* argv[]) {
     std::cout << "Start ArmLearner application." << std::endl;
 
-    std::string pathParams = "params/";
-    if(argc > 1){
-        pathParams = argv[1];
+    uint64_t seed = 0;
+    if(argc > 1 && std::strcmp(argv[1], "default") != 0){
+        seed = std::stoi(argv[1]);
     }
 
-
-    // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists(("/" + pathParams + "/trainParams.json").c_str())) ? "/": "";
-    std::cout<<"Status of slashToAdd : "<< slashToAdd<<std::endl;
+    std::string pathParams = "params/";
+    if(argc > 2){
+        pathParams = argv[2];
+    }
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson((slashToAdd + pathParams + "trainParams.json").c_str());
+    trainingParams.loadParametersFromJson((pathParams + "trainParams.json").c_str());
+
 
 
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson((slashToAdd + pathParams + "/params.json").c_str(), params);
+    File::ParametersParser::loadParametersFromJson((pathParams + "/params.json").c_str(), params);
 
     // Create the instruction set for programs
 	Instructions::Set set;
@@ -70,7 +71,7 @@ int main(int argc, char* argv[]) {
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
 
-    armLearnEnv.loadTargetCSV(trainingParams.pathTargetCSV);
+    armLearnEnv.loadTargetCSV(trainingParams.pathTargetCSV, seed);
 
     // Prompt the number of threads
     std::cout << "Number of threads: " << params.nbThreads << std::endl;
@@ -87,19 +88,19 @@ int main(int argc, char* argv[]) {
     }
     // Save the validation trajectories
     if (trainingParams.saveValidationTrajectories){
-        armLearnEnv.saveValidationTrajectories(pathParams);
+        armLearnEnv.saveValidationTrajectories(trainingParams.pathValidationTrajectories);
     }
 
     // Load the validation trajectories
     if(trainingParams.loadValidationTrajectories){
-        armLearnEnv.loadValidationTrajectories(pathParams);
+        armLearnEnv.loadValidationTrajectories(trainingParams.pathValidationTrajectories);
     }
-    std::string path = (slashToAdd + trainingParams.pathLogs).c_str();
+    std::string path = trainingParams.pathLogs;
 
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
 
-    la.init(trainingParams.seed);
+    la.init(seed);
 
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
     std::thread threadKeyboard;

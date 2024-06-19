@@ -143,6 +143,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "pathValidationTrajectories") {
+        pathValidationTrajectories = (std::string)value.asString();
+        return;
+    }
+
     if (param == "useInstrDist2d"){
         useInstrDist2d = (bool)value.asBool();
         return;
@@ -220,20 +225,6 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "federatedNbSeed"){
-        federatedNbSeed = (uint64_t)value.asUInt64();
-        return;
-    }
-
-    if (param == "federatedNbPolicyKept"){
-        federatedNbPolicyKept = (uint64_t)value.asUInt64();
-        return;
-    }
-
-    if (param == "federatedNbPolicyChoose"){
-        federatedNbPolicyChoose = (uint64_t)value.asUInt64();
-        return;
-    }
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }

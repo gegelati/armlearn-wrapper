@@ -16,8 +16,19 @@
 #include "softActorCritic/sacParameters.h"
 #include <torch/torch.h>
 
-int main() {
+
+int main(int argc, char* argv[]) {
     std::cout << "Start ArmLearner application." << std::endl;
+
+    uint64_t seed = 0;
+    if(argc > 1 && std::strcmp(argv[1], "default") != 0){
+        seed = std::stoi(argv[1]);
+    }
+
+    std::string pathParams = "params/";
+    if(argc > 2){
+        pathParams = argv[2];
+    }
 
     // This is important for the singularity image
     std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
@@ -41,7 +52,7 @@ int main() {
     torch::set_num_threads(gegelatiParams.nbThreads);
 
     // Set random seed
-    torch::manual_seed(trainingParams.seed);
+    torch::manual_seed(seed);
     std::cout << "Number of threads: " << torch::get_num_threads() << std::endl;
 
 

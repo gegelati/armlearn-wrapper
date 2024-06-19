@@ -129,9 +129,14 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
 int main(int argc, char* argv[]) {
     std::cout << "Start ArmLearner application." << std::endl;
 
+    uint64_t seed = 0;
+    if(argc > 1 && std::strcmp(argv[1], "default") != 0){
+        seed = std::stoi(argv[1]);
+    }
+
     std::string pathParams = "params/";
-    if(argc > 1){
-        pathParams = argv[1];
+    if(argc > 2){
+        pathParams = argv[2];
     }
 
 
@@ -198,7 +203,7 @@ int main(int argc, char* argv[]) {
         // Instantiate and init the learning agent
         listLa.push_back(std::make_shared<Learn::ArmLearningAgent>(armLearnEnv, set, params, trainingParams));
         std::shared_ptr<Learn::ArmLearningAgent> la = listLa.back();
-        la->init(trainingParams.seed + indexSeed);
+        la->init(seed);
 
         //Creation of the Output stream on cout and on the file
         auto nameLogs = (!trainingParams.testing) ? "logsGegelati" : "garbage";
@@ -238,7 +243,7 @@ int main(int argc, char* argv[]) {
 
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
-    la.init(trainingParams.seed);
+    la.init(seed);
 
     // Create new population
     la.createPopulationFromRoots(selectedRoots);

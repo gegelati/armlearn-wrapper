@@ -664,7 +664,7 @@ std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(){
 }
 
 
-void ArmLearnWrapper::loadTargetCSV(std::string path) {
+void ArmLearnWrapper::loadTargetCSV(std::string path, uint64_t seed) {
 
     std::ifstream file(path);
     if (!file.is_open()) {
@@ -690,7 +690,8 @@ void ArmLearnWrapper::loadTargetCSV(std::string path) {
 
     file.close();
 
-    std::mt19937 rngData(params.seed);
+    rng.setSeed(seed);
+    std::mt19937 rngData(seed);
     std::shuffle(dataTarget.begin(), dataTarget.end(), rngData);
 }
 
@@ -718,7 +719,7 @@ Learn::LearningEnvironment *ArmLearnWrapper::clone() const {
 
 void ArmLearnWrapper::saveValidationTrajectories(std::string path) {
     // Create file
-    std::ofstream outFile((path + "ValidationTrajectories.txt").c_str());
+    std::ofstream outFile((path).c_str());
 
     if (outFile.is_open()) {
         // For each validation trajectories
@@ -751,7 +752,7 @@ void ArmLearnWrapper::loadValidationTrajectories(std::string path) {
     validationTrajectories.clear();
 
     // Get file
-    std::ifstream inFile((path + "ValidationTrajectories.txt").c_str());
+    std::ifstream inFile((path).c_str());
 
     std::vector<std::vector<double>> allValues;
 

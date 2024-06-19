@@ -192,7 +192,6 @@ public:
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params) {
 
-        rng.setSeed(params.seed);
 
     }
 
@@ -314,7 +313,7 @@ public:
     /**
      * @brief Load the CSV containing equilibrate random positions
      */
-    void loadTargetCSV(std::string path);
+    void loadTargetCSV(std::string path, uint64_t seed);
 
     /**
      * @brief Puts a custom goal in the first slot of the trainingTargets list.

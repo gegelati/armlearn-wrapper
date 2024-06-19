@@ -126,6 +126,9 @@ public:
     /// path to store target hull
     std::string pathTargetCSV = "params/AllTarget.csv";
 
+    /// path to store target hull
+    std::string pathValidationTrajectories = "params/ValidationTrajectories.txt";
+
 	/// To use distance 2D instruction
 	bool useInstrDist2d = false;
 
@@ -173,14 +176,6 @@ public:
 	/// to test single action on marl gegelati
 	bool testSingleAction = true;
 
-    // TODO
-	uint64_t federatedNbSeed = 1;
-
-    // TODO
-	uint64_t federatedNbPolicyKept = 1;
-
-    // TODO
-	uint64_t federatedNbPolicyChoose = 1;
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.
