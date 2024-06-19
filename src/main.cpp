@@ -57,6 +57,9 @@ int main(int argc, char* argv[]) {
     TrainingParameters trainingParams;
     trainingParams.loadParametersFromJson((pathParams + "trainParams.json").c_str());
 
+    if(argc > 3){
+        trainingParams.pathLogs = argv[3];
+    }
 
 
     // Set the parameters for the learning process.
