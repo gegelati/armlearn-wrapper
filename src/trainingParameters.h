@@ -179,6 +179,8 @@ public:
     // TODO
 	uint64_t federatedNbPolicyKept = 1;
 
+    // TODO
+	uint64_t federatedNbPolicyChoose = 1;
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.

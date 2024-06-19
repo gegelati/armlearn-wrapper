@@ -395,10 +395,10 @@ std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> Learn::ArmLea
 
             // Compute a Hash
             Data::Hash<uint64_t> hasher;
-            uint64_t hash = hasher(1000) ^ hasher(iterationNumber); //TODO
+            uint64_t hash = hasher(params.nbGenerations+1) ^ hasher(iterationNumber); //TODO
 
             // Reset the learning Environment
-            le.reset(hash, Learn::LearningMode::TESTING, iterationNumber, 1000); // TODO
+            le.reset(hash, Learn::LearningMode::TESTING, iterationNumber, 1000);
 
             uint64_t nbActions = 0;
             while (!le.isTerminal() &&

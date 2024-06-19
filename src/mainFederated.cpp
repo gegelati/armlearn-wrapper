@@ -62,12 +62,18 @@ void trainLearningAgent(
 }
 
 
-std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>>& data){
+std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>>& data, uint64_t nbPolicies){
 
     std::vector<const TPG::TPGVertex*> survivingRoots;
     std::vector<bool> successCleared;
 
-    for(uint64_t index = 0; index < 10; index++){
+    for(auto pair: data){
+        for(auto pair2 : pair.second){
+            std::cout<<" - "<<pair2.second;
+        }std::cout<<std::endl;
+    }
+
+    for(uint64_t index = 0; index < nbPolicies; index++){
 
         // To select root with the best double fault error
         std::pair<const TPG::TPGVertex *, double> selectedRoot;
@@ -104,6 +110,7 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
                         successSelectedRoot.push_back(pairScoreSuccess.second);
                     }
                 }
+                std::cout<<doubleFaultError<<" - ";
 
             }
         }
@@ -111,7 +118,7 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
         survivingRoots.push_back(selectedRoot.first);
         for(uint64_t i = 0; i < successCleared.size(); i++){
             successCleared[i] = (successCleared[i] || successSelectedRoot[i]);
-        }
+        }std::cout<<std::endl;
     }
 
 
@@ -191,7 +198,6 @@ int main(int argc, char* argv[]) {
         // Instantiate and init the learning agent
         listLa.push_back(std::make_shared<Learn::ArmLearningAgent>(armLearnEnv, set, params, trainingParams));
         std::shared_ptr<Learn::ArmLearningAgent> la = listLa.back();
-        std::cout<<trainingParams.seed + indexSeed<<std::endl;
         la->init(trainingParams.seed + indexSeed);
 
         //Creation of the Output stream on cout and on the file
@@ -212,15 +218,17 @@ int main(int argc, char* argv[]) {
         MARL::MarlTPGGraphDotExporter dotExporter((pathConf + "/out_best.dot").c_str(), *la->getTPGGraph(), params.mutation.marl.useInternProgram);
         dotExporter.print();
 
-
+        std::cout<<1<<std::endl;
         // Generate the data of the policies
         auto seedData = la->generateDataOfRoots(bestRoots, armLearnEnv, params.nbIterationsPerPolicyEvaluation);
 
+        std::cout<<2<<std::endl;
         data.insert(seedData.begin(), seedData.end());
+        std::cout<<3<<std::endl;
     }
 
     // Sélection des nouvelles roots
-    auto selectedRoots = selectSurvivingRoots(data);
+    auto selectedRoots = selectSurvivingRoots(data, trainingParams.federatedNbPolicyChoose);
 
     // Generate files
     std::string pathConf = (path + "final/").c_str();

@@ -41,21 +41,27 @@ void getKey(std::atomic<bool>& exit) {
     std::cout.flush();
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     std::cout << "Start ArmLearner application." << std::endl;
+
+    std::string pathParams = "params/";
+    if(argc > 1){
+        pathParams = argv[1];
+    }
 
 
     // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
+    std::string slashToAdd = (std::filesystem::exists(("/" + pathParams + "/trainParams.json").c_str())) ? "/": "";
+    std::cout<<"Status of slashToAdd : "<< slashToAdd<<std::endl;
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson((slashToAdd + "params/trainParams.json").c_str());
+    trainingParams.loadParametersFromJson((slashToAdd + pathParams + "trainParams.json").c_str());
 
 
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson((slashToAdd + "params/params.json").c_str(), params);
+    File::ParametersParser::loadParametersFromJson((slashToAdd + pathParams + "/params.json").c_str(), params);
 
     // Create the instruction set for programs
 	Instructions::Set set;
@@ -63,6 +69,8 @@ int main() {
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
+
+    armLearnEnv.loadTargetCSV(trainingParams.pathTargetCSV);
 
     // Prompt the number of threads
     std::cout << "Number of threads: " << params.nbThreads << std::endl;
@@ -77,7 +85,16 @@ int main() {
         // Update/Generate the first training validation trajectories
         armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
     }
+    // Save the validation trajectories
+    if (trainingParams.saveValidationTrajectories){
+        armLearnEnv.saveValidationTrajectories(pathParams);
+    }
 
+    // Load the validation trajectories
+    if(trainingParams.loadValidationTrajectories){
+        armLearnEnv.loadValidationTrajectories(pathParams);
+    }
+    std::string path = (slashToAdd + trainingParams.pathLogs).c_str();
 
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
@@ -100,15 +117,11 @@ int main() {
 
 
 
-    // If a validation target is done
-    bool doUpdateLimits = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
-    bool doValidationTarget = (trainingParams.doTrainingValidation && doUpdateLimits);
-
     //Creation of the Output stream on cout and on the file
     auto nameLogs = (!trainingParams.testing) ? "logsGegelati" : "garbage";
-    std::ofstream fichier((slashToAdd + "outLogs/" + nameLogs + ".ods").c_str(), std::ios::out);
-    auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion,fichier);
-    auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion);
+    std::ofstream fichier((path + nameLogs + ".ods").c_str(), std::ios::out);
+    auto logFile = *new Log::ArmLearnLogger(la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion,fichier);
+    auto logCout = *new Log::ArmLearnLogger(la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion);
 
 
 
@@ -116,23 +129,13 @@ int main() {
     if(trainingParams.startPreviousTPG){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, armLearnEnv.getDataSources(), 8);
-        MARL::MarlTPGGraphDotImporter dotImporter((slashToAdd + "outLogs/dotfiles/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
-    }
-
-    // Save the validation trajectories
-    if (trainingParams.saveValidationTrajectories){
-        armLearnEnv.saveValidationTrajectories();
-    }
-
-    // Load the validation trajectories
-    if(trainingParams.loadValidationTrajectories){
-        armLearnEnv.loadValidationTrajectories();
+        MARL::MarlTPGGraphDotImporter dotImporter((path + "dotfiles/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
     }
 
     if(trainingParams.testing){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
-        MARL::MarlTPGGraphDotImporter dotImporter((slashToAdd + trainingParams.pathLogs + "/out_best.dot").c_str(), env, tpg);
+        MARL::MarlTPGGraphDotImporter dotImporter((path + "/out_best.dot").c_str(), env, tpg);
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
     } else {
 
@@ -143,7 +146,7 @@ int main() {
         Log::LAPolicyStatsLogger logStats(la, stats);
 
         // Create an exporter for all graphs
-        MARL::MarlTPGGraphDotExporter dotExporter((slashToAdd + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph(), params.mutation.marl.useInternProgram);
+        MARL::MarlTPGGraphDotExporter dotExporter((path + "/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph(), params.mutation.marl.useInternProgram);
 
         std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
         std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
@@ -158,10 +161,9 @@ int main() {
             armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
 
 
-            //print the previous graphs
-            char buff[16];
-            sprintf(buff, (slashToAdd + "outLogs/dotfiles/out_%04d.dot").c_str(), static_cast<uint16_t>(i));
-            dotExporter.setNewFilePath(buff);
+            std::ostringstream oss;
+            oss << path << "dotfiles/out_" << std::setfill('0') << std::setw(4) << i << ".dot";
+            dotExporter.setNewFilePath(oss.str().c_str());
             dotExporter.print();
 
             la.trainOneGeneration(i);
@@ -178,7 +180,7 @@ int main() {
         // Keep best policy
         la.keepBestPolicy();
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
-        dotExporter.setNewFilePath((slashToAdd + "outLogs/out_best.dot").c_str());
+        dotExporter.setNewFilePath((path + "/out_best.dot").c_str());
         dotExporter.print();
 
         
@@ -187,7 +189,7 @@ int main() {
         ps.setEnvironment(la.getTPGGraph()->getEnvironment());
         ps.analyzePolicy(la.getBestRoot().first);
         std::ofstream bestStats;
-        bestStats.open((slashToAdd + "outLogs/out_best_stats.md").c_str());
+        bestStats.open((path + "/out_best_stats.md").c_str());
         bestStats << ps;
         bestStats.close();
 

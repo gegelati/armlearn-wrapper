@@ -11,6 +11,7 @@ if(os.path.exists("params")):
     pathBuild = ""
 else:
     pathBuild = "/"
+
 pathRepoConfig = pathBuild + "params/repoConfig/"
 
 with open(pathRepoConfig + "launchMultiTraining.txt", "r") as file:
@@ -58,6 +59,7 @@ for indexConf in range(nbconfig):
         data["seed"] = indexSeed * data["federatedNbSeed"]
         data["loadValidationTrajectories"] = indexSeed != 0
         data["saveValidationTrajectories"] = indexSeed == 0
+        data["doTrainingValidation"] = True
         # Save data
         with open(f'{pathConf}params/trainParams.json', 'w') as f:
             json.dump(data, f, indent=4)
