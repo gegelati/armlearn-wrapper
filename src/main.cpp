@@ -135,18 +135,18 @@ int main(int argc, char* argv[]) {
     if(trainingParams.testing){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
-        MARL::MarlTPGGraphDotImporter dotImporter((path + "/out_best.dot").c_str(), env, tpg);
+        MARL::MarlTPGGraphDotImporter dotImporter((path + "out_best.dot").c_str(), env, tpg);
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
     } else {
 
 
         // File for printing best policy stat.
         std::ofstream stats;
-        stats.open((path + "/bestPolicyStats.md").c_str());
+        stats.open((path + "bestPolicyStats.md").c_str());
         Log::LAPolicyStatsLogger logStats(la, stats);
 
         // Create an exporter for all graphs
-        MARL::MarlTPGGraphDotExporter dotExporter((path + "/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph(), params.mutation.marl.useInternProgram);
+        MARL::MarlTPGGraphDotExporter dotExporter((path + "dotfiles/out_0000.dot").c_str(), *la.getTPGGraph(), params.mutation.marl.useInternProgram);
 
         std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
         std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
@@ -179,8 +179,9 @@ int main(int argc, char* argv[]) {
 
         // Keep best policy
         la.keepBestPolicy();
+        trainingParams.testing = true;
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
-        dotExporter.setNewFilePath((path + "/out_best.dot").c_str());
+        dotExporter.setNewFilePath((path + "out_best.dot").c_str());
         dotExporter.print();
 
         
@@ -189,7 +190,7 @@ int main(int argc, char* argv[]) {
         ps.setEnvironment(la.getTPGGraph()->getEnvironment());
         ps.analyzePolicy(la.getBestRoot().first);
         std::ofstream bestStats;
-        bestStats.open((path + "/out_best_stats.md").c_str());
+        bestStats.open((path + "out_best_stats.md").c_str());
         bestStats << ps;
         bestStats.close();
 
