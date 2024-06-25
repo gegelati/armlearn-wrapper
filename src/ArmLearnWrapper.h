@@ -58,9 +58,6 @@ protected:
 
     /// Current goal position
     Data::PrimitiveTypeArray<double> cartesianTarget;
-
-    /// Current goal position
-    Data::PrimitiveTypeArray<double> cartesianDiff;
     
     /// Current motor speed
     Data::PrimitiveTypeArray<double> dataMotorSpeed;
@@ -188,7 +185,7 @@ public:
                 (!params.testSingleAction) ? std::vector<size_t>{3, 3, 3, 3} : std::vector<size_t>{9}, 
                 (!params.testSingleAction) ? std::vector<size_t>{1, 1, 1, 1} : std::vector<size_t>{8}), 
             gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
-              nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3), dataMotorSpeed((params.actionSpeed) ? 4:0),
+              nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget((params.useDiffInState) ? 6:3), dataMotorSpeed((params.actionSpeed) ? 4:0),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params) {
 
@@ -200,7 +197,7 @@ public:
     */ 
     ArmLearnWrapper(const ArmLearnWrapper &other) : MARL::MarlLearningEnvironment(other.vectActions, other.initActions), 
                                                     nbMaxActions(other.nbMaxActions), motorPos(other.motorPos), gegelatiRunning(other.gegelatiRunning),
-                                                    cartesianHand(other.cartesianHand), cartesianTarget(other.cartesianTarget), cartesianDiff(other.cartesianDiff),
+                                                    cartesianHand(other.cartesianHand), cartesianTarget(other.cartesianTarget),
                                                     dataMotorSpeed(other.dataMotorSpeed),
                                                     trainingTrajectories(other.trainingTrajectories),
                                                     validationTrajectories(other.validationTrajectories),

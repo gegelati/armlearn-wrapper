@@ -34,7 +34,9 @@ void ArmLearnWrapper::computeInput() {
     for (int i = 0; i < newCartesianCoords.size(); i++) {
         cartesianHand.setDataAt(typeid(double), i, newCartesianCoords[i]);
         cartesianTarget.setDataAt(typeid(double), i, this->currentTarget->getInput()[i]);
-        cartesianDiff.setDataAt(typeid(double), i, this->currentTarget->getInput()[i] - newCartesianCoords[i]);
+        if(params.useDiffInState){   
+            cartesianTarget.setDataAt(typeid(double), i + newCartesianCoords.size(), this->currentTarget->getInput()[i] - newCartesianCoords[i]);
+        }
     }
 }
 
@@ -42,7 +44,6 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
     auto result = std::vector<std::reference_wrapper<const Data::DataHandler>>();
     result.emplace_back(cartesianTarget);
     result.emplace_back(cartesianHand);
-    result.emplace_back(cartesianDiff);
     result.emplace_back(motorPos);
     if (params.actionSpeed) result.emplace_back(dataMotorSpeed);
     return result;

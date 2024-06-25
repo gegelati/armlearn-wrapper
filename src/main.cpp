@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
         seed = std::stoi(argv[1]);
     }
 
-    std::string pathParams = "params/";
+    std::string pathParams = "../params/";
     if(argc > 2){
         pathParams = argv[2];
     }

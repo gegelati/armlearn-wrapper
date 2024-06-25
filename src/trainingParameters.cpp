@@ -180,6 +180,16 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "useInstrSquare"){
+        useInstrSquare = (bool)value.asBool();
+        return;
+    }
+    
+    if (param == "useInstrSquareRoot"){
+        useInstrSquareRoot = (bool)value.asBool();
+        return;
+    }
+
     if (param == "useInstrSinLn"){
         useInstrSinLn = (bool)value.asBool();
         return;
@@ -215,8 +225,8 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "killIfCollision"){
-        killIfCollision = (bool)value.asBool();
+    if (param == "useDiffInState"){
+        useDiffInState = (bool)value.asBool();
         return;
     }
 

@@ -65,4 +65,14 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
 	    auto pi = [](double a) -> double { return M_PI; };
         set.add(*(new Instructions::LambdaInstruction<double>(pi, "$0 = M_PI;")));
     }
+
+    if(params.useInstrSquare){
+	    auto square = [](double a) -> double { return std::pow(a,2); };
+        set.add(*(new Instructions::LambdaInstruction<double>(square, "$0 = pow($1,2);")));
+    }
+
+    if(params.useInstrSquareRoot){
+	    auto square = [](double a) -> double { return std::sqrt(a); };
+        set.add(*(new Instructions::LambdaInstruction<double>(square, "$0 = sqrt($1);")));
+    }
 }

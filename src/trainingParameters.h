@@ -147,6 +147,11 @@ public:
     /// To use getPi instruction
 	bool useInstrPi = false;
 
+	/// To use square instruction
+	bool useInstrSquare = false;
+
+	/// To use square root instruction
+	bool useInstrSquareRoot = false;
 
 	// To use Sin and Ln functions that seems useless after the ablation study
     bool useInstrSinLn = false;
@@ -170,8 +175,7 @@ public:
 	/// if true, allow the arm to make 360% circle
 	bool canDo360 = false;
 
-    /// Kill the algorithm if a collision is encountered. TPGs are automatically killed
-	bool killIfCollision = false;
+	bool useDiffInState = false;
 
 	/// to test single action on marl gegelati
 	bool testSingleAction = true;
