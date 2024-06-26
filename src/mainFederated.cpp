@@ -16,77 +16,37 @@
 #include "armLearningAgent.h"
 
 
-void trainLearningAgent(
-    Learn::ArmLearningAgent& la, ArmLearnWrapper& armLearnEnv, std::string pathConf, 
-    uint64_t nbIterationTraining, uint64_t timeMaxTraining, uint64_t nbGenerations, bool useInternProgram
-){
-
-    // File for printing best policy stat.
-    std::ofstream stats;
-    stats.open((pathConf + "/bestPolicyStats.md").c_str());
-    Log::LAPolicyStatsLogger logStats(la, stats);
-
-
-    // Create an exporter for all graphs
-    MARL::MarlTPGGraphDotExporter dotExporter((pathConf + "dotfiles/out_0000.dot").c_str(), *la.getTPGGraph(), useInternProgram);
-
-    std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
-    std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
-    bool timeLimitReached = false;
-
-
-    // Train for params.nbGenerations generations
-    for (uint64_t i = 0; i < nbGenerations && !timeLimitReached; i++) {
-        armLearnEnv.setgeneration(i);
-
-
-        // Update/Generate the training trajectories
-        armLearnEnv.updateTrainingTrajectories(nbIterationTraining);
-
-        std::ostringstream oss;
-        oss << pathConf << "dotfiles/out_" << std::setfill('0') << std::setw(4) << i << ".dot";
-        dotExporter.setNewFilePath(oss.str().c_str());
-        dotExporter.print();
-
-        la.trainOneGeneration(i);
-
-        // Check time limit only if the parameter is above 0
-        if(timeMaxTraining > 0){
-            // Set true if the time is above the limit
-            timeLimitReached = (((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() > timeMaxTraining);
-        }
-
-    }
-    stats.close();
-
-}
-
-
-std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>>& data, uint64_t nbPolicies){
+std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>>& data, uint64_t nbPolicies, bool assembleWithScore){
 
     std::vector<const TPG::TPGVertex*> survivingRoots;
-    std::vector<bool> successCleared;
+    std::vector<double> statusEvaliation;
+    double oldDoubleFaultError = -std::numeric_limits<double>::infinity();
 
     for(auto pair: data){
         for(auto pair2 : pair.second){
-            std::cout<<" - "<<pair2.second;
+            if(assembleWithScore) {
+                std::cout<<" - "<<pair2.first;
+            } else {
+                std::cout<<" - "<<pair2.second;
+            }
         }std::cout<<std::endl;
     }
+
 
     for(uint64_t index = 0; index < nbPolicies; index++){
 
         // To select root with the best double fault error
         std::pair<const TPG::TPGVertex *, double> selectedRoot;
-        std::vector<bool> successSelectedRoot;
+        std::vector<double> successSelectedRoot;
         bool firstRoot = true;
 
         // For each root
         for(auto pair: data){
 
-            // Init the success cleared to false
-            if(successCleared.size() == 0){
+            // Init the status of the evaluation to minus infinity
+            if(statusEvaliation.size() == 0){
                 for(uint64_t indexInit = 0; indexInit < pair.second.size(); indexInit++){
-                    successCleared.push_back(false);
+                    statusEvaliation.push_back(-std::numeric_limits<double>::infinity());
                 }
             }
 
@@ -97,7 +57,12 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
                 double doubleFaultError = 0;
                 uint64_t i = 0;
                 for(auto pairScoreSuccess: pair.second){
-                    doubleFaultError += (pairScoreSuccess.second || successCleared[i]) ? 1 : 0;
+                    if(assembleWithScore){
+                        doubleFaultError += std::max(pairScoreSuccess.first, statusEvaliation[i]);
+                    } else {
+                        doubleFaultError += std::max(static_cast<double>(pairScoreSuccess.second), statusEvaliation[i]);
+                    }
+                    
                     i++;
                 }
                 
@@ -107,7 +72,11 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
 
                     successSelectedRoot.clear();
                     for(auto pairScoreSuccess: pair.second){
-                        successSelectedRoot.push_back(pairScoreSuccess.second);
+                        if(assembleWithScore){
+                            successSelectedRoot.push_back(pairScoreSuccess.first);
+                        } else {
+                            successSelectedRoot.push_back(static_cast<double>(pairScoreSuccess.second));
+                        }
                     }
                 }
                 std::cout<<doubleFaultError<<" - ";
@@ -115,10 +84,17 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
             }
         }
 
-        survivingRoots.push_back(selectedRoot.first);
-        for(uint64_t i = 0; i < successCleared.size(); i++){
-            successCleared[i] = (successCleared[i] || successSelectedRoot[i]);
-        }std::cout<<std::endl;
+        if(selectedRoot.second > oldDoubleFaultError){
+            oldDoubleFaultError = selectedRoot.second;
+            survivingRoots.push_back(selectedRoot.first);
+            for(uint64_t i = 0; i < statusEvaliation.size(); i++){
+                statusEvaliation[i] = std::max(statusEvaliation[i], successSelectedRoot[i]);
+            }std::cout<<std::endl;
+        } else {
+            break;
+        }
+
+
     }
 
 
@@ -127,26 +103,34 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
 }
 
 int main(int argc, char* argv[]) {
-    std::cout << "Start ArmLearner application." << std::endl;
+    std::cout << "Start Federation application." << std::endl;
+
 
     uint64_t seed = 0;
     if(argc > 1 && std::strcmp(argv[1], "default") != 0){
         seed = std::stoi(argv[1]);
     }
 
-    std::string pathParams = "params/";
-    if(argc > 2){
-        pathParams = argv[2];
+    uint64_t nbFederation = 1;
+    if(argc > 2 && std::strcmp(argv[2], "default") != 0){
+        nbFederation = std::stoi(argv[2]);
+    }
+
+    std::string pathParams = "../params/";
+    if(argc > 3){
+        pathParams = argv[3];
     }
 
 
     // This is important for the singularity image
     std::string slashToAdd = (std::filesystem::exists(("/" + pathParams + "/trainParams.json").c_str())) ? "/": "";
     std::cout<<"Status of slashToAdd : "<< slashToAdd<<std::endl;
-
     TrainingParameters trainingParams;
     trainingParams.loadParametersFromJson((slashToAdd + pathParams + "trainParams.json").c_str());
 
+    if(argc > 4){
+        trainingParams.pathLogs = argv[4];
+    }
 
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
@@ -160,31 +144,7 @@ int main(int argc, char* argv[]) {
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
 
-    armLearnEnv.loadTargetCSV(trainingParams.pathTargetCSV);
-
-    // Prompt the number of threads
-    std::cout << "Number of threads: " << params.nbThreads << std::endl;
-
-    // Generate validation targets.
-    if(params.doValidation && !trainingParams.loadValidationTrajectories){
-        armLearnEnv.updateValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
-    }
-
-
-    if(trainingParams.doTrainingValidation){
-        // Update/Generate the first training validation trajectories
-        armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
-    }
-
-    // Save the validation trajectories
-    if (trainingParams.saveValidationTrajectories){
-        armLearnEnv.saveValidationTrajectories(pathParams);
-    }
-
-    // Load the validation trajectories
-    if(trainingParams.loadValidationTrajectories){
-        armLearnEnv.loadValidationTrajectories(pathParams);
-    }
+    armLearnEnv.loadTargetCSV(trainingParams.pathTargetCSV, seed);
 
     std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> data;
     std::vector<std::shared_ptr<Learn::ArmLearningAgent>> listLa;
@@ -193,35 +153,29 @@ int main(int argc, char* argv[]) {
 
     std::string path = (slashToAdd + trainingParams.pathLogs).c_str();
 
-    for(int indexSeed = 0; indexSeed < trainingParams.federatedNbSeed; indexSeed++){
+    // Update/Generate the training trajectories
+    armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
 
-        // Generate files
-        std::string pathConf = (path + "seed_" + std::to_string(indexSeed) + "/").c_str();
-        std::filesystem::create_directory(pathConf);
-        std::filesystem::create_directory(pathConf+ "dotfiles/");
+    for(int indexSeed = 0; indexSeed < nbFederation; indexSeed++){
 
         // Instantiate and init the learning agent
         listLa.push_back(std::make_shared<Learn::ArmLearningAgent>(armLearnEnv, set, params, trainingParams));
         std::shared_ptr<Learn::ArmLearningAgent> la = listLa.back();
         la->init(seed);
 
-        //Creation of the Output stream on cout and on the file
-        auto nameLogs = (!trainingParams.testing) ? "logsGegelati" : "garbage";
-        std::ofstream fichier((pathConf + nameLogs + ".ods").c_str(), std::ios::out);
-        auto logFile = *new Log::ArmLearnLogger(*la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion,fichier);
-        auto logCout = *new Log::ArmLearnLogger(*la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion);
 
-        trainLearningAgent(*la, armLearnEnv, pathConf, 
-            trainingParams.nbIterationTraining, trainingParams.timeMaxTraining, 
-            params.nbGenerations, params.mutation.marl.useInternProgram);
 
-        // Update/Generate the training trajectories
-        armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
+        // Find last generation
+        std::ostringstream pathOutDot;
+        pathOutDot << path << "FederatedSeed_" << indexSeed << "/dotfiles/out_lastGen.dot";
 
-        // Keep the best policies
-        auto bestRoots = la->keepBestPolicies(trainingParams.federatedNbPolicyKept);
-        MARL::MarlTPGGraphDotExporter dotExporter((pathConf + "/out_best.dot").c_str(), *la->getTPGGraph(), params.mutation.marl.useInternProgram);
-        dotExporter.print();
+        auto &tpg = *la->getTPGGraph();
+        Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters);
+        MARL::MarlTPGGraphDotImporter dotImporter(pathOutDot.str().c_str(), env, tpg);
+
+        uint64_t nbPolicies = (1.0 - params.ratioDeletedRoots) * (double)params.mutation.tpg.nbRoots;
+
+        std::vector<const TPG::TPGVertex *> bestRoots = la->keepBestPolicies(nbPolicies);
 
         // Generate the data of the policies
         auto seedData = la->generateDataOfRoots(bestRoots, armLearnEnv, params.nbIterationsPerPolicyEvaluation);
@@ -230,16 +184,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Sélection des nouvelles roots
-    auto selectedRoots = selectSurvivingRoots(data, trainingParams.federatedNbPolicyChoose);
-
-    // Generate files
-    std::string pathConf = (path + "final/").c_str();
-    std::filesystem::create_directory(pathConf);
-    std::filesystem::create_directory(pathConf+ "dotfiles/");
-
-
-    // Load params for the federated learning agent
-    File::ParametersParser::loadParametersFromJson((slashToAdd + pathParams + "/federatedParams.json").c_str(), params);
+    auto selectedRoots = selectSurvivingRoots(data, trainingParams.nbRootsKept, trainingParams.assembleWithScore);
 
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
@@ -248,31 +193,11 @@ int main(int argc, char* argv[]) {
     // Create new population
     la.createPopulationFromRoots(selectedRoots);
 
-    //Creation of the Output stream on cout and on the file
-    auto nameLogs = (!trainingParams.testing) ? "logsGegelati" : "garbage";
-    std::ofstream fichier((pathConf + nameLogs + ".ods").c_str(), std::ios::out);
-    auto logFile = *new Log::ArmLearnLogger(la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion,fichier);
-    auto logCout = *new Log::ArmLearnLogger(la,trainingParams.doTrainingValidation,trainingParams.controlTrajectoriesDeletion);
-
-    // Training
-    trainLearningAgent(la, armLearnEnv, pathConf, 
-                    trainingParams.nbIterationTraining, trainingParams.timeMaxTraining, 
-                    params.nbGenerations, params.mutation.marl.useInternProgram);
-
-    // Keep best policy
-    la.keepBestPolicy();
-    la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
-    MARL::MarlTPGGraphDotExporter dotExporter((pathConf + "/out_best.dot").c_str(), *la.getTPGGraph(), params.mutation.marl.useInternProgram);
+    MARL::MarlTPGGraphDotExporter dotExporter((path + "federatedRun/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph(), params.mutation.marl.useInternProgram);
+    std::ostringstream oss;
+    oss << path << "federatedRun/dotfiles/out_0000.dot";
+    dotExporter.setNewFilePath(oss.str().c_str());
     dotExporter.print();
-    
-    // Export best policy statistics.
-    TPG::PolicyStats ps;
-    ps.setEnvironment(la.getTPGGraph()->getEnvironment());
-    ps.analyzePolicy(la.getBestRoot().first);
-    std::ofstream bestStats;
-    bestStats.open((slashToAdd + "outLogs/out_best_stats.md").c_str());
-    bestStats << ps;
-    bestStats.close();
 
     // cleanup
     for (unsigned int i = 0; i < set.getNbInstructions(); i++) {

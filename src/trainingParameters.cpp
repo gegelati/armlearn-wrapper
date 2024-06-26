@@ -235,6 +235,15 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "nbRootsKept"){
+        nbRootsKept = (uint64_t)value.asUInt64();
+        return;
+    }
+    if (param == "assembleWithScore"){
+        assembleWithScore = (bool)value.asBool();
+        return;
+    }
+
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }

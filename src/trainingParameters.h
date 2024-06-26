@@ -180,6 +180,11 @@ public:
 	/// to test single action on marl gegelati
 	bool testSingleAction = true;
 
+	/// number of roots kept for the assemble/federated learning
+	uint64_t nbRootsKept = 1;
+
+	/// Do the assemble/federation with either the score either the success rate
+	bool assembleWithScore = true;
     /**
      * \brief Loads a given json file and fills the parameters it contains
      * in given LearningParameters.

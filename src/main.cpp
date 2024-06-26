@@ -180,6 +180,11 @@ int main(int argc, char* argv[]) {
 
         }
 
+        std::ostringstream oss;
+        oss << path << "dotfiles/out_lastGen.dot";
+        dotExporter.setNewFilePath(oss.str().c_str());
+        dotExporter.print();
+
 
         // Keep best policy
         la.keepBestPolicy();

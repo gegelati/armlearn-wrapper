@@ -318,8 +318,9 @@ std::vector<const TPG::TPGVertex *> Learn::ArmLearningAgent::keepBestPolicies(ui
         auto i = 0;
         results = this->evaluateAllRoots(params.nbGenerations+1, LearningMode::TRAINING);
 
+
         while (i < currentNbRoots - nbPolicies && results.size() > 0) {
-            // If the root is an action, do not remove it!
+
             const TPG::TPGVertex* root = results.begin()->second;
 
             tpg->removeVertex(*results.begin()->second);
@@ -346,7 +347,6 @@ std::vector<const TPG::TPGVertex *> Learn::ArmLearningAgent::keepBestPolicies(ui
 
 std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> Learn::ArmLearningAgent::generateDataOfRoots(std::vector<const TPG::TPGVertex *>& bestRoots, LearningEnvironment& le, uint64_t nbIterations){
 
-
     // Create the TPGExecutionEngine for this evaluation.
     // The engine uses the Archive only in training mode.
     std::unique_ptr<TPG::TPGExecutionEngine> tee =
@@ -372,24 +372,21 @@ std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> Learn::ArmLea
     std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> data;
 
     for(const TPG::TPGVertex * root: bestRoots){
-
         // To store the score and success
         std::multimap<double, bool> dataRoot;
 
         // Evaluate nbIteration times
         for (auto iterationNumber = 0; iterationNumber < nbIterations; iterationNumber++) {
-
             // Compute a Hash
             Data::Hash<uint64_t> hasher;
             uint64_t hash = hasher(params.nbGenerations+1) ^ hasher(iterationNumber); //TODO
 
             // Reset the learning Environment
-            le.reset(hash, Learn::LearningMode::TESTING, iterationNumber, 1000);
+            le.reset(hash, Learn::LearningMode::TRAINING, iterationNumber, 1000);
 
             uint64_t nbActions = 0;
             while (!le.isTerminal() &&
                 nbActions < this->params.maxNbActionsPerEval) {
-                
 
 
                 std::vector<std::uint64_t> actionsID;
@@ -411,8 +408,7 @@ std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> Learn::ArmLea
                 }
 
 
-
-                
+    
                 // Do it
                 marlLe->doActions(actionsID);
                 // Count actions
