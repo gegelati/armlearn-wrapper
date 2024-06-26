@@ -39,6 +39,10 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     // Remove worst performing roots
     decimateWorstRoots(results);
 
+    for (auto logger : loggers) {
+        logger.get().logAfterDecimate();
+    }
+
     // Clear best results
     bestTrainingResult.clear();
     // Utilisez un itérateur pour parcourir la std::multimap d'origine à partir de la fin
