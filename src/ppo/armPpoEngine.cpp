@@ -325,14 +325,11 @@ void ArmPPOEngine::logHeader(){
         file << std::setw(colWidth) << "Vdistance" << std::setw(colWidth) << "Vreward" << std::setw(colWidth) << "Success" ;
     }
 
-    if (doTrainingValidation){
+    if (trainingParams.doTrainingValidation){
         std::cout << std::setw(colWidth) << "TrainVal";
         file << std::setw(colWidth) << "TrainVal";
     }
-    if (doUpdateLimits){
-        std::cout<<std::setw(colWidth) << "S_StartP"<<std::setw(colWidth)<<"S_Targ";
-        file <<std::setw(colWidth) << "S_StartP"<<std::setw(colWidth)<<"S_Targ";
-    }
+
 
     if (trainingParams.controlTrajectoriesDeletion){
         std::cout<<std::setw(colWidth)<<"T_Del";
@@ -346,7 +343,7 @@ void ArmPPOEngine::logHeader(){
         std::cout << std::setw(colWidth) << "T_valid";
         file << std::setw(colWidth) << "T_valid";
     }
-    if (doTrainingValidation) {
+    if (trainingParams.doTrainingValidation) {
         std::cout << std::setw(colWidth) << "T_TrainVal";
         file << std::setw(colWidth) << "T_TrainVal";
     }
@@ -396,14 +393,6 @@ void ArmPPOEngine::logTrainingValidation(double distance){
     trainingValidationTime = ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
 }
 
-void ArmPPOEngine::logLimits(){
-
-    double targetLimit = (trainingParams.progressiveRangeTarget) ? armLearnEnv->getCurrentRangeTarget() : armLearnEnv->getCurrentMaxLimitTarget();
-
-    std::cout<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<targetLimit<<std::setw(colWidth);
-    file<<armLearnEnv->getCurrentMaxLimitStartingPos()<<std::setw(colWidth)<<targetLimit<<std::setw(colWidth);
-}
-
 void ArmPPOEngine::logTimes(){
 
     totalTime += trainingTime + validationTime + trainingValidationTime;
@@ -414,7 +403,7 @@ void ArmPPOEngine::logTimes(){
         std::cout<<validationTime<<std::setw(colWidth);
         file<<validationTime<<std::setw(colWidth);
     }
-    if(doTrainingValidation){
+    if(trainingParams.doTrainingValidation){
         std::cout<<trainingValidationTime<<std::setw(colWidth);
         file<<trainingValidationTime<<std::setw(colWidth);
     }

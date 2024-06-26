@@ -16,14 +16,25 @@ extern "C" {
 #include <filesystem>
 
 
-int main() {
+int main(int argc, char* argv[]) {
+    std::cout << "Start Code Gen inference application." << std::endl;
 
+    uint64_t seed = 0;
+    if(argc > 1 && std::strcmp(argv[1], "default") != 0){
+        seed = std::stoi(argv[1]);
+    }
 
-    // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
+    std::string pathParams = "../params/";
+    if(argc > 2){
+        pathParams = argv[2];
+    }
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson((slashToAdd + "params/trainParams.json").c_str());
+    trainingParams.loadParametersFromJson((pathParams + "trainParams.json").c_str());
+
+    if(argc > 3){
+        trainingParams.pathLogs = argv[3];
+    }
 
 
     // Instantiate the LearningEnvironment
@@ -43,7 +54,7 @@ int main() {
     auto& st4 = dataSources.at(3).get();
 	in4 = st4.getDataAt(typeid(double), 0).getSharedPointer<double>().get();
 
-    armLearnEnv.loadValidationTrajectories();
+    armLearnEnv.loadValidationTrajectories(trainingParams.pathValidationTrajectories);
 
 
     int nbEpisodes = 0;

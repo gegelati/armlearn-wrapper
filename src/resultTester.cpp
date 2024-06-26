@@ -14,26 +14,30 @@
 
 #include "ArmLearnWrapper.h"
 
-int main() {
-    /*
-    // Check sudo rights to connect to the arm
-    if (getuid() != 0) {
-        std::cerr << "Error: You need to be root to connect to the arm." << std::endl;
-        exit(1);
-    }
-    */
+int main(int argc, char* argv[]) {
+    std::cout << "Start Result Tester application." << std::endl;
 
-    // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
+    uint64_t seed = 0;
+    if(argc > 1 && std::strcmp(argv[1], "default") != 0){
+        seed = std::stoi(argv[1]);
+    }
+
+    std::string pathParams = "../params/";
+    if(argc > 2){
+        pathParams = argv[2];
+    }
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson((slashToAdd + "params/trainParams.json").c_str());
+    trainingParams.loadParametersFromJson((pathParams + "trainParams.json").c_str());
 
+    if(argc > 3){
+        trainingParams.pathLogs = argv[3];
+    }
 
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson((slashToAdd + "params/params.json").c_str(), params);
+    File::ParametersParser::loadParametersFromJson((pathParams + "/params.json").c_str(), params);
 
     // Create the instruction set for programs
 	Instructions::Set set;
@@ -54,7 +58,7 @@ int main() {
 
     // Create an importer for the best graph and imports it
     std::cout << "Import graph"<< std::endl;
-    File::TPGGraphDotImporter dotImporter((slashToAdd + trainingParams.pathLogs + "/out_best.dot").c_str(), env, tpg);
+    File::TPGGraphDotImporter dotImporter((trainingParams.pathLogs + "/out_best.dot").c_str(), env, tpg);
     dotImporter.importGraph();
 
     // takes the first root of the graph, anyway out_best has only 1 root (the best)
@@ -115,7 +119,7 @@ void runEvals(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearn
     double x=1;
     auto validationStartingPos = le.getInitStartingPos();
     while(x!=100000){
-        auto rnd = le.randomGoal(validationStartingPos, true);
+        auto rnd = le.randomGoal();
         le.customTrajectory(rnd, validationStartingPos);
         le.reset();
         for(int i=0; i<2000; i++) {

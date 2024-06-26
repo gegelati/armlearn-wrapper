@@ -88,6 +88,11 @@ void SACParameters::setParameterFromString(const std::string& param, Json::Value
         return;
     }
 
+    if (param == "pathModel") {
+        pathModel = (std::string)value.asString();
+        return;
+    }
+
     if (param == "multipleActions") {
         multipleActions = (bool)value.asBool();
         return;

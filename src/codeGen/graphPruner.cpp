@@ -32,12 +32,8 @@ int main(int argc, char* argv[]) {
     }
 
     int config = 0;
-    int seed = 0;
 
     auto path = "../../result/Publi/GegelatiFT2/config_" + std::to_string(config) + "_" + std::to_string(seed)+"/";
-
-    // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
 
     int incr=0;
     while(!std::filesystem::exists((path + "params/trainParams_" + std::to_string(incr) + ".json"))){
@@ -75,7 +71,7 @@ int main(int argc, char* argv[]) {
     dot.importGraph();
     const TPG::TPGVertex* root = dotGraph.getRootVertices().front();
 
-    armLearnEnv.loadValidationTrajectories();
+    armLearnEnv.loadValidationTrajectories(trainingParams.pathValidationTrajectories);
 
     // Play the game once to identify useful edges & vertices
     std::ofstream ofs ((path + "outLogs/tpg_orig.txt").c_str(), std::ofstream::out);

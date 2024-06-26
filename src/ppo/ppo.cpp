@@ -111,17 +111,15 @@ void PPO::learn(){
 
 void PPO::loadModels(){
     std::cout<<" ----- Loading Models ----- "<<std::endl;
-    std::string slashToAdd = (std::filesystem::exists(params.pathModel)) ? "": "/";
-    std::string path = (slashToAdd + params.pathModel + "/models/best_model/").c_str();
+    std::string path = (params.pathModel + "/models/best_model/").c_str();
     net.loadCheckpoint(path);
 }
 
 void PPO::saveModels(uint64_t genenrationNumber, bool bestModel){
     //std::cout<<" ----- Saving Models ----- "<<std::endl;
-    std::string slashToAdd = (std::filesystem::exists(params.pathModel)) ? "": "/";
-    std::string path = (slashToAdd + params.pathModel + "/models/save_" + std::to_string(genenrationNumber) + "/").c_str();
+    std::string path = (params.pathModel + "/models/save_" + std::to_string(genenrationNumber) + "/").c_str();
     if(bestModel){
-        path = (slashToAdd + params.pathModel + "/models/best_model/").c_str();
+        path = (params.pathModel + "/models/best_model/").c_str();
     }
     if(!std::filesystem::exists(path)){
         std::filesystem::create_directory(path);

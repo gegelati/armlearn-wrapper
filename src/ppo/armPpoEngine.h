@@ -33,8 +33,6 @@ class ArmPPOEngine{
         /// True if validation is done
         bool doValidation;
 
-        /// True if training validation is done
-        bool doTrainingValidation;
 
         /// True if limits are updated
         bool doUpdateLimits;
@@ -79,8 +77,6 @@ class ArmPPOEngine{
         learningAgent(ppoParams, (trainingParams.actionSpeed) ? 17: 13, (ppoParams.multipleActions) ? 4:1) {
             this->maxNbActions = maxNbActions;
             this->doValidation=doValidation;
-            this->doUpdateLimits = (this->trainingParams.progressiveModeTargets || this->trainingParams.progressiveModeStartingPos);
-            this->doTrainingValidation = (this->trainingParams.doTrainingValidation && this->doUpdateLimits);
             file << std::setprecision(2) << std::fixed << std::right;
             this->logHeader();
             file.flush();
@@ -142,9 +138,6 @@ class ArmPPOEngine{
 
         /// Log the training validation distance
         void logTrainingValidation(double distance);
-        
-        /// Log the size limits of the environnement (targets and starting position)
-        void logLimits();
 
         /// Log the training, learning, validation, training validation and total times
         void logTimes();

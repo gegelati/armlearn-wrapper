@@ -713,6 +713,44 @@ void ArmLearnWrapper::customTrajectory(armlearn::Input<double> *newGoal, std::ve
     trajectories.push_back(std::make_pair(&startingPos, newGoal));
 }
 
+std::string ArmLearnWrapper::newGoalToString() const {
+
+    // Log the current coordonate of the target
+    std::stringstream toLog;
+    toLog << " - (new goal : ";
+    toLog << this->currentTarget->getInput()[0] << " ; ";
+    toLog << this->currentTarget->getInput()[1] << " ; ";
+    toLog << this->currentTarget->getInput()[2] << " ; ";
+    toLog << ")" << std::endl;
+    return toLog.str();
+}
+
+std::string ArmLearnWrapper::toString() const {
+    std::stringstream res;
+
+    // Log the current position of the motor
+    for (int i = 0; i < 6; i++) {
+        double input = (double) *(this->motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
+        res << input << " ; ";
+    }
+
+    // Log the current coordonates of the arm in cartesian coords
+    res << "    -->    ";
+    for (int i = 0; i < 3; i++) {
+        double input = (double) *(this->cartesianHand.getDataAt(typeid(double), i).getSharedPointer<const double>());
+        res << input << " ; ";
+    }
+
+    // Log the target coordonate in cartesian coords
+    res << " - (goal : ";
+    res << this->currentTarget->getInput()[0] << " ; ";
+    res << this->currentTarget->getInput()[1] << " ; ";
+    res << this->currentTarget->getInput()[2] << " ; ";
+    res << ")";
+
+    return res.str();
+}
+
 Learn::LearningEnvironment *ArmLearnWrapper::clone() const {
     return new ArmLearnWrapper(*this);
 }

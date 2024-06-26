@@ -123,10 +123,8 @@ int main(int argc, char* argv[]) {
 
 
     // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists(("/" + pathParams + "/trainParams.json").c_str())) ? "/": "";
-    std::cout<<"Status of slashToAdd : "<< slashToAdd<<std::endl;
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson((slashToAdd + pathParams + "trainParams.json").c_str());
+    trainingParams.loadParametersFromJson((pathParams + "trainParams.json").c_str());
 
     if(argc > 4){
         trainingParams.pathLogs = argv[4];
@@ -135,7 +133,7 @@ int main(int argc, char* argv[]) {
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson((slashToAdd + pathParams + "/params.json").c_str(), params);
+    File::ParametersParser::loadParametersFromJson((pathParams + "/params.json").c_str(), params);
 
     // Create the instruction set for programs
 	Instructions::Set set;
@@ -151,7 +149,7 @@ int main(int argc, char* argv[]) {
 
     int indexFile = 0;
 
-    std::string path = (slashToAdd + trainingParams.pathLogs).c_str();
+    std::string path = (trainingParams.pathLogs).c_str();
 
     // Update/Generate the training trajectories
     armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);

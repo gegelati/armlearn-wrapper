@@ -29,21 +29,20 @@ int main(int argc, char* argv[]) {
         pathParams = argv[2];
     }
 
-
-    // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
-
     // Set the parameters from Gegelati.
     // Loads them from "params.json" file
     Learn::LearningParameters gegelatiParams;
-    File::ParametersParser::loadParametersFromJson((slashToAdd + "params/params.json").c_str(), gegelatiParams);
+    File::ParametersParser::loadParametersFromJson((pathParams + "params.json").c_str(), gegelatiParams);
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson((slashToAdd + "params/trainParams.json").c_str());
+    trainingParams.loadParametersFromJson((pathParams + "trainParams.json").c_str());
 
     PPOParameters ppoParams;
-    ppoParams.loadParametersFromJson((slashToAdd + "params/ppoParams.json").c_str());
+    ppoParams.loadParametersFromJson((pathParams + "ppoParams.json").c_str());
 
+    if(argc > 3){
+        ppoParams.pathModel = argv[3];
+    }
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams, false);
@@ -55,17 +54,12 @@ int main(int argc, char* argv[]) {
     torch::manual_seed(seed);
     std::cout << "Number of threads: " << torch::get_num_threads() << std::endl;
 
-
-    // If a validation target is done
-    bool doUpdateLimits = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
-    bool doTrainingValidation = (trainingParams.doTrainingValidation && doUpdateLimits);
-
     // Generate validation targets.
     if(gegelatiParams.doValidation && !trainingParams.loadValidationTrajectories){
         armLearnEnv.updateValidationTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
     }
 
-    if(doTrainingValidation){
+    if(trainingParams.doTrainingValidation){
         // Update/Generate the first training validation trajectories
         armLearnEnv.updateTrainingValidationTrajectories(gegelatiParams.nbIterationsPerPolicyEvaluation);
     }
@@ -74,7 +68,7 @@ int main(int argc, char* argv[]) {
 
     //Creation of the Output stream on cout and on the file
     auto nameLogs = (!trainingParams.testing) ? "logsPPO" : "garbage";
-    std::ofstream file((slashToAdd + "outLogs/" + nameLogs + ".ods").c_str(), std::ios::out);
+    std::ofstream file((ppoParams.pathModel + nameLogs + ".ods").c_str(), std::ios::out);
 
     // Instantiate the softActorCritic engine
     ArmPPOEngine learningAgent(ppoParams, &armLearnEnv, file, trainingParams, gegelatiParams.maxNbActionsPerEval, 
@@ -82,12 +76,12 @@ int main(int argc, char* argv[]) {
 
     // Save the validation trajectories
     if (trainingParams.saveValidationTrajectories){
-        armLearnEnv.saveValidationTrajectories();
+        armLearnEnv.saveValidationTrajectories(trainingParams.pathValidationTrajectories);
     }
 
     // Load the validation trajectories
     if(trainingParams.loadValidationTrajectories){
-        armLearnEnv.loadValidationTrajectories();
+        armLearnEnv.loadValidationTrajectories(trainingParams.pathValidationTrajectories);
     }
 
     if(trainingParams.testing){
@@ -114,23 +108,8 @@ int main(int argc, char* argv[]) {
             }
 
             // Does a training validation or not according to doTrainingValidation
-            if (doTrainingValidation) {
+            if (trainingParams.doTrainingValidation) {
                 learningAgent.validateTrainingOneGeneration(gegelatiParams.nbIterationsPerPolicyEvaluation);
-            }
-
-            if (doUpdateLimits) {
-
-                // Log the limits
-                learningAgent.logLimits();
-
-                // Update limits
-                if (doTrainingValidation) {
-                    armLearnEnv.updateCurrentLimits(learningAgent.getLastTrainingValidationScore(), gegelatiParams.nbIterationsPerPolicyEvaluation);
-                }
-                else{
-                    armLearnEnv.updateCurrentLimits(learningAgent.getLastTrainingScore(), gegelatiParams.nbIterationsPerPolicyEvaluation);
-                }
-                
             }
 
             learningAgent.logTimes();

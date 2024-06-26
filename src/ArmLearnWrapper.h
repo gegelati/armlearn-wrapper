@@ -317,6 +317,17 @@ public:
      */ 
     void customTrajectory(armlearn::Input<double> *newGoal, std::vector<uint16_t> startingPos, bool validation = false);
     /**
+     * @brief Returns a string logging the goal (to use e.g. when there is a goal change)
+     */ 
+    std::string newGoalToString() const;
+
+    /**
+     * @brief Used to print the current situation (positions of the motors)
+     */ 
+    std::string toString() const override;
+
+
+    /**
     * @brief Executes a learning algorithm on the learning set
     */
     virtual void learn() override {}
