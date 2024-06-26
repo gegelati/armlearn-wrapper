@@ -86,7 +86,6 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainPPO.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainFederated.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/graphPruner.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
@@ -150,21 +149,6 @@ list(REMOVE_ITEM
         armgegelati_files
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainFederated.cpp)
 
-
-        
-list(APPEND
-        armgegelati_files
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp)
-
-
-# armMultipleTraining: Create multiple trainings
-add_executable(armMultipleTraining ${armgegelati_files})
-target_link_libraries(armMultipleTraining ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
-target_compile_definitions(armMultipleTraining PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
-
-list(REMOVE_ITEM
-        armgegelati_files
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp)
 list(APPEND
         armgegelati_files
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
@@ -276,41 +260,31 @@ target_compile_definitions(armSoftActorCritic PRIVATE ROOT_DIR="${CMAKE_SOURCE_D
 
 
 
-list(APPEND
-        armgegelati_files
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenSac.cpp)
+#list(APPEND
+#        armgegelati_files
+#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
+#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
+#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
+#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
+#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
+#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenSac.cpp)
 
         
-list(REMOVE_ITEM
-        armgegelati_files
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp)
+#list(REMOVE_ITEM
+#        armgegelati_files
+#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp)
 
 # armSoftActorCritic: Training SoftActorCritic on the ArmLearnWrapper learning environment
-add_executable(armCodeGenSac ${armgegelati_files})
+#add_executable(armCodeGenSac ${armgegelati_files})
 
 
-target_link_libraries(armCodeGenSac ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
-target_compile_definitions(armCodeGenSac PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")        
+#target_link_libraries(armCodeGenSac ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
+#target_compile_definitions(armCodeGenSac PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")        
 
 
 # *******************************************
 # *********** Directory creation ************
 # *******************************************
-
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/params)
-        add_custom_command(
-                TARGET ${PROJECT_NAME}
-                COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/params
-                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/params.json ${CMAKE_BINARY_DIR}/params/params.json
-                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/trainParams.json ${CMAKE_BINARY_DIR}/params/trainParams.json
-                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/sacParams.json ${CMAKE_BINARY_DIR}/params/sacParams.json
-                COMMENT "Creating params directory and copying parameters' files")
-endif()
 
 if(NOT EXISTS ${CMAKE_BINARY_DIR}/outLogs)
         add_custom_command(

@@ -9,7 +9,7 @@ echo "Beginning of dependencies installation..."
 sudo apt install git make cmake g++ python3 python3-pip python3-catkin-pkg python3-empy python3-nose libgtest-dev libboost-all-dev doxygen libsdl2-image-dev libsdl2-ttf-dev
 
 # dependencies will be put in lib and installed
-mkdir -p lib && cd lib
+cd lib
 
 # get Eigen3 (v3.3.9)
 echo "# Install Eigen3"

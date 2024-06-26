@@ -57,8 +57,10 @@ Thumbs.db
 **/cmake-build-release/
 
 # Curve Scripts files for know
-**/curve_scripts/
+**/curves/
 
 # VsCode generated files
 **/.vscode/
 
+# RepoConfig folder
+**/params/RepoConfig/
