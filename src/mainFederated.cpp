@@ -119,6 +119,11 @@ int main(int argc, char* argv[]) {
         trainingParams.pathLogs = argv[4];
     }
 
+    std::string pathSaveFederation = "federatedRun/";
+    if(argc > 5){
+        pathSaveFederation = argv[5];
+    }
+
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
@@ -180,9 +185,10 @@ int main(int argc, char* argv[]) {
     // Create new population
     la.createPopulationFromRoots(selectedRoots);
 
-    MARL::MarlTPGGraphDotExporter dotExporter((path + "federatedRun/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph(), params.mutation.marl.useInternProgram);
+    std::cout<<pathSaveFederation<<std::endl;
+    MARL::MarlTPGGraphDotExporter dotExporter((pathSaveFederation + "/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph(), params.mutation.marl.useInternProgram);
     std::ostringstream oss;
-    oss << path << "federatedRun/dotfiles/out_0000.dot";
+    oss << pathSaveFederation << "/dotfiles/out_0000.dot";
     dotExporter.setNewFilePath(oss.str().c_str());
     dotExporter.print();
 
