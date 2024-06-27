@@ -108,7 +108,7 @@ namespace Learn {
 
         std::vector<const TPG::TPGVertex *> keepBestPolicies(uint64_t nbPolicies);
 
-        std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> generateDataOfRoots(
+        std::multimap<const TPG::TPGVertex *, std::vector<double>> generateDataOfRoots(
           std::vector<const TPG::TPGVertex *>& bestRoots, LearningEnvironment& le, uint64_t nbIterations);
 
         void createPopulationFromRoots(std::vector<const TPG::TPGVertex *> roots);

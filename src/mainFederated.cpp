@@ -16,21 +16,19 @@
 #include "armLearningAgent.h"
 
 
-std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>>& data, uint64_t nbPolicies, bool assembleWithScore){
+std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG::TPGVertex *, std::vector<double>>& data, uint64_t nbPolicies){
 
     std::vector<const TPG::TPGVertex*> survivingRoots;
     std::vector<double> statusEvaliation;
     double oldDoubleFaultError = -std::numeric_limits<double>::infinity();
 
     for(auto pair: data){
-        for(auto pair2 : pair.second){
-            if(assembleWithScore) {
-                std::cout<<" - "<<pair2.first;
-            } else {
-                std::cout<<" - "<<pair2.second;
-            }
+        for(auto value : pair.second){
+                std::cout<<";"<<value;
+            
         }std::cout<<std::endl;
     }
+    std::cout<<std::endl;
 
 
     for(uint64_t index = 0; index < nbPolicies; index++){
@@ -56,13 +54,8 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
                 // Calcul the double fault error
                 double doubleFaultError = 0;
                 uint64_t i = 0;
-                for(auto pairScoreSuccess: pair.second){
-                    if(assembleWithScore){
-                        doubleFaultError += std::max(pairScoreSuccess.first, statusEvaliation[i]);
-                    } else {
-                        doubleFaultError += std::max(static_cast<double>(pairScoreSuccess.second), statusEvaliation[i]);
-                    }
-                    
+                for(auto value: pair.second){
+                    doubleFaultError += std::max(value, statusEvaliation[i]);
                     i++;
                 }
                 
@@ -71,15 +64,11 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
                     selectedRoot = std::make_pair(pair.first, doubleFaultError);
 
                     successSelectedRoot.clear();
-                    for(auto pairScoreSuccess: pair.second){
-                        if(assembleWithScore){
-                            successSelectedRoot.push_back(pairScoreSuccess.first);
-                        } else {
-                            successSelectedRoot.push_back(static_cast<double>(pairScoreSuccess.second));
-                        }
+                    for(auto value: pair.second){
+                        successSelectedRoot.push_back(value);
                     }
                 }
-                std::cout<<doubleFaultError<<" - ";
+                std::cout<<doubleFaultError<<";";
 
             }
         }
@@ -144,7 +133,7 @@ int main(int argc, char* argv[]) {
 
     armLearnEnv.loadTargetCSV(trainingParams.pathTargetCSV, seed);
 
-    std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> data;
+    std::multimap<const TPG::TPGVertex *, std::vector<double>> data;
     std::vector<std::shared_ptr<Learn::ArmLearningAgent>> listLa;
 
     int indexFile = 0;
@@ -182,7 +171,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Sélection des nouvelles roots
-    auto selectedRoots = selectSurvivingRoots(data, trainingParams.nbRootsKept, trainingParams.assembleWithScore);
+    auto selectedRoots = selectSurvivingRoots(data, trainingParams.nbRootsKept);
 
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);

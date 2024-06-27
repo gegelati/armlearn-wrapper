@@ -39,9 +39,9 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     // Remove worst performing roots
     decimateWorstRoots(results);
 
-    for (auto logger : loggers) {
-        logger.get().logAfterDecimate();
-    }
+    //for (auto logger : loggers) {
+    //    logger.get().logAfterDecimate();
+    //}
 
     // Clear best results
     bestTrainingResult.clear();
@@ -349,7 +349,7 @@ std::vector<const TPG::TPGVertex *> Learn::ArmLearningAgent::keepBestPolicies(ui
 }
 
 
-std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> Learn::ArmLearningAgent::generateDataOfRoots(std::vector<const TPG::TPGVertex *>& bestRoots, LearningEnvironment& le, uint64_t nbIterations){
+std::multimap<const TPG::TPGVertex *, std::vector<double>> Learn::ArmLearningAgent::generateDataOfRoots(std::vector<const TPG::TPGVertex *>& bestRoots, LearningEnvironment& le, uint64_t nbIterations){
 
     // Create the TPGExecutionEngine for this evaluation.
     // The engine uses the Archive only in training mode.
@@ -373,11 +373,11 @@ std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> Learn::ArmLea
 
 
     // Instantiate the data map
-    std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> data;
+    std::multimap<const TPG::TPGVertex *, std::vector<double>> data;
 
     for(const TPG::TPGVertex * root: bestRoots){
         // To store the score and success
-        std::multimap<double, bool> dataRoot;
+        std::vector<double> dataRoot;
 
         // Evaluate nbIteration times
         for (auto iterationNumber = 0; iterationNumber < nbIterations; iterationNumber++) {
@@ -427,7 +427,13 @@ std::multimap<const TPG::TPGVertex *, std::multimap<double, bool>> Learn::ArmLea
             bool success = ((ArmLearnWrapper&)le).getDistance() < trainingParams.rangeTarget;
 
             // Push back the id with the score
-            dataRoot.insert(std::make_pair(score, success));
+            if(trainingParams.assembleWithScore){
+                dataRoot.push_back(score);
+            }
+            else {
+                dataRoot.push_back(success);
+            }
+            
         }
         data.insert(std::make_pair(root, dataRoot));
 
