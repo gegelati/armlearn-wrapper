@@ -26,31 +26,34 @@ int main(int argc, char* argv[]) {
         seed = std::stoi(argv[1]);
     }
 
-    std::string pathParams = "params/";
+    std::string pathParams = "../params/";
     if(argc > 2){
         pathParams = argv[2];
     }
 
-    int config = 0;
 
-    auto path = "../../result/Publi/GegelatiFT2/config_" + std::to_string(config) + "_" + std::to_string(seed)+"/";
 
-    int incr=0;
-    while(!std::filesystem::exists((path + "params/trainParams_" + std::to_string(incr) + ".json"))){
-        
-        incr++;
-    }
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson((path + "params/trainParams_" + std::to_string(incr) + ".json").c_str());
+    trainingParams.loadParametersFromJson((pathParams + "/trainParams.json").c_str());
 
-    /*if(config < 11){
-        trainingParams.useInstrSinLn=true;
-    }*/
+    if(argc > 3){
+        trainingParams.pathLogs = argv[3];
+    }
+
+    std::string pathOldGraph = "out_best.dot";
+    if(argc > 4){
+        pathOldGraph = argv[4];
+    }
+
+    std::string pathCleanedGraph = "out_best_cleaned.dot";
+    if(argc > 5){
+        pathCleanedGraph = argv[5];
+    }
 
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson((path + "params/params_" + std::to_string(incr) + ".json").c_str(), params);
+    File::ParametersParser::loadParametersFromJson((pathParams + "/params.json").c_str(), params);
 
     // Create the instruction set for programs
 	Instructions::Set set;
@@ -60,79 +63,86 @@ int main(int argc, char* argv[]) {
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
 
-    auto file = path + "outLogs/out_best.dot";
-
     // Load graph
-    std::cout << "Loading dot file from " << file << "." << std::endl;
-
+    std::cout << "Loading dot file from " << (trainingParams.pathLogs + pathOldGraph).c_str() << "." << std::endl;
     Environment dotEnv(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
     TPG::TPGGraph dotGraph(dotEnv, std::make_unique<TPG::TPGInstrumentedFactory>());
-    File::TPGGraphDotImporter dot((file).c_str(), dotEnv, dotGraph);
+    File::TPGGraphDotImporter dot(((trainingParams.pathLogs + pathOldGraph).c_str()), dotEnv, dotGraph);
     dot.importGraph();
-    const TPG::TPGVertex* root = dotGraph.getRootVertices().front();
 
     armLearnEnv.loadValidationTrajectories(trainingParams.pathValidationTrajectories);
-
-    // Play the game once to identify useful edges & vertices
-    std::ofstream ofs ((path + "outLogs/tpg_orig.txt").c_str(), std::ofstream::out);
     TPG::TPGExecutionEngineInstrumented tee(dotEnv);
-    int nbActions = 0;
-    int nbActionsEp = 0;
-    int nbEpisodes = 0;
+
     double scoreOrig = 0;
+    int nbActionsOrig = 0;
+    int initNbRoots = dotGraph.getNbRootVertices();
+
     std::cout << "Play with TPG code" << std::endl;
-    while(nbEpisodes < params.nbIterationsPerPolicyEvaluation){
-        if (armLearnEnv.isTerminal() || nbActionsEp == params.maxNbActionsPerEval || nbActions == 0){
-            scoreOrig += armLearnEnv.getScore();
-            armLearnEnv.reset(0, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
-            nbEpisodes++;
-            nbActionsEp = 0;
+    for(const TPG::TPGVertex * root: dotGraph.getRootVertices()){
+        // Play the game once to identify useful edges & vertices
+        int nbActions = 0;
+        int nbActionsEp = 0;
+        int nbEpisodes = 0;
+        armLearnEnv.reset(0, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
+        while(nbEpisodes < params.nbIterationsPerPolicyEvaluation){
+            if (armLearnEnv.isTerminal() || nbActionsEp == params.maxNbActionsPerEval || nbActions == 0){
+                scoreOrig += armLearnEnv.getScore();
+                armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
+                nbEpisodes++;
+                nbActionsEp = 0;
+            }
+            auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(*root).back()))->getActionID();
+            std::vector<std::uint64_t> actionsID;
+            actionsID.push_back(actionID);
+            armLearnEnv.doActions(actionsID);
+            nbActions++;
+            nbActionsEp++;
         }
-    	auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(* root).back()))->getActionID();
-        armLearnEnv.doAction(actionID);
-        ofs << nbActions << " " << actionID << std::endl;
-        nbActions++;
-        nbActionsEp++;
+        nbActionsOrig += nbActions;
     }
-    scoreOrig /= params.nbIterationsPerPolicyEvaluation;
-    auto nbActionsOrig = nbActions;
+    scoreOrig = scoreOrig / (double)(params.nbIterationsPerPolicyEvaluation * initNbRoots);
+    
     std::cout << "Total score: " << scoreOrig << " in "  << nbActionsOrig << " actions." << std::endl;
-    ofs.close();
 
     // Clean the unused vertices & teams
     ((const TPG::TPGInstrumentedFactory&)dotGraph.getFactory()).clearUnusedTPGGraphElements(dotGraph);
     dotGraph.clearProgramIntrons();
 
 
-    root = dotGraph.getRootVertices().front();
-
-    // Play the game again to check the result remains the same.
-    std::ofstream ofs2 ((path + "outLogs/tpg_clean.txt").c_str(), std::ofstream::out);
-    nbActions = 0;
-    nbEpisodes = 0;
     double scoreClean = 0;
-    armLearnEnv.reset(0, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
+    int nbActionsAfter = 0;
+
     std::cout << "Play with cleaned TPG code" << std::endl;
-    while(nbEpisodes < params.nbIterationsPerPolicyEvaluation){
-        if (armLearnEnv.isTerminal() || nbActionsEp == params.maxNbActionsPerEval || nbActions == 0){
-            scoreClean += armLearnEnv.getScore();
-            armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
-            
-            nbEpisodes++;
-            nbActionsEp = 0;
+    for(const TPG::TPGVertex * root: dotGraph.getRootVertices()){
+
+        // Play the game again to check the result remains the same.
+        int nbEpisodes = 0;
+        int nbActions = 0;
+        int nbActionsEp = 0;
+        armLearnEnv.reset(0, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
+        while(nbEpisodes < params.nbIterationsPerPolicyEvaluation){
+            if (armLearnEnv.isTerminal() || nbActionsEp == params.maxNbActionsPerEval || nbActions == 0){
+                scoreClean += armLearnEnv.getScore();
+                armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
+                
+                nbEpisodes++;
+                nbActionsEp = 0;
+            }
+            auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(*root).back()))->getActionID();
+
+            std::vector<std::uint64_t> actionsID;
+            actionsID.push_back(actionID);
+            armLearnEnv.doActions(actionsID);
+            nbActions++;
+            nbActionsEp++;
+
         }
-    	auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(* root).back()))->getActionID();
-
-        armLearnEnv.doAction(actionID);
-        ofs2 << nbActions << " " << actionID << std::endl;
-        nbActions++;
-        nbActionsEp++;
-
+        nbActionsAfter += nbActions;
     }
-    std::cout << "Total score: " << scoreClean / params.nbIterationsPerPolicyEvaluation << " in "  << nbActions << " actions." << std::endl;
-    ofs.close();
+    scoreClean = scoreClean / (double)(params.nbIterationsPerPolicyEvaluation * initNbRoots);
+    std::cout << "Total score: " << scoreClean << " in "  << nbActionsAfter << " actions." << std::endl;
 
-    if(scoreClean / params.nbIterationsPerPolicyEvaluation != scoreOrig || nbActions != nbActionsOrig){
+    if(scoreClean != scoreOrig || nbActionsAfter != nbActionsOrig){
         std::cout << "Determinism was lost during graph cleaning." << std::endl;
         exit(1);
     }
@@ -144,30 +154,28 @@ int main(int argc, char* argv[]) {
     ps.analyzePolicy(dotGraph.getRootVertices().front());
 
     // Print in file
-    char bestPolicyStatsPath[150];
     std::ofstream bestStats;
-    sprintf(bestPolicyStatsPath, (path + "outLogs/out_best_stats_cleaned.md").c_str());
-    bestStats.open(bestPolicyStatsPath);
+    std::ostringstream ossStats;
+    ossStats << trainingParams.pathLogs << "out_best_stats_cleaned.md";
+    bestStats.open(ossStats.str().c_str());
     bestStats << ps;
     bestStats.close();
 
     // Export cleaned dot file
     std::cout << "Printing cleaned dot file." << std::endl;
-    char bestDot[150];
-    sprintf(bestDot, (path + "outLogs/out_best_cleaned.dot").c_str());
-    File::TPGGraphDotExporter dotExporter(bestDot, dotGraph);
+    std::ostringstream ossDot;
+    ossDot << trainingParams.pathLogs << pathCleanedGraph;
+    File::TPGGraphDotExporter dotExporter(ossDot.str().c_str(), dotGraph);
     dotExporter.print();
 
 
 
 
-
-
-    Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
+    /*Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
     la.init(seed);
     auto &tpg = *la.getTPGGraph();
     Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
-    File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best_cleaned.dot").c_str(), env, tpg);
+    File::TPGGraphDotImporter dotImporter((traububg + "outLogs/out_best_cleaned.dot").c_str(), env, tpg);
     trainingParams.pathLogs = (path + "outLogs").c_str();
     trainingParams.testing = true;
     la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
@@ -184,7 +192,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Printing C code." << std::endl;
 	CodeGen::TPGGenerationEngineFactory factory(CodeGen::TPGGenerationEngineFactory::switchMode);
     std::unique_ptr<CodeGen::TPGGenerationEngine> tpggen = factory.create("codeGenArmlearn", dotGraph, codeGenPath);
-    tpggen->generateTPGGraph();
+    tpggen->generateTPGGraph();*/
 
     return 0;
 }
