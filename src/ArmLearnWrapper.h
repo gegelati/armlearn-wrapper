@@ -182,8 +182,9 @@ public:
      */
     ArmLearnWrapper(int nbMaxActions, TrainingParameters& params, bool gegelatiRunning, bool handServosTrained = false)
             : MARL::MarlLearningEnvironment(
-                (!params.testSingleAction) ? std::vector<size_t>{3, 3, 3, 3} : std::vector<size_t>{9}, 
-                (!params.testSingleAction) ? std::vector<size_t>{1, 1, 1, 1} : std::vector<size_t>{8}), 
+                (!params.testSingleAction) ? ((!params.armIn2d) ? std::vector<size_t>{3, 3, 3, 3} : std::vector<size_t>{3, 3, 3}) : ((!params.armIn2d) ? std::vector<size_t>{9} : std::vector<size_t>{7}), 
+                (!params.testSingleAction) ? ((!params.armIn2d) ? std::vector<size_t>{1, 1, 1, 1} : std::vector<size_t>{1, 1, 1}) : ((!params.armIn2d) ? std::vector<size_t>{9} : std::vector<size_t>{6})
+            ),
             gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
               nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget((params.useDiffInState) ? 6:3), dataMotorSpeed((params.actionSpeed) ? 4:0),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),

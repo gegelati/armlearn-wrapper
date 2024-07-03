@@ -56,29 +56,34 @@ void ArmLearnWrapper::doActions(std::vector<std::uint64_t> actions) {
     std::vector<double> motorAction = {0, 0, 0, 0, 0, 0};
     double step  = params.sizeAction;
 
+
     if(params.testSingleAction){
+
+        if(params.armIn2d){
+            actions[0] += 2;
+        }
         // Get the action
         switch (actions[0]) {
             case 0:
                 motorAction = {step, 0, 0, 0, 0, 0};
                 break;
             case 1:
-                motorAction = {0, step, 0, 0, 0, 0};
-                break;
-            case 2:
-                motorAction = {0, 0, step, 0, 0, 0};
-                break;
-            case 3:
-                motorAction = {0, 0, 0, step, 0, 0};
-                break;
-            case 4:
                 motorAction = {-step, 0, 0, 0, 0, 0};
                 break;
-            case 5:
+            case 2:
+                motorAction = {0, step, 0, 0, 0, 0};
+                break;
+            case 3:
                 motorAction = {0, -step, 0, 0, 0, 0};
                 break;
-            case 6:
+            case 4:
+                motorAction = {0, 0, step, 0, 0, 0};
+                break;
+            case 5:
                 motorAction = {0, 0, -step, 0, 0, 0};
+                break;
+            case 6:
+                motorAction = {0, 0, 0, step, 0, 0};
                 break;
             case 7:
                 motorAction = {0, 0, 0, -step, 0, 0};
@@ -106,8 +111,14 @@ void ArmLearnWrapper::doActions(std::vector<std::uint64_t> actions) {
             }
     }
     else{
+
+        int incrementFor2d = 0;
+        if(params.armIn2d){
+            incrementFor2d += 2;
+        }
+
         for(int actionID=0; actionID < actions.size(); actionID++){
-            motorAction[actionID] = step * ((double)actions[actionID] - 1); // -1 because action is either 0, 1 or 2 and became -1, 0 or +1 motor step
+            motorAction[actionID + incrementFor2d] = step * ((double)actions[actionID] - 1); // -1 because action is either 0, 1 or 2 and became -1, 0 or +1 motor step
         } 
 
         if(motorAction == std::vector<double>{0, 0, 0, 0, 0, 0}){
@@ -116,7 +127,6 @@ void ArmLearnWrapper::doActions(std::vector<std::uint64_t> actions) {
             }
         }
     }
-
 
 
     
@@ -601,7 +611,11 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(std::vector<double> cartes
         // valueNeeded = 3, then the value is sample between 1022 and 3061. The division/multiplication allow to round around 5
         // Then we add 3 again to be sure that the coordonates are possible
         int16_t valueNeeded = 2048 % (int)params.sizeAction;
-        i = (uint16_t) (valueNeeded + (int)(rng.getInt32(1 - valueNeeded, 4096 - valueNeeded) / params.sizeAction) * params.sizeAction);
+        if(params.armIn2d){
+            i = 2048;
+        } else {
+            i = (uint16_t) (valueNeeded + (int)(rng.getInt32(1 - valueNeeded, 4096 - valueNeeded) / params.sizeAction) * params.sizeAction);
+        }
         j = (uint16_t) (valueNeeded + (int)(rng.getInt32(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);
         k = (uint16_t) (valueNeeded + (int)(rng.getInt32(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);
         l = (uint16_t) (valueNeeded + (int)(rng.getInt32(1025 - valueNeeded, 3071 - valueNeeded) / params.sizeAction) * params.sizeAction);

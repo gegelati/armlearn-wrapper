@@ -180,6 +180,9 @@ public:
 	/// to test single action on marl gegelati
 	bool testSingleAction = true;
 
+	/// To fixed the first motor and only use the arm in 2d
+	bool armIn2d = true;
+
 	/// number of roots kept for the assemble/federated learning
 	uint64_t nbRootsKept = 1;
 

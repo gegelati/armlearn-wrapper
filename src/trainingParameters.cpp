@@ -235,6 +235,11 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "armIn2d"){
+        armIn2d = (bool)value.asBool();
+        return;
+    }
+
     if (param == "nbRootsKept"){
         nbRootsKept = (uint64_t)value.asUInt64();
         return;
