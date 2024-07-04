@@ -8,7 +8,7 @@ nbconfig = 1
 
 pathFile = os.path.dirname(__file__) + "/"
 
-nameTest = "multiPPO"
+nameTest = "multiSAC"
 pathLogs = pathFile + "../build/" + "outLogs/"
 pathRootParams = pathFile + "../params/"
 index = 0

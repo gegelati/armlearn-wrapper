@@ -573,7 +573,7 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(std::vector<double> cartes
     std::vector<double> cartesianPos;
     double distanceMotorPos = 0;
 
-    for(int index=0; index < 10000; index++){
+    for(int index=0; index < 100; index++){
 
         // The calcul insure that the value sampled are possible
         // For exemple with params.sizeAction = 5,
