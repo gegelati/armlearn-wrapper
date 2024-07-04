@@ -1,0 +1,48 @@
+{
+	/// Learning rate of the models
+	"lr": 0.0003,
+
+	/// Clip parameter
+	"clip": 0.2,
+
+	/// Gamma for bellman equation
+	"gamma" : 0.99,
+
+	/// Lambda for gae calculation
+	"lambda" : 0.95,
+
+	/// std
+	"std" : 2e-2,
+
+	/// value of beta (for entropy)
+	"beta" : 1e-3,
+
+	/// Size of the buffer
+	"sizeBuffer" : 2048,
+
+	/// Batch size of training iterations
+	"batchSize" : 512,
+
+	/// Batch size of training iterations
+	"nbEpochs" : 15,
+
+	/// Size of the first layer of the models
+	"sizeHL1" : 256,
+
+	/// Size of the second layer of the models
+	"sizeHL2" : 256,
+
+	"standardize" : true,
+
+	/// True to load the models
+	"loadModels" : false,
+
+	/// Path to models
+	"pathModel" : "outLogs",
+	// True to unable multiple actions
+	"multipleActions": true,
+	// True to unable continuous actions. Note : actions can only be continuous if multiple actions is unable
+	"continuousActions": false,
+	// Active or deactivate the false single action : SAC take multiple action but it is interpret as multiple single action by the env
+	"falseSingleAction": false
+}
