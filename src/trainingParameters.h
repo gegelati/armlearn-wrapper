@@ -175,8 +175,6 @@ public:
 	/// if true, allow the arm to make 360% circle
 	bool canDo360 = false;
 
-	bool useDiffInState = false;
-
 	/// to test single action on marl gegelati
 	bool testSingleAction = true;
 

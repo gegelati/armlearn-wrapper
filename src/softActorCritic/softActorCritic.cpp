@@ -122,7 +122,7 @@ void SoftActorCritic::learn(){
 
 void SoftActorCritic::loadModels(){
     std::cout<<" ----- Loading Models ----- "<<std::endl;
-    std::string path = (params.pathModel + "/models/best_model/").c_str();
+    std::string path = (params.pathModel + "best_model/").c_str();
     actorNet.loadCheckpoint(path);
     criticNet1.loadCheckpoint(path);
     criticNet2.loadCheckpoint(path);
@@ -132,9 +132,9 @@ void SoftActorCritic::loadModels(){
 
 void SoftActorCritic::saveModels(uint64_t genenrationNumber, bool bestModel){
     //std::cout<<" ----- Saving Models ----- "<<std::endl;
-    std::string path = (params.pathModel + "/models/save_" + std::to_string(genenrationNumber) + "/").c_str();
+    std::string path = (params.pathModel + "/save_" + std::to_string(genenrationNumber) + "/").c_str();
     if(bestModel){
-        path = (params.pathModel + "/models/best_model/").c_str();
+        path = (params.pathModel + "/best_model/").c_str();
     }
     if(!std::filesystem::exists(path)){
         std::filesystem::create_directory(path);

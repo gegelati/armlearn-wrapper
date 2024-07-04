@@ -34,15 +34,14 @@ void ArmLearnWrapper::computeInput() {
     for (int i = 0; i < newCartesianCoords.size(); i++) {
         cartesianHand.setDataAt(typeid(double), i, newCartesianCoords[i]);
         cartesianTarget.setDataAt(typeid(double), i, this->currentTarget->getInput()[i]);
-        if(params.useDiffInState){   
-            cartesianTarget.setDataAt(typeid(double), i + newCartesianCoords.size(), this->currentTarget->getInput()[i] - newCartesianCoords[i]);
-        }
+        cartesianDiff.setDataAt(typeid(double), i, this->currentTarget->getInput()[i] - newCartesianCoords[i]);
     }
 }
 
 std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::getDataSources() {
     auto result = std::vector<std::reference_wrapper<const Data::DataHandler>>();
     result.emplace_back(cartesianTarget);
+    result.emplace_back(cartesianDiff);
     result.emplace_back(cartesianHand);
     result.emplace_back(motorPos);
     if (params.actionSpeed) result.emplace_back(dataMotorSpeed);
@@ -90,9 +89,6 @@ void ArmLearnWrapper::doActions(std::vector<std::uint64_t> actions) {
                 break;
             case 8:
                 motorAction = {0, 0, 0, 0, 0, 0};
-                if(gegelatiRunning && !params.actionSpeed){
-                    isMoving=false;
-                }
                 break;
 
                 // Following cases only when the hand is trained
@@ -114,18 +110,12 @@ void ArmLearnWrapper::doActions(std::vector<std::uint64_t> actions) {
 
         int incrementFor2d = 0;
         if(params.armIn2d){
-            incrementFor2d += 2;
+            incrementFor2d += 1;
         }
 
         for(int actionID=0; actionID < actions.size(); actionID++){
             motorAction[actionID + incrementFor2d] = step * ((double)actions[actionID] - 1); // -1 because action is either 0, 1 or 2 and became -1, 0 or +1 motor step
         } 
-
-        if(motorAction == std::vector<double>{0, 0, 0, 0, 0, 0}){
-            if(gegelatiRunning && !params.actionSpeed){
-                isMoving=false;
-            }
-        }
     }
 
 
@@ -154,6 +144,13 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 }
 
 void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
+
+    // If not moving, stop the episode
+    if(motorAction == std::vector<double>{0, 0, 0, 0, 0, 0}){
+        if(!params.actionSpeed){
+            isMoving=false;
+        }
+    }
 
     if(params.actionSpeed){
         // Change the speed of the motors
@@ -191,10 +188,8 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         // The arm is not moving
         scaledOutput[0] = inputI;
 
-        // only active for gegelati because SAC is not deterministic
-        if(gegelatiRunning){
-            isMoving=false;
-        }
+        isMoving=false;
+
 
         // Give a penalty if the algorithm as taken an unavailable action
         givePenaltyMoveUnavailable = true;
@@ -230,9 +225,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
     if(params.realSimulation && motorCollision(scaledOutput)){
 
-        if(gegelatiRunning){
-            isMoving=false;
-        }
+        isMoving=false;
 
         // Give a penalty if the algorithm as taken an unavailable action (only one penalty even with multiple action)
         givePenaltyMoveUnavailable = true;
@@ -329,19 +322,6 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable, int nbMot
     // Compute Distance with the target
     auto err = getDistance();
 
-
-    // Tempory reward to force to stop close to the objective
-    if (err < params.rangeTarget){
-        // Incremente a counter
-        nbActionsInThreshold++;
-
-    // If not close to the objective
-    } else{
-        // reset counter
-        nbActionsInThreshold=0;
-    }
-
-
     // If the arm is not moving, set terminal to true
     if(!isMoving || isCycling){
         terminal = true;
@@ -352,22 +332,11 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable, int nbMot
             terminal = true;
             return 10;
         }
-    } else if(nbActionsInThreshold == 10 || !isMoving){
-        terminal = true;
-        if(err < params.rangeTarget){
-            return 10;
-        }
-    }
-
-    // If the arm is not moving anymore or is cycling, the reward is multiplied by the number of action normally to come
-    double penaltyStopTooSoon = 1;
-    if((!isMoving || isCycling) && gegelatiRunning){
-        penaltyStopTooSoon = nbMaxActions - nbActionsDone;
     }
 
     // If the arm has done an unavailable move, the algorithm get a penalty
     double penaltyMoveUnavailable = 0;
-    if (givePenaltyMoveUnavailable && !gegelatiRunning){
+    if (givePenaltyMoveUnavailable){
         penaltyMoveUnavailable = params.penaltyMoveUnavailable;
     }
 
@@ -377,12 +346,12 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable, int nbMot
             penaltySpeed += abs(speed);
         }
         penaltySpeed *= params.penaltySpeed;
+
     } else if (nbMotorMoving > 1){
         penaltySpeed = (nbMotorMoving - 1) * params.penaltySpeed;
     }
 
-    // Return distance divided by the initCurrentMaxLimitTarget (this will push the arm to stay in the initCurrentMaxLimitTarget)
-    return (- err * params.coefRewardMultiplication - penaltyMoveUnavailable - penaltySpeed) * penaltyStopTooSoon;
+    return (- (err * err) * params.coefRewardMultiplication - penaltyMoveUnavailable - penaltySpeed);
 
 }
 

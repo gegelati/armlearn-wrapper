@@ -45,8 +45,13 @@ int main(int argc, char* argv[]) {
         sacParams.pathModel = argv[3];
     }
 
+    if(argc > 4){
+        trainingParams.pathLogs = argv[4];
+    }
+
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams, false);
+    armLearnEnv.loadTargetCSV(trainingParams.pathTargetCSV, seed);
 
     // Set and Prompt the number of threads
     torch::set_num_threads(gegelatiParams.nbThreads);

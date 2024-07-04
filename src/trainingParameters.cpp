@@ -225,11 +225,6 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "useDiffInState"){
-        useDiffInState = (bool)value.asBool();
-        return;
-    }
-
     if (param == "testSingleAction"){
         testSingleAction = (bool)value.asBool();
         return;
