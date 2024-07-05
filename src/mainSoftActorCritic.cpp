@@ -128,6 +128,8 @@ int main(int argc, char* argv[]) {
             }
     }
 
+        trainingParams.testing = true;
+        learningAgent.testingModel(gegelatiParams.nbIterationsPerPolicyEvaluation); 
 
     }
 

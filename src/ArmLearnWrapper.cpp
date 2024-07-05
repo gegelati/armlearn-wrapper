@@ -304,6 +304,7 @@ void ArmLearnWrapper::saveMotorPos(){
         vectorValidationInfos.push_back(static_cast<int32_t>(1000*getScore()));
         vectorValidationInfos.push_back(static_cast<int32_t>(1000*distance));
         vectorValidationInfos.push_back(static_cast<int32_t>((distance < params.rangeTarget) ? 1: 0));
+        vectorValidationInfos.push_back(static_cast<int32_t>((armCollide) ? 1: 0));
         vectorValidationInfos.push_back(static_cast<int32_t>(nbActionsDone));
 
         // Add each motor positions
@@ -841,7 +842,7 @@ void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati){
     // Vérification si le fichier est correctement ouvert
     if (outputFile.is_open()) {
         outputFile<<"armPos0,"<<"armPos1,"<<"armPos2,"<<"armPos3,"<<"armPos4,"<<"armPos5,";
-        outputFile<<"targetPos0,"<<"targetPos1,"<<"targetPos2,"<<"Duration(ms),"<<"Score,"<<"Distance,"<<"Success,"<<"NbActions,"<<"MotorPos"<<std::endl;
+        outputFile<<"targetPos0,"<<"targetPos1,"<<"targetPos2,"<<"Duration(ms),"<<"Score,"<<"Distance,"<<"Success,"<<"Collision,"<<"NbActions,"<<"MotorPos"<<std::endl;
         // Écriture des données dans le fichier CSV
         for (const auto &row : allValidationInfos) {
             for (size_t i = 0; i < row.size(); ++i) {
