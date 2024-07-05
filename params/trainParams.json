@@ -16,11 +16,13 @@
 	// Proportion of trajectories (pair startingPos-Target) reused at each training generation
 	"propTrajectoriesReused": 0,
 	// Penalty for moving a motor : the goal is to avoid to much speed unecessary
-	"penaltySpeed": 0.05,
+	"penaltySpeed": 0.0,
 	// Coefficient to multiply the reward with
 	"coefRewardMultiplication": 0.01,
+	"bonusSuccess": 10,
+	"deepRLSquareErr": true,
 	// true to load the validation trajectories
-	"loadValidationTrajectories": true,
+	"loadValidationTrajectories": false,
 	// true to save the validation trajectories
 	"saveValidationTrajectories": false,
 	// Seed to init the algorithm (gegelati or SAC) 
@@ -36,7 +38,7 @@
 	// Value to penalize if an unavailable action is taken : reward = reward - penalty is isScoreResult is true, else score = score - penalty
 	"penaltyMoveUnavailable": 1,
 	// Size in degree of a discrete action, and max size of a continuous action
-	"sizeAction": 10,
+	"sizeAction": 5,
 	// if true, deactivate the training and only logs results
 	"testing": false,
 	// path to store the testing output
@@ -81,7 +83,9 @@
 	// if true, allow the arm to make 360% circle
 	"canDo360": false,
 
-	"useDiffInState": false,
+	"armIn2d": false,
+
+	"killDeepRLCollide": false,
 
 	"testSingleAction": false,
 	"nbRootsKept": 10,

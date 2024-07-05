@@ -133,7 +133,7 @@ class ArmSacEngine{
         void logTraining(double distance, double result);
 
         /// Log the validation distance, potentially save the models
-        void logValidation(double distance, double result, double success);
+        void logValidation(double distance, double result, double success, double nbCollision);
 
         /// Log the training validation distance
         void logTrainingValidation(double distance);

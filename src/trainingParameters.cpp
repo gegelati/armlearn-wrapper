@@ -235,6 +235,20 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "killDeepRLCollide"){
+        killDeepRLCollide = (bool)value.asBool();
+        return;
+    }
+    if (param == "deepRLSquareErr"){
+        deepRLSquareErr = (bool)value.asBool();
+        return;
+    }
+
+    if (param == "bonusSuccess"){
+        bonusSuccess = (double)value.asDouble();
+        return;
+    }
+
     if (param == "nbRootsKept"){
         nbRootsKept = (uint64_t)value.asUInt64();
         return;

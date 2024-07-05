@@ -28,6 +28,7 @@ namespace Learn {
         double nbActivatedTeam = 0;
         double nbActivatedAction = 0;
         double nbActivatedTeamRatio = 0;
+        double nbCollision = 0;
 
         std::vector<std::pair<int, double>> trajScores;
 
@@ -42,7 +43,7 @@ namespace Learn {
          * iteration.
          */
         ArmlearnEvaluationResult(const double score, const double success, const double distance, const double nbActivatedTeam, 
-        const double nbActivatedAction, const double nbActivatedTeamRatio, std::vector<std::pair<int, double>> trajScores, const size_t& nbEval)
+        const double nbActivatedAction, const double nbActivatedTeamRatio, double nbCollision, std::vector<std::pair<int, double>> trajScores, const size_t& nbEval)
             : EvaluationResult(score, nbEval)
         {
           this->success = success;
@@ -62,6 +63,8 @@ namespace Learn {
         double getNbActivatedAction() const;
 
         double getNbActivatedTeamRatio() const;
+
+        double getNbCollision() const;
 
         std::vector<std::pair<int, double>> getTrajScores();
 

@@ -181,6 +181,12 @@ public:
 	/// To fixed the first motor and only use the arm in 2d
 	bool armIn2d = true;
 
+    bool killDeepRLCollide = true;
+
+    bool deepRLSquareErr = false;
+    
+	double bonusSuccess = 10;
+
 	/// number of roots kept for the assemble/federated learning
 	uint64_t nbRootsKept = 1;
 

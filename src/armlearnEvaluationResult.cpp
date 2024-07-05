@@ -24,6 +24,10 @@ double Learn::ArmlearnEvaluationResult::getNbActivatedAction() const{
     return this->nbActivatedAction;
 }
 
+double Learn::ArmlearnEvaluationResult::getNbCollision() const{
+    return this->nbCollision;
+}
+
 std::vector<std::pair<int, double>> Learn::ArmlearnEvaluationResult::getTrajScores(){
     return this->trajScores;
 }
@@ -72,6 +76,11 @@ Learn::EvaluationResult& Learn::ArmlearnEvaluationResult::operator+=(
         this->nbActivatedAction = this->nbActivatedAction * (double)this->nbEvaluation +
                        otherConverted.nbActivatedAction * (double)otherConverted.nbEvaluation;
         this->nbActivatedAction /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
+
+
+        this->nbCollision = this->nbCollision * (double)this->nbEvaluation +
+                       otherConverted.nbCollision * (double)otherConverted.nbEvaluation;
+        this->nbCollision /= (double)this->nbEvaluation + (double)otherConverted.nbEvaluation;
 
         // Addition ot nbEvaluation
         this->nbEvaluation += otherConverted.nbEvaluation;

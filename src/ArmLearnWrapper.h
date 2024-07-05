@@ -32,11 +32,11 @@
 class ArmLearnWrapper : public MARL::MarlLearningEnvironment, armlearn::learning::DeviceLearner {
 protected:
 
-    int valKillCollision = 0;
+    bool armCollide = false;
 
     void computeInput();
 
-    double computeReward(bool givePenaltyMoveUnavailable, int nbMotorMoving);
+    double computeReward(int nbMotorMoving);
 
     TrainingParameters& params;
 
@@ -257,6 +257,8 @@ public:
 
     /// @brief Inherited via LearningEnvironment
     bool isCopyable() const override;
+
+    bool getArmCollide() const;
 
     /// @brief Inherited via LearningEnvironment
     virtual LearningEnvironment *clone() const;

@@ -213,6 +213,7 @@ void ArmPPOEngine::validateOneGeneration(uint16_t nbIterationValidation){
     double result = 0;
     double distance = 0;
     double success = 0;
+    double nbCollision = 0;
 
     // Validate for nbIterationTraining episode(s)
     for(int j = 0; j < nbIterationValidation; j++){
@@ -229,14 +230,17 @@ void ArmPPOEngine::validateOneGeneration(uint16_t nbIterationValidation){
         if (armLearnEnv->getDistance() < trainingParams.rangeTarget){
             success++;
         }
+
+        nbCollision += armLearnEnv->getArmCollide();
     }
     // get the mean result, mean distance and mean success
     result /= nbIterationValidation;
     distance /= nbIterationValidation;
     success /= nbIterationValidation;
+    nbCollision /= nbIterationValidation;
 
     // Log the validation
-    logValidation(distance, result, success);
+    logValidation(distance, result, success, nbCollision);
 };
 
 void ArmPPOEngine::validateTrainingOneGeneration(uint16_t nbIterationTrainingValidation){
@@ -321,8 +325,8 @@ void ArmPPOEngine::logHeader(){
     file << std::setw(colWidth) << "Gen" << std::setw(colWidth) << "Tdistance"<< std::setw(colWidth)<<"Treward";
 
     if (doValidation) {
-        std::cout << std::setw(colWidth) << "Vdistance"<< std::setw(colWidth) << "Vreward" << std::setw(colWidth) << "Success" ;
-        file << std::setw(colWidth) << "Vdistance" << std::setw(colWidth) << "Vreward" << std::setw(colWidth) << "Success" ;
+        std::cout << std::setw(colWidth) << "Vdistance"<< std::setw(colWidth) << "Vreward" << std::setw(colWidth) << "Success"  << std::setw(colWidth) << "nbCollis" ;
+        file << std::setw(colWidth) << "Vdistance" << std::setw(colWidth) << "Vreward" << std::setw(colWidth) << "Success" << std::setw(colWidth) << "nbCollis" ;
     }
 
     if (trainingParams.doTrainingValidation){
@@ -369,10 +373,10 @@ void ArmPPOEngine::logTraining(double distance, double result){
     chronoFromNow();
 }
 
-void ArmPPOEngine::logValidation(double distance, double result, double success){
+void ArmPPOEngine::logValidation(double distance, double result, double success, double nbCollision){
 
-    std::cout<<distance<<std::setw(colWidth)<<result<<std::setw(colWidth)<<success<<std::setw(colWidth);
-    file<<distance<<std::setw(colWidth)<<result<<std::setw(colWidth)<<success<<std::setw(colWidth);
+    std::cout<<distance<<std::setw(colWidth)<<result<<std::setw(colWidth)<<success<<std::setw(colWidth)<<nbCollision<<std::setw(colWidth);
+    file<<distance<<std::setw(colWidth)<<result<<std::setw(colWidth)<<success<<std::setw(colWidth)<<nbCollision<<std::setw(colWidth);
     lastValidationScore = success;
 
     if(lastValidationScore > bestScore){

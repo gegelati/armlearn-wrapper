@@ -146,7 +146,7 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
     // If not moving, stop the episode
-    if(motorAction == std::vector<double>{0, 0, 0, 0, 0, 0}){
+    if(motorAction == std::vector<double>{0, 0, 0, 0, 0, 0} && gegelatiRunning){
         if(!params.actionSpeed){
             isMoving=false;
         }
@@ -188,11 +188,11 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         // The arm is not moving
         scaledOutput[0] = inputI;
 
-        isMoving=false;
+        armCollide = true;
+        if(gegelatiRunning || params.killDeepRLCollide){
+            isMoving=false;
+        }
 
-
-        // Give a penalty if the algorithm as taken an unavailable action
-        givePenaltyMoveUnavailable = true;
 
     }
 
@@ -214,21 +214,22 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
 
             // only active for gegelati because SAC is not deterministic
-            if(gegelatiRunning){
+            if(gegelatiRunning || params.killDeepRLCollide){
                 isMoving=false;
             }
+            armCollide = true;
 
-            // Give a penalty if the algorithm as taken an unavailable action (only one penalty even with multiple action)
-            givePenaltyMoveUnavailable = true;
         }
     }
 
     if(params.realSimulation && motorCollision(scaledOutput)){
 
-        isMoving=false;
+        armCollide = true;
 
-        // Give a penalty if the algorithm as taken an unavailable action (only one penalty even with multiple action)
-        givePenaltyMoveUnavailable = true;
+        if(gegelatiRunning || params.killDeepRLCollide){
+            isMoving=false;
+        }
+
         for (int i = 0; i < 4; i++) {
             inputI = (double) *(motorPos.getDataAt(typeid(double), i).getSharedPointer<const double>());
             scaledOutput[i] = inputI;
@@ -257,7 +258,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     distance = computeSquaredError(target, cartesianCoords);
 
     nbActionsDone++;
-    reward = computeReward(givePenaltyMoveUnavailable, nbMotorMoving); // Computation of reward
+    reward = computeReward(nbMotorMoving); // Computation of reward
     score += reward;
 
     if(gegelatiRunning){
@@ -265,7 +266,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
         if(params.bonusNbIteration){
             if(-1 * score < params.rangeTarget){
-                score = (nbMaxActions - nbActionsDone) * params.coefRewardMultiplication;
+                score = (nbMaxActions - nbActionsDone) * params.coefRewardMultiplication + params.bonusSuccess;
             }
         }
 
@@ -317,10 +318,16 @@ void ArmLearnWrapper::saveMotorPos(){
     }
 }
 
-double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable, int nbMotorMoving) {
+double ArmLearnWrapper::computeReward(int nbMotorMoving) {
 
     // Compute Distance with the target
     auto err = getDistance();
+
+    
+    double basicReward = err;
+    if(params.deepRLSquareErr){
+        basicReward *= err;
+    }
 
     // If the arm is not moving, set terminal to true
     if(!isMoving || isCycling){
@@ -330,13 +337,13 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable, int nbMot
     if(params.reachingObjectives){
         if(err < params.rangeTarget){
             terminal = true;
-            return 10;
+            return params.bonusSuccess;
         }
     }
 
     // If the arm has done an unavailable move, the algorithm get a penalty
     double penaltyMoveUnavailable = 0;
-    if (givePenaltyMoveUnavailable){
+    if (armCollide){
         penaltyMoveUnavailable = params.penaltyMoveUnavailable;
     }
 
@@ -351,7 +358,7 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable, int nbMot
         penaltySpeed = (nbMotorMoving - 1) * params.penaltySpeed;
     }
 
-    return (- (err * err) * params.coefRewardMultiplication - penaltyMoveUnavailable - penaltySpeed);
+    return - basicReward * params.coefRewardMultiplication - penaltyMoveUnavailable - penaltySpeed;
 
 }
 
@@ -398,6 +405,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     memoryMotorPos.clear();
     distance = 0.0;
     timeEnv = 0.0;
+    armCollide = false;
 
 
     // If we are testing the arm, we save the current trajectory
@@ -498,6 +506,9 @@ bool ArmLearnWrapper::isCopyable() const {
     return true;
 }
 
+bool ArmLearnWrapper::getArmCollide() const {
+    return armCollide;
+}
 
 void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
 

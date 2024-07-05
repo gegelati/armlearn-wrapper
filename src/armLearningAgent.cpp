@@ -158,6 +158,9 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
 
     double success = 0.0;
 
+
+    double nbCollision = 0.0;
+
     double distance = 0.0;
 
     std::vector<std::pair<int, double>> trajectoriesScore;
@@ -243,6 +246,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
             success += 1;
         }
 
+        nbCollision += ((ArmLearnWrapper&)le).getArmCollide();
+
         // Push back the id with the score
         trajectoriesScore.push_back(std::make_pair(iterationNumber, le.getScore()));
     }
@@ -272,6 +277,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
             nbActivatedTeam / (double)nbIteration,
             nbActivatedAction / (double)nbIteration,
             nbActivatedTeamRatio / (double)nbIteration,
+            nbCollision / (double)nbIteration,
             trajectoriesScore, nbIteration));
 
     // Combine it with previous one if any
