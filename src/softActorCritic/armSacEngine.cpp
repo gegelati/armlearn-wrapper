@@ -231,6 +231,7 @@ void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
     result /= nbIterationValidation;
     distance /= nbIterationValidation;
     success /= nbIterationValidation;
+    nbCollision /= nbIterationValidation;
 
     // Log the validation
     logValidation(distance, result, success, nbCollision);
