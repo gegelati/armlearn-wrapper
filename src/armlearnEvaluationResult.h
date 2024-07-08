@@ -52,6 +52,7 @@ namespace Learn {
           this->nbActivatedAction = nbActivatedAction;
           this->nbActivatedTeamRatio = nbActivatedTeamRatio;
           this->trajScores = trajScores;
+          this->nbCollision = nbCollision;
         }
 
         double getSuccess() const;
