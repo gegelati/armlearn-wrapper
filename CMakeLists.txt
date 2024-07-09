@@ -94,7 +94,8 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenInf.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenSac.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/hybridInfSAC.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/hybridInfPPO.cpp)
 
 # Delete softActorCritic files for know
 file(GLOB 
@@ -228,9 +229,35 @@ target_link_libraries(armPPO ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so
 target_compile_definitions(armPPO PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
 
 
+list(APPEND
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/hybridInfPPO.cpp)
+
+        
 list(REMOVE_ITEM
         armgegelati_files
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainPPO.cpp)
+
+add_executable(armHybridPPO ${armgegelati_files})
+
+
+target_link_libraries(armHybridPPO ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
+target_compile_definitions(armHybridPPO PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")    
+
+
+list(REMOVE_ITEM
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/hybridInfPPO.cpp)
 
 
 foreach(ppoFile ${ppoFiles})
@@ -260,26 +287,25 @@ target_compile_definitions(armSoftActorCritic PRIVATE ROOT_DIR="${CMAKE_SOURCE_D
 
 
 
-#list(APPEND
-#        armgegelati_files
-#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
-#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
-#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
-#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
-#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
-#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenSac.cpp)
+list(APPEND
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/hybridInfSAC.cpp)
 
         
-#list(REMOVE_ITEM
-#        armgegelati_files
-#        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp)
+list(REMOVE_ITEM
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp)
 
-# armSoftActorCritic: Training SoftActorCritic on the ArmLearnWrapper learning environment
-#add_executable(armCodeGenSac ${armgegelati_files})
+add_executable(armHybridSAC ${armgegelati_files})
 
 
-#target_link_libraries(armCodeGenSac ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
-#target_compile_definitions(armCodeGenSac PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")        
+target_link_libraries(armHybridSAC ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
+target_compile_definitions(armHybridSAC PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")        
 
 
 # *******************************************
