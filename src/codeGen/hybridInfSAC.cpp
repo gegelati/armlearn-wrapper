@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
 
     TrainingParameters trainingParams;
     trainingParams.loadParametersFromJson((pathParams + "trainParams.json").c_str());
+    trainingParams.testing=true;
 
     if(argc > 3){
         trainingParams.pathLogs = argv[3];
@@ -45,17 +46,23 @@ int main(int argc, char* argv[]) {
     SACParameters sacParams;
     sacParams.loadParametersFromJson((pathParams + "sacParams.json").c_str());
 
+    if(argc > 4){
+        sacParams.pathModel = argv[4];
+    }
+
+    Learn::LearningParameters gegelatiParams;
+    File::ParametersParser::loadParametersFromJson((pathParams + "params.json").c_str(), gegelatiParams);
 
 
     // Instantiate the LearningEnvironment
-    ArmLearnWrapper armLearnEnv(1500, trainingParams, true);
+    ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams, true);
 
 
     //Creation of the Output stream on cout and on the file
     auto nameLogs = "garbage";
     std::ofstream file((trainingParams.pathLogs + nameLogs + ".ods").c_str(), std::ios::out);
     // Instantiate the softActorCritic engine
-    ArmSacEngine learningAgent(sacParams, &armLearnEnv, file, trainingParams, 1500, 
+    ArmSacEngine learningAgent(sacParams, &armLearnEnv, file, trainingParams, gegelatiParams.maxNbActionsPerEval, 
                                true);
 
 
@@ -75,55 +82,72 @@ int main(int argc, char* argv[]) {
 
     armLearnEnv.loadValidationTrajectories(trainingParams.pathValidationTrajectories);
 
-
+    int counterLetGegelati = 0;
+    int nbMilimeterChange = 10;
+    int nbIterationGoBackGegelati = 100;
     int nbEpisodes = 0;
     double scoreOrig = 0;
     int nbActionsEp = 0;
     int nbActions = 0;
     bool tpgAction = true;
-    double previousDistance = 0;
-    int incr = 0;
+    double bestDistance = 0;
     std::cout << "Play with TPG code" << std::endl;
-    while(nbEpisodes < 100){
-        if (armLearnEnv.isTerminal() || nbActionsEp == 1500 || nbActions == 0){
+    while(nbEpisodes < 1){
+
+        // Reset part
+        if (armLearnEnv.isTerminal() || nbActionsEp == gegelatiParams.maxNbActionsPerEval || nbActions == 0){
             scoreOrig += (nbActions == 0) ? 0 : armLearnEnv.getDistance();
+            nbEpisodes += (nbActions == 0) ? 0 : 1;
             nbActionsEp = 0;
             armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
-            nbEpisodes++;
             tpgAction = true;
-            previousDistance = armLearnEnv.getDistance();
+            bestDistance = armLearnEnv.getDistance();
             armLearnEnv.setGegelatiRunning(true);
-            armLearnEnv.setIsMoving(true);
-            incr = 0;
         }
+
+        // Do action with either TPGs, either SAC
         if(tpgAction){
     	    auto actionID = inferenceTPG();
-            armLearnEnv.doAction(actionID);
+            std::vector<std::uint64_t> actionsID = {(uint64_t)actionID};
+            armLearnEnv.doActions(actionsID);
         } else {
-    	    auto actionID = learningAgent.doOneActionInference();
-            armLearnEnv.doActionContinuous(actionID);
-        }
+    	    auto actionsID = learningAgent.doOneActionInference();
+            armLearnEnv.doActionContinuous(actionsID);
+            counterLetGegelati+=1;
+
+            // If the counter reached the value, go back to Gegelati Inference
+            if (counterLetGegelati == nbIterationGoBackGegelati){
+                tpgAction = true;
+                armLearnEnv.setGegelatiRunning(true);
+
+            }
+
         nbActionsEp++;
         nbActions++;
 
-
-        if(tpgAction && armLearnEnv.getDistance() > previousDistance){
-            incr++;
-            if(incr == 5){
-                tpgAction = false;
-                armLearnEnv.setGegelatiRunning(false);    
-            } else {
-                incr = 0;
-            }
-            
-        } else if(!armLearnEnv.getIsMoving() && tpgAction){
-            armLearnEnv.setIsMoving(true);
-            tpgAction = false;
-            armLearnEnv.setGegelatiRunning(false);
-            armLearnEnv.setTerminal(false);
-            armLearnEnv.incrValKillCollision();
+        // If current distance is lower, save new best distance
+        if(armLearnEnv.getDistance() < bestDistance){
+            bestDistance = armLearnEnv.getDistance();
         }
-        previousDistance = armLearnEnv.getDistance();
+
+        if(tpgAction){
+
+
+            // Else if current Distance is best distance plus the value to change, swap to DeepRL algorithm
+            if (armLearnEnv.getDistance() > bestDistance + nbMilimeterChange){
+                counterLetGegelati = 0;
+                tpgAction = false;
+                armLearnEnv.setGegelatiRunning(false);  
+            
+            // Else if TPGs stop but did not collide (so stop because of cycle or just action to stop), swap to Deep Rl
+            } else if(!armLearnEnv.getIsMoving() && !armLearnEnv.getArmCollide()){
+                counterLetGegelati = 0;
+                tpgAction = false;
+                armLearnEnv.setIsMoving(true);
+                armLearnEnv.setGegelatiRunning(false);
+                armLearnEnv.setTerminal(false);
+            }
+        }
     }
     scoreOrig /= 100;
     armLearnEnv.logTestingTrajectories(true);

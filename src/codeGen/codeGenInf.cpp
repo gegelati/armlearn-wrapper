@@ -31,6 +31,8 @@ int main(int argc, char* argv[]) {
 
     TrainingParameters trainingParams;
     trainingParams.loadParametersFromJson((pathParams + "trainParams.json").c_str());
+    Learn::LearningParameters params;
+    File::ParametersParser::loadParametersFromJson((pathParams + "/params.json").c_str(), params);
 
     if(argc > 3){
         trainingParams.pathLogs = argv[3];
@@ -38,7 +40,7 @@ int main(int argc, char* argv[]) {
 
 
     // Instantiate the LearningEnvironment
-    ArmLearnWrapper armLearnEnv(1500, trainingParams, true);
+    ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
 
 	/// fetch data in the environment
 	auto dataSources = armLearnEnv.getDataSources();
@@ -56,21 +58,23 @@ int main(int argc, char* argv[]) {
 
     armLearnEnv.loadValidationTrajectories(trainingParams.pathValidationTrajectories);
 
+    trainingParams.testing=true;
 
     int nbEpisodes = 0;
     double scoreOrig = 0;
     int nbActionsEp = 0;
     int nbActions = 0;
     std::cout << "Play with TPG code" << std::endl;
-    while(nbEpisodes < 100){
-        if (armLearnEnv.isTerminal() || nbActionsEp == 1500 || nbActions == 0){
+    while(nbEpisodes < params.nbIterationsPerPolicyEvaluation){
+        if (armLearnEnv.isTerminal() || nbActionsEp == params.maxNbActionsPerEval || nbActions == 0){
             scoreOrig += (nbActions == 0) ? 0 : armLearnEnv.getScore();
             nbActionsEp = 0;
             armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
             nbEpisodes++;
         }
     	auto actionID = inferenceTPG();
-        armLearnEnv.doAction(actionID);
+        std::vector<std::uint64_t> actionsID = {(uint64_t)actionID};
+        armLearnEnv.doActions(actionsID);
         nbActionsEp++;
         nbActions++;
     }

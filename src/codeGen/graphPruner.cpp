@@ -167,23 +167,10 @@ int main(int argc, char* argv[]) {
     ossDot << trainingParams.pathLogs << pathCleanedGraph;
     File::TPGGraphDotExporter dotExporter(ossDot.str().c_str(), dotGraph);
     dotExporter.print();
-
-
-
-
-    /*Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
-    la.init(seed);
-    auto &tpg = *la.getTPGGraph();
-    Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
-    File::TPGGraphDotImporter dotImporter((traububg + "outLogs/out_best_cleaned.dot").c_str(), env, tpg);
-    trainingParams.pathLogs = (path + "outLogs").c_str();
-    trainingParams.testing = true;
-    la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
-    
     
 
     // Print graph
-    std::string codeGenPath = (path + "outLogs/codeGen/").c_str();
+    std::string codeGenPath = (trainingParams.pathLogs + "codeGen/").c_str();
     std::cout<<codeGenPath<<std::endl;
     if(!std::filesystem::exists(codeGenPath)){
         std::filesystem::create_directory(codeGenPath);
@@ -192,7 +179,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Printing C code." << std::endl;
 	CodeGen::TPGGenerationEngineFactory factory(CodeGen::TPGGenerationEngineFactory::switchMode);
     std::unique_ptr<CodeGen::TPGGenerationEngine> tpggen = factory.create("codeGenArmlearn", dotGraph, codeGenPath);
-    tpggen->generateTPGGraph();*/
+    tpggen->generateTPGGraph();
 
     return 0;
 }

@@ -383,6 +383,14 @@ public:
 
     bool getIsMoving();
 
+    void setGegelatiRunning(bool isRunning);
+
+    // To set if the arm is moving or not
+    void setIsMoving(bool newMoving);
+
+    // To set terminal or not (ONLY FOR HYBRID)
+    void setTerminal(bool newTerminal);
+
     /**
      * @brief Return True if one of the motor has collision or is bellow 0 on z axis
      * 

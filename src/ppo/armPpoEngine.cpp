@@ -31,7 +31,7 @@ double ArmPPOEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
 
         // Get the continuous action
         actionNCritic = learningAgent.chooseAction(state);
-        actionTensor = actionNCritic.first;
+        actionTensor = torch::tanh(actionNCritic.first);
 
         // reset reward
         singleReward = 0;
@@ -154,7 +154,7 @@ std::vector<float> ArmPPOEngine::doOneActionInference(){
     
     torch::Tensor state = getTensorState();
     // Get the continuous action
-    torch::Tensor actionTensor = learningAgent.chooseAction(state).first;
+    torch::Tensor actionTensor = torch::tanh(learningAgent.chooseAction(state).first);
 
     auto actionTaken = actionTensor;
     if (!ppoParams.continuousActions){

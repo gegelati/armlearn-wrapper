@@ -842,7 +842,7 @@ void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati){
     // Vérification si le fichier est correctement ouvert
     if (outputFile.is_open()) {
         outputFile<<"armPos0,"<<"armPos1,"<<"armPos2,"<<"armPos3,"<<"armPos4,"<<"armPos5,";
-        outputFile<<"targetPos0,"<<"targetPos1,"<<"targetPos2,"<<"Duration(ms),"<<"Score,"<<"Distance,"<<"Success,"<<"Collision,"<<"NbActions,"<<"MotorPos"<<std::endl;
+        outputFile<<"targetPos0,"<<"targetPos1,"<<"targetPos2,"<<"Duration(micros),"<<"Score*1000,"<<"Distance*1000,"<<"Success,"<<"Collision,"<<"NbActions,"<<"MotorPos"<<std::endl;
         // Écriture des données dans le fichier CSV
         for (const auto &row : allValidationInfos) {
             for (size_t i = 0; i < row.size(); ++i) {
@@ -895,7 +895,7 @@ void ArmLearnWrapper::setInitStartingPos(std::vector<uint16_t> newInitStartingPo
 
 
 double ArmLearnWrapper::getDistance(){
-    return distance;
+    return computeSquaredError(this->currentTarget->getInput(), converter->computeServoToCoord(getMotorsPos())->getCoord());
 }
 
 bool ArmLearnWrapper::motorCollision(std::vector<uint16_t> newMotorPos){
@@ -1052,6 +1052,19 @@ bool ArmLearnWrapper::hasCollision(std::vector<double> armSegment, std::vector<d
 
 bool ArmLearnWrapper::getIsMoving(){
     return isMoving && !isCycling;
+}
+
+void ArmLearnWrapper::setGegelatiRunning(bool isRunning){
+    gegelatiRunning = isRunning;
+}
+
+void ArmLearnWrapper::setIsMoving(bool newMoving){
+    isMoving = true;
+    isCycling = false;
+}
+
+void ArmLearnWrapper::setTerminal(bool newTerminal){
+    terminal = newTerminal;
 }
 
 armlearn::Input<double> *ArmLearnWrapper::randomGoal(){
