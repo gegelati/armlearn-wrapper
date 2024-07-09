@@ -121,6 +121,7 @@ int main(int argc, char* argv[]) {
                 armLearnEnv.setGegelatiRunning(true);
 
             }
+        }
 
         nbActionsEp++;
         nbActions++;
