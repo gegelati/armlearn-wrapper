@@ -87,6 +87,20 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "alwaysReward"){
+        alwaysReward = (double)value.asBool();
+        return;
+    }
+
+    if (param == "deepRLCanStop"){
+        deepRLCanStop = (double)value.asBool();
+        return;
+    }
+
+    if (param == "defaultDeepRlReward"){
+        defaultDeepRlReward = (double)value.asDouble();
+        return;
+    }
 
     if (param == "coefRewardMultiplication"){
         coefRewardMultiplication = (double)value.asDouble();

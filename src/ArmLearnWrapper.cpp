@@ -146,7 +146,7 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
     // If not moving, stop the episode
-    if(motorAction == std::vector<double>{0, 0, 0, 0, 0, 0} && gegelatiRunning){
+    if(motorAction == std::vector<double>{0, 0, 0, 0, 0, 0} && (gegelatiRunning || params.deepRLCanStop)){
         if(!params.actionSpeed){
             isMoving=false;
         }
@@ -261,6 +261,8 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     reward = computeReward(nbMotorMoving); // Computation of reward
     score += reward;
 
+    std::cout<<reward<< " - "<<score<<"-"<<distance<<std::endl;
+
     if(gegelatiRunning){
         score = -1 * getDistance();
 
@@ -359,7 +361,22 @@ double ArmLearnWrapper::computeReward(int nbMotorMoving) {
         penaltySpeed = (nbMotorMoving - 1) * params.penaltySpeed;
     }
 
-    return - basicReward * params.coefRewardMultiplication - penaltyMoveUnavailable - penaltySpeed;
+    if(terminal){
+        if(armCollide){
+            return params.penaltyMoveUnavailable;
+        } else {
+            return - basicReward * params.coefRewardMultiplication - penaltySpeed;
+        }
+
+    } else {
+        if(params.alwaysReward){
+            return - basicReward * params.coefRewardMultiplication + penaltyMoveUnavailable + penaltySpeed;
+        } else {
+            return params.defaultDeepRlReward;
+        }
+    }
+
+    
 
 }
 

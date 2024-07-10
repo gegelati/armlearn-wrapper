@@ -185,6 +185,12 @@ public:
 
     bool deepRLSquareErr = false;
     
+	bool alwaysReward = false;
+
+	bool deepRLCanStop = false;
+    
+	double defaultDeepRlReward = -1;
+    
 	double bonusSuccess = 10;
 
 	/// number of roots kept for the assemble/federated learning
