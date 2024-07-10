@@ -261,8 +261,6 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     reward = computeReward(nbMotorMoving); // Computation of reward
     score += reward;
 
-    std::cout<<reward<< " - "<<score<<"-"<<distance<<std::endl;
-
     if(gegelatiRunning){
         score = -1 * getDistance();
 
