@@ -145,6 +145,8 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
 
 void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
+    armCollide = false;
+
     // If not moving, stop the episode
     if(motorAction == std::vector<double>{0, 0, 0, 0, 0, 0} && (gegelatiRunning || params.deepRLCanStop)){
         if(!params.actionSpeed){
