@@ -34,6 +34,8 @@ protected:
 
     bool armCollide = false;
 
+    double nbArmCollide = 0;
+
     void computeInput();
 
     double computeReward(int nbMotorMoving);
@@ -259,6 +261,8 @@ public:
     bool isCopyable() const override;
 
     bool getArmCollide() const;
+
+    double getNbArmCollide() const;
 
     /// @brief Inherited via LearningEnvironment
     virtual LearningEnvironment *clone() const;

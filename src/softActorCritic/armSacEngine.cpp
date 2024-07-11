@@ -225,7 +225,9 @@ void ArmSacEngine::validateOneGeneration(uint16_t nbIterationValidation){
         if (armLearnEnv->getDistance() < trainingParams.rangeTarget){
             success++;
         }
-        nbCollision += armLearnEnv->getArmCollide();
+        if (armLearnEnv->getNbArmCollide() > 0){
+            nbCollision ++;
+        }
     }
     // get the mean result, mean distance and mean success
     result /= nbIterationValidation;

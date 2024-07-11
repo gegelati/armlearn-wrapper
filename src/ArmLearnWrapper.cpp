@@ -282,6 +282,10 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         saveMotorPos();
     }
 
+    if(armCollide){
+        nbArmCollide++;
+    }
+
     timeEnv += ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpointEnv)).count();
 
 }
@@ -424,6 +428,7 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     distance = 0.0;
     timeEnv = 0.0;
     armCollide = false;
+    nbArmCollide = 0;
 
 
     // If we are testing the arm, we save the current trajectory
@@ -526,6 +531,10 @@ bool ArmLearnWrapper::isCopyable() const {
 
 bool ArmLearnWrapper::getArmCollide() const {
     return armCollide;
+}
+
+double ArmLearnWrapper::getNbArmCollide() const {
+    return nbArmCollide;
 }
 
 void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
