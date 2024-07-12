@@ -123,6 +123,44 @@ void Learn::ArmLearningAgent::testingBestRoot(uint64_t generationNumber){
 
 }
 
+void Learn::ArmLearningAgent::decimateWorstRoots(
+    std::multimap<std::shared_ptr<EvaluationResult>, const TPG::TPGVertex*>&
+        results)
+{
+    // Some actions may be encountered but not removed while scanning the
+    // results map they should be re-inserted to the list before leaving the
+    // method.
+    std::multimap<std::shared_ptr<EvaluationResult>, const TPG::TPGVertex*>
+        preservedActionRoots;
+
+    auto i = 0;
+
+    int nbRootsToDelete = std::max((this->tpg->getNbRootVertices() - params.mutation.tpg.nbRoots), (uint64_t)0) + floor(this->params.ratioDeletedRoots * (double)params.mutation.tpg.nbRoots);
+    
+
+    while (i < nbRootsToDelete &&
+           results.size() > 0) {
+        // If the root is an action, do not remove it!
+        const TPG::TPGVertex* root = results.begin()->second;
+        if (dynamic_cast<const TPG::TPGAction*>(root) == nullptr) {
+            tpg->removeVertex(*results.begin()->second);
+            // Removed stored result (if any)
+            this->resultsPerRoot.erase(results.begin()->second);
+        }
+        else {
+            preservedActionRoots.insert(*results.begin());
+            i--; // no vertex was actually removed
+        }
+        results.erase(results.begin());
+
+        // Increment loop counter
+        i++;
+    }
+
+    // Restore root actions
+    results.insert(preservedActionRoots.begin(), preservedActionRoots.end());
+}
+
 std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     TPG::TPGExecutionEngine& tee, const Job& job, uint64_t generationNumber,
     Learn::LearningMode mode, LearningEnvironment& le) const

@@ -101,6 +101,9 @@ namespace Learn {
             uint64_t generationNumber, LearningMode mode,
             LearningEnvironment& le) const override;
 
+        virtual void decimateWorstRoots(
+            std::multimap<std::shared_ptr<EvaluationResult>,
+                          const TPG::TPGVertex*>& results) override;
 
         virtual std::queue<std::shared_ptr<Learn::Job>> makeJobs(
         Learn::LearningMode mode, TPG::TPGGraph* tpgGraph) override;
