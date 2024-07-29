@@ -86,9 +86,14 @@ int main(int argc, char* argv[]) {
         armLearnEnv.reset(0, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
         while(nbEpisodes < params.nbIterationsPerPolicyEvaluation){
             if (armLearnEnv.isTerminal() || nbActionsEp == params.maxNbActionsPerEval || nbActions == 0){
-                scoreOrig += armLearnEnv.getScore();
+                if(nbActions > 0){
+                    scoreOrig += armLearnEnv.getScore();
+                    nbEpisodes++;
+                    if(nbEpisodes == params.nbIterationsPerPolicyEvaluation){
+                        break;
+                    }
+                }
                 armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
-                nbEpisodes++;
                 nbActionsEp = 0;
             }
             auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(*root).back()))->getActionID();
@@ -122,10 +127,15 @@ int main(int argc, char* argv[]) {
         armLearnEnv.reset(0, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
         while(nbEpisodes < params.nbIterationsPerPolicyEvaluation){
             if (armLearnEnv.isTerminal() || nbActionsEp == params.maxNbActionsPerEval || nbActions == 0){
-                scoreClean += armLearnEnv.getScore();
+                if(nbActions > 0){
+                    scoreClean += armLearnEnv.getScore();
+                    nbEpisodes++;
+                    if(nbEpisodes == params.nbIterationsPerPolicyEvaluation){
+                        break;
+                    }
+                }
                 armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
                 
-                nbEpisodes++;
                 nbActionsEp = 0;
             }
             auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(*root).back()))->getActionID();

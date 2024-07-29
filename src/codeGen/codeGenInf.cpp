@@ -60,19 +60,38 @@ int main(int argc, char* argv[]) {
 
     trainingParams.testing=true;
 
+    armLearnEnv.setHybridMode(true);
     int nbEpisodes = 0;
     double scoreOrig = 0;
     int nbActionsEp = 0;
     int nbActions = 0;
+    double time = 0;
+
+
+    std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
+
     std::cout << "Play with TPG code" << std::endl;
     while(nbEpisodes < params.nbIterationsPerPolicyEvaluation){
         if (armLearnEnv.isTerminal() || nbActionsEp == params.maxNbActionsPerEval || nbActions == 0){
-            scoreOrig += (nbActions == 0) ? 0 : armLearnEnv.getScore();
+            if(nbActions > 0){
+                scoreOrig += armLearnEnv.getScore();
+                armLearnEnv.setTimeEnv(time);
+                armLearnEnv.saveMotorPos();
+                nbEpisodes++;
+                if(nbEpisodes == params.nbIterationsPerPolicyEvaluation){
+                    break;
+                }
+            }
             nbActionsEp = 0;
+                time = 0;
             armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
-            nbEpisodes++;
+            
+
         }
+        checkpoint = std::make_shared<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
     	auto actionID = inferenceTPG();
+        time += ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
+
         std::vector<std::uint64_t> actionsID = {(uint64_t)actionID};
         armLearnEnv.doActions(actionsID);
         nbActionsEp++;
@@ -81,5 +100,7 @@ int main(int argc, char* argv[]) {
     scoreOrig /= 100;
     armLearnEnv.logTestingTrajectories(true);
     std::cout << "Total score: " << scoreOrig << std::endl;
+
+
 
 }

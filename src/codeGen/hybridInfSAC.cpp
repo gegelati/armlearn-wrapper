@@ -46,9 +46,11 @@ int main(int argc, char* argv[]) {
     SACParameters sacParams;
     sacParams.loadParametersFromJson((pathParams + "sacParams.json").c_str());
 
-    if(argc > 4){
+    if(argc > 4) {
         sacParams.pathModel = argv[4];
     }
+
+    sacParams.loadModels = true;
 
     Learn::LearningParameters gegelatiParams;
     File::ParametersParser::loadParametersFromJson((pathParams + "params.json").c_str(), gegelatiParams);
@@ -57,6 +59,13 @@ int main(int argc, char* argv[]) {
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(gegelatiParams.maxNbActionsPerEval, trainingParams, true);
 
+
+    armLearnEnv.setHybridMode(true);
+
+    
+    // Set and Prompt the number of threads
+    torch::set_num_threads(gegelatiParams.nbThreads);
+    std::cout << "Number of threads: " << torch::get_num_threads() << std::endl;
 
     //Creation of the Output stream on cout and on the file
     auto nameLogs = "garbage";
@@ -83,53 +92,81 @@ int main(int argc, char* argv[]) {
     armLearnEnv.loadValidationTrajectories(trainingParams.pathValidationTrajectories);
 
     int counterLetGegelati = 0;
-    int nbMilimeterChange = 10;
-    int nbIterationGoBackGegelati = 100;
+    int nbMilimeterChange = std::stoi(argv[5]);
+    int nbIterationGoBackGegelati = std::stoi(argv[6]);
+
+    std::cout<<nbMilimeterChange<<"-"<<nbIterationGoBackGegelati<<std::endl;
+
     int nbEpisodes = 0;
     double scoreOrig = 0;
     int nbActionsEp = 0;
     int nbActions = 0;
     bool tpgAction = true;
     double bestDistance = 0;
+
+    double time = 0;
+    int actBySac = 0;
+    std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
+
     std::cout << "Play with TPG code" << std::endl;
-    while(nbEpisodes < 1){
+    while(nbEpisodes < gegelatiParams.nbIterationsPerPolicyEvaluation){
+
 
         // Reset part
         if (armLearnEnv.isTerminal() || nbActionsEp == gegelatiParams.maxNbActionsPerEval || nbActions == 0){
-            scoreOrig += (nbActions == 0) ? 0 : armLearnEnv.getDistance();
-            nbEpisodes += (nbActions == 0) ? 0 : 1;
-            nbActionsEp = 0;
-            armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
+            if(nbActions > 0){
+                scoreOrig += armLearnEnv.getDistance();
+                nbEpisodes++;
+                armLearnEnv.setTimeEnv(time);
+                armLearnEnv.saveMotorPos();
+            }
+            if(nbEpisodes == gegelatiParams.nbIterationsPerPolicyEvaluation){
+                break;
+            }
+            nbActionsEp = 0;        
+            time = 0;
+
             tpgAction = true;
-            bestDistance = armLearnEnv.getDistance();
             armLearnEnv.setGegelatiRunning(true);
+
+            armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
+            bestDistance = armLearnEnv.getDistance();
+
         }
+
 
         // Do action with either TPGs, either SAC
         if(tpgAction){
-    	    auto actionID = inferenceTPG();
+
+            checkpoint = std::make_shared<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+            auto actionID = inferenceTPG();
+            time += ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count();
+
             std::vector<std::uint64_t> actionsID = {(uint64_t)actionID};
             armLearnEnv.doActions(actionsID);
+            nbActionsEp++;
+            nbActions++;
         } else {
-    	    auto actionsID = learningAgent.doOneActionInference();
-            armLearnEnv.doActionContinuous(actionsID);
-            counterLetGegelati+=1;
+            
+    	    auto results = learningAgent.doActionsInference(std::min((uint64_t)nbIterationGoBackGegelati, gegelatiParams.maxNbActionsPerEval - nbActionsEp));
+            
 
-            // If the counter reached the value, go back to Gegelati Inference
-            if (counterLetGegelati == nbIterationGoBackGegelati){
-                tpgAction = true;
-                armLearnEnv.setGegelatiRunning(true);
+            nbActionsEp+=results.first;
+            nbActions+=results.first;
 
-            }
+            time += results.second;
+
+            tpgAction = true;
+            armLearnEnv.setGegelatiRunning(true);
+            bestDistance = armLearnEnv.getDistance(false);
+
         }
 
-        nbActionsEp++;
-        nbActions++;
+        
+
 
         // If current distance is lower, save new best distance
-        if(armLearnEnv.getDistance() < bestDistance){
-            bestDistance = armLearnEnv.getDistance();
-        }
+        bestDistance = std::min(armLearnEnv.getDistance(), bestDistance);
 
         if(tpgAction){
 
@@ -149,8 +186,13 @@ int main(int argc, char* argv[]) {
                 armLearnEnv.setTerminal(false);
             }
         }
+
+        
     }
-    scoreOrig /= 100;
+    scoreOrig /= gegelatiParams.nbIterationsPerPolicyEvaluation;
+
+    
+    armLearnEnv.setGegelatiRunning(true);
     armLearnEnv.logTestingTrajectories(true);
     std::cout << "Total score: " << scoreOrig << std::endl;
 

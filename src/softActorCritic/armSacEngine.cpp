@@ -18,6 +18,11 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
     uint64_t nbActions = 0;
     std::vector<float> sendActionVector;
 
+    
+    // For testing
+    double timeTest = 0;
+    std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpointTest;
+
     // Reset the environnement
     armLearnEnv->reset(seed, mode, iterationNumber);
 
@@ -28,8 +33,15 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
     // Do iterations while the episode is not terminated
     while (!terminated && nbActions < maxNbActions) {
 
-        // Get the continuous action
-        actionTensor = learningAgent.chooseAction(state);
+        if(trainingParams.testing){
+            checkpointTest = std::make_shared<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+            // Get the continuous action
+            actionTensor = learningAgent.chooseAction(state);
+            timeTest += ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpointTest)).count();
+        } else {
+            
+            actionTensor = learningAgent.chooseAction(state);
+        }
 
         // reset reward
         singleReward = 0;
@@ -142,25 +154,50 @@ double ArmSacEngine::runOneEpisode(uint16_t seed, Learn::LearningMode mode, uint
         result += singleReward;
     }
 
+    if(trainingParams.testing){
+        armLearnEnv->setTimeEnv(timeTest);
+        armLearnEnv->saveMotorPos();
+
+    }
+
     return result;
 }
 
-std::vector<float> ArmSacEngine::doOneActionInference(){
+std::pair<int, double> ArmSacEngine::doActionsInference(int nbActions){
     
-    torch::Tensor state = getTensorState();
-    // Get the continuous action
-    torch::Tensor actionTensor = learningAgent.chooseAction(state);
+    torch::Tensor state;
+    torch::Tensor actionTensor;
+    torch::Tensor actionTaken;
+    
+    double time = 0;
+    std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint2;
 
-    auto actionTaken = actionTensor;
-    if (!sacParams.continuousActions){
-        actionTaken = torch::round(actionTensor * 3 / 2);
+    int nbActionsDone = 0;
+    for(auto step = 0; step < nbActions && !armLearnEnv->isTerminal();step++){
+
+
+        state = getTensorState();
+        // Get the continuous action
+
+        checkpoint2 = std::make_shared<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+        actionTensor = learningAgent.chooseAction(state);
+
+        time += ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint2)).count();
+
+        actionTaken = actionTensor;
+        if (!sacParams.continuousActions){
+            actionTaken = torch::round(actionTensor * 3 / 2);
+        }
+
+        
+        // Convert actionTensor to an actionVector
+        std::vector<float> actionVector(actionTaken.data_ptr<float>(), actionTaken.data_ptr<float>() + actionTaken.numel());
+
+        armLearnEnv->doActionContinuous(actionVector);
+        nbActionsDone++;
     }
 
-    
-    // Convert actionTensor to an actionVector
-    std::vector<float> actionVector(actionTaken.data_ptr<float>(), actionTaken.data_ptr<float>() + actionTaken.numel());
-
-    return actionVector;
+    return std::make_pair(nbActionsDone, time);
 }
 
 
@@ -267,6 +304,7 @@ void ArmSacEngine::testingModel(uint16_t nbIterationTesting){
     double success = 0;
     double distance = 0;
 
+    armLearnEnv->setHybridMode(true);
 
     std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint;
     checkpoint = std::make_shared<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
@@ -434,14 +472,20 @@ torch::Tensor ArmSacEngine::getTensorState(){
         tensorState[i] = *dataSrc.at(0).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/100;
     }
 
+    int i1 = 3;
+    int i2 = 6;
+    if(trainingParams.doRandomStartingPosition){
+        i1 = 6;
+        i2 = 3;
+    }
     // Get data (cartesian position of the hand)
     for(int i=0; i<3;i++){
-        tensorState[i+3] = *dataSrc.at(1).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/100;
+        tensorState[i+i1] = *dataSrc.at(1).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/100;
     }
         
     // Get data (cartesian difference between hand and target)
     for(int i=0; i<3;i++){
-        tensorState[i+6] = *dataSrc.at(2).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/100;
+        tensorState[i+i2] = *dataSrc.at(2).get().getDataAt(typeid(double), i).getSharedPointer<const double>()/100;
     }
 
     // Get data (angular position of the motors)

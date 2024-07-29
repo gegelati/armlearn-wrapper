@@ -55,10 +55,10 @@ int main(int argc, char* argv[]) {
 
     // Set and Prompt the number of threads
     torch::set_num_threads(gegelatiParams.nbThreads);
+    std::cout << "Number of threads: " << torch::get_num_threads() << std::endl;
 
     // Set random seed
     torch::manual_seed(seed);
-    std::cout << "Number of threads: " << torch::get_num_threads() << std::endl;
 
 
     // Generate validation targets.

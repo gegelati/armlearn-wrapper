@@ -32,6 +32,8 @@
 class ArmLearnWrapper : public MARL::MarlLearningEnvironment, armlearn::learning::DeviceLearner {
 protected:
 
+    bool hybridMode = false;
+
     bool armCollide = false;
 
     double nbArmCollide = 0;
@@ -78,6 +80,8 @@ protected:
 
     /// Reward of the last action done
     double reward = 0.0;
+
+    double nbIterationGegelati = 0;
 
     /// Number of actions done in the episode
     size_t nbActionsDone = 0;
@@ -233,6 +237,8 @@ public:
     /// Save the current motor position(
     void saveMotorPos();
 
+    void setTimeEnv(double timeToDelete);
+
     /// @brief Inherited via LearningEnvironment
     void reset(size_t seed = 0, Learn::LearningMode mode = Learn::LearningMode::TRAINING, uint16_t iterationNumber = 0, uint64_t generationNumber = 0) override;
 
@@ -263,6 +269,8 @@ public:
     bool getArmCollide() const;
 
     double getNbArmCollide() const;
+
+    void setHybridMode(bool hybridMode);
 
     /// @brief Inherited via LearningEnvironment
     virtual LearningEnvironment *clone() const;
@@ -383,7 +391,7 @@ public:
     void setInitStartingPos(std::vector<uint16_t> newInitStartingPos);
 
     /// Get distance from the arm to the target
-    double getDistance();
+    double getDistance(bool calcul=false);
 
     bool getIsMoving();
 

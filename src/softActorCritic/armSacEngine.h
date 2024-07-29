@@ -95,7 +95,7 @@ class ArmSacEngine{
          * @brief Do only one action on the environment
          * Without training
          */
-        std::vector<float> doOneActionInference();
+        std::pair<int, double> doActionsInference(int nbActions);
 
         /**
          * @brief Train one generation
