@@ -50,8 +50,6 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
 
 void ArmLearnWrapper::doActions(std::vector<std::uint64_t> actions) {
 
-    checkpointEnv = std::make_shared<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
-
     std::vector<double> motorAction = {0, 0, 0, 0, 0, 0};
     double step  = params.sizeAction;
 
@@ -118,18 +116,12 @@ void ArmLearnWrapper::doActions(std::vector<std::uint64_t> actions) {
         } 
     }
 
-
-    
-
     // Execute the action
     executeAction(motorAction);
 
 }
 
 void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
-
-
-    checkpointEnv = std::make_shared<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
 
     // Get the action
     std::vector<double> motorAction;
@@ -138,6 +130,7 @@ void ArmLearnWrapper::doActionContinuous(std::vector<float> actions) {
     }
     motorAction.push_back(0.0);
     motorAction.push_back(0.0);
+
 
     // Execute the action
     executeAction(motorAction);
@@ -264,7 +257,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     score += reward;
 
     if(gegelatiRunning){
-        score = -1 * getDistance();
+        score = -1 * distance;
 
         if(params.bonusNbIteration){
             if(-1 * score < params.rangeTarget){
@@ -276,18 +269,21 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
     if(gegelatiRunning){
         updateAndCheckCycles();
+        nbIterationGegelati++;
     }
 
     if(params.testing){
-        saveMotorPos();
+        
+        allMotorPos.push_back(getMotorsPos());
+        if(!hybridMode && (terminal || nbActionsDone == nbMaxActions)){
+            saveMotorPos();
+        }
+        
     }
 
     if(armCollide){
         nbArmCollide++;
     }
-
-    timeEnv += ((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpointEnv)).count();
-
 }
 
 void ArmLearnWrapper::updateAndCheckCycles(){
@@ -301,34 +297,37 @@ void ArmLearnWrapper::updateAndCheckCycles(){
 }
 
 void ArmLearnWrapper::saveMotorPos(){
-    // Push back the motor position
-    allMotorPos.push_back(getMotorsPos());
-    if(terminal || nbActionsDone == nbMaxActions){
 
-        // If terminal or end of episode, add time (in micro s), score, distance, success and number of actions
-        vectorValidationInfos.push_back(static_cast<int32_t>((((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() - timeEnv)*1000000));
-        vectorValidationInfos.push_back(static_cast<int32_t>(1000*getScore()));
-        vectorValidationInfos.push_back(static_cast<int32_t>(1000*distance));
-        vectorValidationInfos.push_back(static_cast<int32_t>((distance < params.rangeTarget) ? 1: 0));
-        vectorValidationInfos.push_back(static_cast<int32_t>((armCollide) ? 1: 0));
-        vectorValidationInfos.push_back(static_cast<int32_t>(nbActionsDone));
+    //add time (in micro s), score, distance, success and number of actions
+    vectorValidationInfos.push_back(static_cast<int32_t>((timeEnv)*1000000));
+    vectorValidationInfos.push_back(static_cast<int32_t>(1000*getScore()));
+    vectorValidationInfos.push_back(static_cast<int32_t>(1000*distance));
+    vectorValidationInfos.push_back(static_cast<int32_t>((distance < params.rangeTarget) ? 1: 0));
+    vectorValidationInfos.push_back(static_cast<int32_t>((armCollide) ? 1: 0));
+    vectorValidationInfos.push_back(static_cast<int32_t>(nbActionsDone));
+    vectorValidationInfos.push_back(static_cast<int32_t>(nbIterationGegelati));
 
-        // Add each motor positions
-        for(auto motor_value: allMotorPos){
-            vectorValidationInfos.push_back(motor_value[0]);
-            vectorValidationInfos.push_back(motor_value[1]);
-            vectorValidationInfos.push_back(motor_value[2]);
-            vectorValidationInfos.push_back(motor_value[3]);
-        }
-        // Add the vector containing the inforamtions to the vector containing all the informations
-        allValidationInfos.push_back(vectorValidationInfos);
+    // Add each motor positions
+    for(auto motor_value: allMotorPos){
+        vectorValidationInfos.push_back(motor_value[0]);
+        vectorValidationInfos.push_back(motor_value[1]);
+        vectorValidationInfos.push_back(motor_value[2]);
+        vectorValidationInfos.push_back(motor_value[3]);
     }
+    // Add the vector containing the inforamtions to the vector containing all the informations
+    allValidationInfos.push_back(vectorValidationInfos);
+
+}
+
+
+void ArmLearnWrapper::setTimeEnv(double setTimeEnv){
+    timeEnv = setTimeEnv;
 }
 
 double ArmLearnWrapper::computeReward(int nbMotorMoving) {
 
     // Compute Distance with the target
-    auto err = getDistance();
+    auto err = distance;
 
     
     double basicReward = err;
@@ -425,10 +424,11 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
     motorSpeed = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     isValidation = (mode==Learn::LearningMode::VALIDATION);
     memoryMotorPos.clear();
-    distance = 0.0;
+    distance = getDistance(true);
     timeEnv = 0.0;
     armCollide = false;
     nbArmCollide = 0;
+    nbIterationGegelati = 0;
 
 
     // If we are testing the arm, we save the current trajectory
@@ -536,6 +536,11 @@ bool ArmLearnWrapper::getArmCollide() const {
 double ArmLearnWrapper::getNbArmCollide() const {
     return nbArmCollide;
 }
+
+void ArmLearnWrapper::setHybridMode(bool newHybridMode) {
+    hybridMode = newHybridMode;
+}
+
 
 void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
 
@@ -860,7 +865,7 @@ void ArmLearnWrapper::loadValidationTrajectories(std::string path) {
 void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati){
 
     // Nom du fichier CSV
-    std::string fileName = (params.pathLogs + ((usingGegelati) ? "/outputGegelati.csv": "/outputSAC.csv")).c_str();
+    std::string fileName = (params.pathLogs + ((usingGegelati) ? "/outputGegelati.ods": "/outputSAC.ods")).c_str();
 
     // Ouverture du fichier en mode écriture
     std::ofstream outputFile(fileName);
@@ -868,7 +873,7 @@ void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati){
     // Vérification si le fichier est correctement ouvert
     if (outputFile.is_open()) {
         outputFile<<"armPos0,"<<"armPos1,"<<"armPos2,"<<"armPos3,"<<"armPos4,"<<"armPos5,";
-        outputFile<<"targetPos0,"<<"targetPos1,"<<"targetPos2,"<<"Duration(micros),"<<"Score*1000,"<<"Distance*1000,"<<"Success,"<<"Collision,"<<"NbActions,"<<"MotorPos"<<std::endl;
+        outputFile<<"targetPos0,"<<"targetPos1,"<<"targetPos2,"<<"Duration(micros),"<<"Score*1000,"<<"Distance*1000,"<<"Success,"<<"Collision,"<<"NbActions,"<<"NbIterationGegelati,"<<"MotorPos"<<std::endl;
         // Écriture des données dans le fichier CSV
         for (const auto &row : allValidationInfos) {
             for (size_t i = 0; i < row.size(); ++i) {
@@ -920,8 +925,13 @@ void ArmLearnWrapper::setInitStartingPos(std::vector<uint16_t> newInitStartingPo
 }
 
 
-double ArmLearnWrapper::getDistance(){
-    return computeSquaredError(this->currentTarget->getInput(), converter->computeServoToCoord(getMotorsPos())->getCoord());
+double ArmLearnWrapper::getDistance(bool calcul){
+    if(calcul){
+        return computeSquaredError(this->currentTarget->getInput(), converter->computeServoToCoord(getMotorsPos())->getCoord());
+    } else{
+        return distance;
+    }
+    
 }
 
 bool ArmLearnWrapper::motorCollision(std::vector<uint16_t> newMotorPos){
