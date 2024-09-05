@@ -119,9 +119,14 @@ int main(int argc, char* argv[]) {
         trainingParams.pathLogs = argv[4];
     }
 
-    std::string pathSaveFederation = "federatedRun/";
+    std::string pathLoadData = "seed_/";
     if(argc > 5){
-        pathSaveFederation = argv[5];
+        pathLoadData = argv[5];
+    }
+
+    std::string pathSaveFederation = "federatedRun/";
+    if(argc > 6){
+        pathSaveFederation = argv[6];
     }
 
     // Set the parameters for the learning process.
@@ -159,9 +164,12 @@ int main(int argc, char* argv[]) {
 
         // Find last generation
         std::ostringstream pathOutDot;
-        pathOutDot << path << "FederatedSeed_" << indexSeed << "/dotfiles/out_lastGen.dot";
+        pathOutDot << pathLoadData << indexSeed << "/dotfiles/out_lastGen.dot";
 
         auto &tpg = *la->getTPGGraph();
+
+        std::cout<<"Graph load"<<std::endl;
+
         Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters);
         MARL::MarlTPGGraphDotImporter dotImporter(pathOutDot.str().c_str(), env, tpg);
 
@@ -171,20 +179,30 @@ int main(int argc, char* argv[]) {
 
         // Generate the data of the policies
         auto seedData = la->generateDataOfRoots(bestRoots, armLearnEnv, params.nbIterationsPerPolicyEvaluation);
+        std::cout<<"Data generated"<<std::endl;
 
         data.insert(seedData.begin(), seedData.end());
     }
+    std::cout<<"Surviving roots selection"<<std::endl;
 
     // Sélection des nouvelles roots
     auto selectedRoots = selectSurvivingRoots(data, trainingParams.nbRootsKept);
 
+    std::cout<<"Initialisation of new learning agent"<<std::endl;
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
     la.init(seed);
 
+
+
+    std::cout<<"Creating population from roots"<<std::endl;
     // Create new population
     la.createPopulationFromRoots(selectedRoots);
 
+    //if(trainingParams.dispableDuplication)
+    //la.disableNonRootsVertexDuplication();
+
+    std::cout<<"Saving dot file"<<std::endl;
     std::cout<<pathSaveFederation<<std::endl;
     MARL::MarlTPGGraphDotExporter dotExporter((pathSaveFederation + "/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph(), params.mutation.marl.useInternProgram);
     std::ostringstream oss;
