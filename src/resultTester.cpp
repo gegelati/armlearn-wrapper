@@ -102,9 +102,8 @@ void runByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLear
     // let's play, the only way to leave this loop is to enter -1
     while(x!=-1){
         // gets the action the TPG would decide in this situation (the result can only be between 0 and 8 included)
-        uint64_t action=((const TPG::TPGAction *) tee.executeFromRoot(* root).back())->getActionID();
-        std::cout<<"TPG : "<<action<<std::endl;
-        le.doAction(action);
+        std::vector<uint64_t> action = tee.executeFromRoot(*root, le.getInitActions(), 1).second;
+        le.doActions(action);
 
         // prints the game board
         std::cout<<x<<"-Arm :\n"<<le.toString()<<std::endl;
@@ -124,8 +123,8 @@ void runEvals(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearn
         le.reset();
         for(int i=0; i<2000; i++) {
             // gets the action the TPG would decide in this situation (the result can only be between 0 and 8 included)
-            uint64_t action = ((const TPG::TPGAction *) tee.executeFromRoot(*root).back())->getActionID();
-            le.doAction(action);
+            std::vector<uint64_t> action = tee.executeFromRoot(*root, le.getInitActions(), 1).second;
+            le.doActions(action);
 
             // prints the game board
         }
@@ -315,10 +314,10 @@ void goToPos(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnW
     int counterTraj = 0;
 
     // Impossible action to start with
-    uint64_t savedAction = 100;
+    std::vector<uint64_t> savedAction = {100};
     for(int i=0; i<=1500; i++) {
-        uint64_t action = ((const TPG::TPGAction *) tee.executeFromRoot(*root).back())->getActionID();
-        le.doAction(action);
+        std::vector<uint64_t> action = tee.executeFromRoot(*root, le.getInitActions(), 1).second;
+        le.doActions(action);
         if (counterTraj >= 10 && action != savedAction) {
             counterTraj = 0;
             savedAction = action;

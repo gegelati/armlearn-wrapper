@@ -9,11 +9,11 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     for (auto logger : loggers) {
         logger.get().logNewGeneration(generationNumber);
     }
-
     // Populate Sequentially
-    MARL::MarlTPGMutator::populateTPG(*dynamic_cast<MARL::MarlTPGGraph*>(this->tpg.get()), this->archive,
-                                     this->params.mutation, this->rng,
-                                     maxNbThreads);
+    Mutator::TPGMutator::populateTPG(
+        *this->tpg, this->archive, this->params.mutation, this->rng,
+        this->learningEnvironment.getVectActions(), maxNbThreads);
+
     for (auto logger : loggers) {
         logger.get().logAfterPopulateTPG();
     }
@@ -87,7 +87,6 @@ void Learn::ArmLearningAgent::trainOneGeneration(uint64_t generationNumber){
     for (auto logger : loggers) {
         logger.get().logEndOfTraining();
     }
-
     
 }
 
@@ -123,63 +122,10 @@ void Learn::ArmLearningAgent::testingBestRoot(uint64_t generationNumber){
 
 }
 
-void Learn::ArmLearningAgent::decimateWorstRoots(
-    std::multimap<std::shared_ptr<EvaluationResult>, const TPG::TPGVertex*>&
-        results)
-{
-    // Some actions may be encountered but not removed while scanning the
-    // results map they should be re-inserted to the list before leaving the
-    // method.
-    std::multimap<std::shared_ptr<EvaluationResult>, const TPG::TPGVertex*>
-        preservedActionRoots;
-
-    auto i = 0;
-
-    int nbRootsToDelete = std::max((this->tpg->getNbRootVertices() - params.mutation.tpg.nbRoots), (uint64_t)0) + floor(this->params.ratioDeletedRoots * (double)params.mutation.tpg.nbRoots);
-    
-
-    while (i < nbRootsToDelete &&
-           results.size() > 0) {
-        // If the root is an action, do not remove it!
-        const TPG::TPGVertex* root = results.begin()->second;
-        if (dynamic_cast<const TPG::TPGAction*>(root) == nullptr) {
-            tpg->removeVertex(*results.begin()->second);
-            // Removed stored result (if any)
-            this->resultsPerRoot.erase(results.begin()->second);
-        }
-        else {
-            preservedActionRoots.insert(*results.begin());
-            i--; // no vertex was actually removed
-        }
-        results.erase(results.begin());
-
-        // Increment loop counter
-        i++;
-    }
-
-    // Restore root actions
-    results.insert(preservedActionRoots.begin(), preservedActionRoots.end());
-}
-
 std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     TPG::TPGExecutionEngine& tee, const Job& job, uint64_t generationNumber,
     Learn::LearningMode mode, LearningEnvironment& le) const
 {
- 
- 
-    // Get the tpg execution engine with the right class
-    if(!dynamic_cast<MARL::MarlTpgExecutionEngine*>(&tee)){
-        throw std::runtime_error("tee should be a MarlTpgExecutionEngine object but "
-                                 "seems to be a simple TPGExecutionEngine object");
-    }
-    MARL::MarlTpgExecutionEngine* marlTee = dynamic_cast<MARL::MarlTpgExecutionEngine*>(&tee);
-
-    // Get the learning environment with the right class
-    if(!dynamic_cast<MARL::MarlLearningEnvironment*>(&le)){
-        throw std::runtime_error("le should be a MarlLearningEnvironment object but "
-                                 "seems to be a simple LearningEnvironment object");
-    }
-    MARL::MarlLearningEnvironment* marlLe = dynamic_cast<MARL::MarlLearningEnvironment*>(&le);
  
     // Only consider the first root of jobs as we are not in adversarial mode
     const TPG::TPGVertex* root = job.getRoot();
@@ -212,6 +158,9 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     double nbActivatedAction = 0.0;
     double nbActivatedTeamRatio = 0.0;
 
+    if(dynamic_cast<const TPG::TPGAction*>(root)){
+    }
+
     // Evaluate nbIteration times
     for (auto iterationNumber = 0; iterationNumber < nbIteration && !cancelThisRoot; iterationNumber++) {
 
@@ -234,38 +183,22 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
         // Reset the learning Environment
         le.reset(hash, mode, iterationNumber, generationNumber);
 
+        
+        // Reset the memory registers.
+        tee.resetAllMemoryRegisters();
+
         uint64_t nbActions = 0;
         while (!le.isTerminal() &&
                nbActions < this->params.maxNbActionsPerEval) {
-            
 
+            // Get the actions
+            std::vector<uint64_t> actionsID =
+                tee.executeFromRoot(*root, le.getInitActions(),
+                                    this->params.nbEdgesActivable)
+                    .second;
 
-            std::vector<std::uint64_t> actionsID;
-            if((dynamic_cast<const MARL::MarlTPGTeam*>(root))){
-                // Get the actions
-                std::map<std::uint64_t, std::pair<std::uint64_t, double>> actions 
-                    = marlTee->executeFromRoot(*root, marlLe->getInitActions(), this->params);
-
-                nbActivatedTeamRatioOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateTeamRatio();
-                nbActivatedTeamOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateTeam();
-                nbActivatedActionOneEp += (dynamic_cast<const MARL::MarlTPGTeam*>(root))->getNbActivateAction();
-
-                // Browse the map to get the actions ID
-                for (const auto& obj :actions) {
-                    actionsID.push_back(obj.second.first);
-                }
-            }else if((dynamic_cast<const MARL::MarlTPGAction*>(root))){
-                actionsID = marlLe->getInitActions();
-                const MARL::MarlTPGAction* actionRoot = (dynamic_cast<const MARL::MarlTPGAction*>(root));
-                actionsID[actionRoot->getActionID()] = actionRoot->getActionValue();
-            }else {
-                throw std::runtime_error("Root should be either MARL Team or MARL Action");
-            }
-
-
-            
             // Do it
-            marlLe->doActions(actionsID);
+            le.doActions(actionsID);
             // Count actions
             nbActions++;
 
@@ -393,7 +326,7 @@ std::vector<const TPG::TPGVertex *> Learn::ArmLearningAgent::keepBestPolicies(ui
 }
 
 
-std::multimap<const TPG::TPGVertex *, std::vector<double>> Learn::ArmLearningAgent::generateDataOfRoots(std::vector<const TPG::TPGVertex *>& bestRoots, LearningEnvironment& le, uint64_t nbIterations){
+/*std::multimap<const TPG::TPGVertex *, std::vector<double>> Learn::ArmLearningAgent::generateDataOfRoots(std::vector<const TPG::TPGVertex *>& bestRoots, LearningEnvironment& le, uint64_t nbIterations){
 
     // Create the TPGExecutionEngine for this evaluation.
     // The engine uses the Archive only in training mode.
@@ -506,4 +439,4 @@ void Learn::ArmLearningAgent::createPopulationFromRoots(std::vector<const TPG::T
     for(auto root: roots){ 
         dynamic_cast<MARL::MarlTPGGraph*>(this->tpg.get())->graftRoot(*root, addedTeams);
     }
-}
+}*/

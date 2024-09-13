@@ -12,7 +12,7 @@
 	// Maximum number of actions performed on the learning environment during the
 	// each evaluation of a root.
 	// "maxNbActionsPerEval" : 1000, // Default value
-	"maxNbActionsPerEval" : 700,
+	"maxNbActionsPerEval" : 100,
 	// Maximum number of times a given root is evaluated.After this number is
 	// reached, possibly after several generations, the score of the root will be
 	// fixed, and no further evaluation will be done.
@@ -37,6 +37,9 @@
 					// Probability of each constant to be mutated.
 					// "pConstantMutation" : 0.5, // Default value
 					"pConstantMutation" : 0.5,
+
+					"pNewProgram": 0.0,
+
 					// Probability of deleting a line of the Program.
 					// "pDelete" : 0.5, // Default value
 					"pDelete" : 0.5,
@@ -68,7 +71,9 @@
 					// Number of root TPGTeams to maintain when populating the TPGGraph
 					// "nbRoots" : 100, // Default value
 
-					"nbRoots" : 2000,
+					"nbRoots" : 360,
+
+					"initNbRoots": 72,
 
 					// Probability of adding an outgoing Edge to a Team.
 					// "pEdgeAddition" : 0.7, // Default value
@@ -87,30 +92,6 @@
 					// Probability of mutating the Program of an outgoing Edge.
 					// "pProgramMutation" : 0.2, // Default value
 					"pProgramMutation" : 0.2
-			},
-			"marl" :
-			{
-					// To Use intern program
-					"useInternProgram" : true,
-
-					// To use only the last active action instead of comparison
-					"useLastActive" : false,
-
-					"useFirstActive": false,
-
-					"sortBidBeforeExecution": true,
-
-					// To use the first action active and doing mutation on the order of edges
-					"useMutationOrderEdges" : false,
-
-					// Probability of the mutation of the edges order
-					"mutationOrderEdgeProbability" : 0.7,
-
-					// Max number of edges activate per Team. If set to 0, all edges can be activated
-					"maxActivationEdge" : 2,
-
-					// 
-					"maxActivationTeam" : 1
 			}
 	},
 	// Number of generations of the training.
@@ -125,7 +106,9 @@
 	// Number of evaluation of each root per generation.
 	// "nbIterationsPerPolicyEvaluation" : 5, // Default value
 
-	"nbIterationsPerPolicyEvaluation" : 100,
+	"nbIterationsPerPolicyEvaluation" : 3,
+
+	"nbEdgesActivable": 1,
 
 	// Number of Constant available in each Program.
 	// "nbProgramConstant" : 0, // Default value
@@ -133,12 +116,14 @@
 	// Number of registers for the Program execution.
 	// "nbRegisters" : 8, // Default value
 	"nbRegisters" : 8,
+
+	"useMemoryRegisters": false,
 	// [Only used in ParallelLearningAgent and child classes.]
 	// Number of threads used for the training process.
 	// When undefined in the json file, this parameter is automatically set to the
 	// number of cores of the CPU.
-	"nbThreads" : 1,// Commented by default
+	"nbThreads" : 20,// Commented by default
 	// Percentage of deleted (and regenerated) root TPGVertex at each generation.
 	// "ratioDeletedRoots" : 0.5, // Default value
-	"ratioDeletedRoots" : 0.99
+	"ratioDeletedRoots" : 0.98
 }

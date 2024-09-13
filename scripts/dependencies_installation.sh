@@ -87,7 +87,7 @@ cd ../..
 
 # get Gegelati (latest version installed, tested with 0.5.1)
 echo "# Install Gegelati"
-git clone --branch v1.2.0 https://github.com/gegelati/gegelati.git
+git clone --branch multiActionGegelati https://github.com/gegelati/gegelati.git
 cd gegelati/bin
 cmake ..
 sudo cmake --build . --target install # On Linux

@@ -6,7 +6,7 @@
 	// Allow to choose if the starting position are random of the BACKHOE one
 	"doRandomStartingPosition": false,
 	// Distance in milimeters to reach to validate the target
-	"rangeTarget": 5,
+	"rangeTarget": 3,
 	// Allow to start with a predifined TPG
 	"startPreviousTPG": false,
 	// Name of the predifined TPG (no effect if startPreviousTPG is false)
@@ -38,7 +38,7 @@
 	// Value to penalize if an unavailable action is taken : reward = reward - penalty is isScoreResult is true, else score = score - penalty
 	"penaltyMoveUnavailable": 1,
 	// Size in degree of a discrete action, and max size of a continuous action
-	"sizeAction": 5,
+	"sizeAction": 3,
 	// if true, deactivate the training and only logs results
 	"testing": false,
 	// path to store the testing output
@@ -72,13 +72,13 @@
 	"realSimulation": true,
 
 	// Number of training iteration (nbIterationsPerPolicyEvaluation will be only for validation/training validation)
-	"nbIterationTraining": 10,
+	"nbIterationTraining": 100,
 
 	// Set a limit of time to train (in seconds), if 0: no limit
-	"timeMaxTraining": 7200, //289 200 seconds is 72h so 3 days
+	"timeMaxTraining": 0, //289 200 seconds is 72h so 3 days
 
     // When testing a root, a test will be made on the root above this number of iteration, if the score of the root is to low, the root is canceled
-    "nbIterationRootCanceled": 100,
+    "nbIterationRootCanceled": 3,
 
 	// if true, allow the arm to make 360% circle
 	"canDo360": false,
@@ -87,7 +87,7 @@
 
 	"killDeepRLCollide": false,
 
-	"testSingleAction": false,
+	"testSingleAction": true,
 	"nbRootsKept": 10,
 	"assembleWithScore": true
 }

@@ -20,7 +20,7 @@ namespace Learn {
      * Because of parallelism, determinism of the LearningProcess could easiliy
      * be lost, but this implementation must remain deterministic at all costs.
      */
-    class ArmLearningAgent : public MARL::MarlLearningAgent
+    class ArmLearningAgent : public Learn::ParallelLearningAgent
     {
       private:
         std::multimap<std::shared_ptr<Learn::EvaluationResult>, const TPG::TPGVertex *> bestTrainingResult;
@@ -43,9 +43,9 @@ namespace Learn {
          * \param[in] p The LearningParameters for the LearningAgent.
          */
         ArmLearningAgent(
-            MARL::MarlLearningEnvironment& le, const Instructions::Set& iSet,
+            Learn::LearningEnvironment& le, const Instructions::Set& iSet,
             const LearningParameters& p, TrainingParameters& trainingParams)
-            : MARL::MarlLearningAgent(le, iSet, p), trainingParams(trainingParams) {};
+            : Learn::ParallelLearningAgent(le, iSet, p), trainingParams(trainingParams) {};
 
         /**
          * \brief Evaluate all root TPGVertex of the TPGGraph.
@@ -101,20 +101,16 @@ namespace Learn {
             uint64_t generationNumber, LearningMode mode,
             LearningEnvironment& le) const override;
 
-        virtual void decimateWorstRoots(
-            std::multimap<std::shared_ptr<EvaluationResult>,
-                          const TPG::TPGVertex*>& results) override;
-
         virtual std::queue<std::shared_ptr<Learn::Job>> makeJobs(
         Learn::LearningMode mode, TPG::TPGGraph* tpgGraph) override;
 
 
         std::vector<const TPG::TPGVertex *> keepBestPolicies(uint64_t nbPolicies);
 
-        std::multimap<const TPG::TPGVertex *, std::vector<double>> generateDataOfRoots(
-          std::vector<const TPG::TPGVertex *>& bestRoots, LearningEnvironment& le, uint64_t nbIterations);
+        //std::multimap<const TPG::TPGVertex *, std::vector<double>> generateDataOfRoots(
+        //  std::vector<const TPG::TPGVertex *>& bestRoots, LearningEnvironment& le, uint64_t nbIterations);
 
-        void createPopulationFromRoots(std::vector<const TPG::TPGVertex *> roots);
+        //void createPopulationFromRoots(std::vector<const TPG::TPGVertex *> roots);
     };
 
 } // namespace Learn

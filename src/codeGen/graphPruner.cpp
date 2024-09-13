@@ -96,9 +96,9 @@ int main(int argc, char* argv[]) {
                 armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
                 nbActionsEp = 0;
             }
-            auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(*root).back()))->getActionID();
-            std::vector<std::uint64_t> actionsID;
-            actionsID.push_back(actionID);
+
+            std::vector<uint64_t> actionsID = tee.executeFromRoot(*root, armLearnEnv.getInitActions(), params.nbEdgesActivable).second;
+
             armLearnEnv.doActions(actionsID);
             nbActions++;
             nbActionsEp++;
@@ -138,10 +138,8 @@ int main(int argc, char* argv[]) {
                 
                 nbActionsEp = 0;
             }
-            auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(*root).back()))->getActionID();
 
-            std::vector<std::uint64_t> actionsID;
-            actionsID.push_back(actionID);
+            std::vector<uint64_t> actionsID = tee.executeFromRoot(*root, armLearnEnv.getInitActions(), params.nbEdgesActivable).second;
             armLearnEnv.doActions(actionsID);
             nbActions++;
             nbActionsEp++;

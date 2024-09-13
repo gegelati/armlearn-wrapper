@@ -92,10 +92,13 @@ std::vector<const TPG::TPGVertex *> selectSurvivingRoots(std::multimap<const TPG
 }
 
 int main(int argc, char* argv[]) {
-    std::cout << "Start Federation application." << std::endl;
 
 
-    uint64_t seed = 0;
+    std::cout << "Do not Start Federation application." << std::endl;
+    std::cout << "Deprecated for now." << std::endl;
+
+
+    /*uint64_t seed = 0;
     if(argc > 1 && std::strcmp(argv[1], "default") != 0){
         seed = std::stoi(argv[1]);
     }
@@ -171,7 +174,7 @@ int main(int argc, char* argv[]) {
         std::cout<<"Graph load"<<std::endl;
 
         Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters);
-        MARL::MarlTPGGraphDotImporter dotImporter(pathOutDot.str().c_str(), env, tpg);
+        File::TPGGraphDotImporter dotImporter(pathOutDot.str().c_str(), env, tpg);
 
         uint64_t nbPolicies = (1.0 - params.ratioDeletedRoots) * (double)params.mutation.tpg.nbRoots;
 
@@ -204,7 +207,7 @@ int main(int argc, char* argv[]) {
 
     std::cout<<"Saving dot file"<<std::endl;
     std::cout<<pathSaveFederation<<std::endl;
-    MARL::MarlTPGGraphDotExporter dotExporter((pathSaveFederation + "/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph(), params.mutation.marl.useInternProgram);
+    File::TPGGraphDotExporter dotExporter((pathSaveFederation + "/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
     std::ostringstream oss;
     oss << pathSaveFederation << "/dotfiles/out_0000.dot";
     dotExporter.setNewFilePath(oss.str().c_str());
@@ -213,7 +216,7 @@ int main(int argc, char* argv[]) {
     // cleanup
     for (unsigned int i = 0; i < set.getNbInstructions(); i++) {
         delete (&set.getInstruction(i));
-    }
+    }*/
 
     return 0;
 }

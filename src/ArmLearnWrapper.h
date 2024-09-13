@@ -29,7 +29,7 @@
 * The simulation is stopped after something like 1000 frames, and we
 * take the negative distance arm-target as score.
 */
-class ArmLearnWrapper : public MARL::MarlLearningEnvironment, armlearn::learning::DeviceLearner {
+class ArmLearnWrapper : public Learn::LearningEnvironment, armlearn::learning::DeviceLearner {
 protected:
 
     bool hybridMode = false;
@@ -190,7 +190,7 @@ public:
      * controlling the hand of the robotic arm are trained.
      */
     ArmLearnWrapper(int nbMaxActions, TrainingParameters& params, bool gegelatiRunning, bool handServosTrained = false)
-            : MARL::MarlLearningEnvironment(
+            : Learn::LearningEnvironment(
                 (!params.testSingleAction) ? ((!params.armIn2d) ? std::vector<size_t>{3, 3, 3, 3} : std::vector<size_t>{3, 3, 3}) : ((!params.armIn2d) ? std::vector<size_t>{9} : std::vector<size_t>{7}), 
                 (!params.testSingleAction) ? ((!params.armIn2d) ? std::vector<size_t>{1, 1, 1, 1} : std::vector<size_t>{1, 1, 1}) : ((!params.armIn2d) ? std::vector<size_t>{8} : std::vector<size_t>{6})
             ),
@@ -205,7 +205,7 @@ public:
     /**
     * \brief Copy constructor for the armLearnWrapper.
     */ 
-    ArmLearnWrapper(const ArmLearnWrapper &other) : MARL::MarlLearningEnvironment(other.vectActions, other.initActions), 
+    ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.vectActions, other.initActions), 
                                                     nbMaxActions(other.nbMaxActions), motorPos(other.motorPos), gegelatiRunning(other.gegelatiRunning),
                                                     cartesianHand(other.cartesianHand), cartesianTarget(other.cartesianTarget),
                                                     dataMotorSpeed(other.dataMotorSpeed), cartesianDiff(other.cartesianDiff),
