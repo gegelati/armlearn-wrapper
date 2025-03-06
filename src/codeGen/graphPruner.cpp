@@ -21,18 +21,10 @@ int main(int argc, char** argv ){
     int config = 0;
     int seed = 0;
 
-    auto path = "../../result/Publi/GegelatiFT2/config_" + std::to_string(config) + "_" + std::to_string(seed)+"/";
+    std::string path = "";
 
-    // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
-
-    int incr=0;
-    while(!std::filesystem::exists((path + "params/trainParams_" + std::to_string(incr) + ".json"))){
-        
-        incr++;
-    }
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson((path + "params/trainParams_" + std::to_string(incr) + ".json").c_str());
+    trainingParams.loadParametersFromJson((path + "params/trainParams.json").c_str());
 
     /*if(config < 11){
         trainingParams.useInstrSinLn=true;
@@ -41,7 +33,7 @@ int main(int argc, char** argv ){
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson((path + "params/params_" + std::to_string(incr) + ".json").c_str(), params);
+    File::ParametersParser::loadParametersFromJson((path + "params/params.json").c_str(), params);
 
     // Create the instruction set for programs
 	Instructions::Set set;
@@ -51,7 +43,7 @@ int main(int argc, char** argv ){
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
 
-    auto file = path + "outLogs/out_best.dot";
+    auto file = path + trainingParams.testPath;
 
     // Load graph
     std::cout << "Loading dot file from " << file << "." << std::endl;
@@ -76,6 +68,7 @@ int main(int argc, char** argv ){
     double scoreOrig = 0;
     std::cout << "Play with TPG code" << std::endl;
     while(nbEpisodes < params.nbIterationsPerPolicyEvaluation){
+        std::cout<<"ALLO"<<std::endl;
         if (armLearnEnv.isTerminal() || nbActionsEp == params.maxNbActionsPerEval || nbActions == 0){
             scoreOrig += armLearnEnv.getScore();
             armLearnEnv.reset(0, Learn::LearningMode::VALIDATION, nbEpisodes, 0);

@@ -756,9 +756,8 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
 
 void ArmLearnWrapper::loadTargetCSV() {
 
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
 
-    std::ifstream file((slashToAdd + "params/AllTarget.csv").c_str());
+    std::ifstream file("params/AllTarget.csv");
     if (!file.is_open()) {
         std::cerr << "Error: unable to open file" << std::endl;
     }
@@ -894,8 +893,7 @@ Learn::LearningEnvironment *ArmLearnWrapper::clone() const {
 
 void ArmLearnWrapper::saveValidationTrajectories() {
     // Create file
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
-    std::ofstream outFile((slashToAdd + "params/ValidationTrajectories.txt").c_str());
+    std::ofstream outFile("params/ValidationTrajectories.txt");
 
     if (outFile.is_open()) {
         // For each validation trajectories
@@ -927,8 +925,7 @@ void ArmLearnWrapper::loadValidationTrajectories() {
     validationTrajectories.clear();
 
     // Get file
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
-    std::ifstream inFile((slashToAdd + "params/ValidationTrajectories.txt").c_str());
+    std::ifstream inFile("params/ValidationTrajectories.txt");
 
     std::vector<std::vector<double>> allValues;
 

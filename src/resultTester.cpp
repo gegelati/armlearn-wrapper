@@ -23,17 +23,15 @@ int main() {
     }
     */
 
-    // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
 
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson((slashToAdd + "params/trainParams.json").c_str());
+    trainingParams.loadParametersFromJson("params/trainParams.json");
 
 
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson((slashToAdd + "params/params.json").c_str(), params);
+    File::ParametersParser::loadParametersFromJson("params/params.json", params);
 
     // Create the instruction set for programs
 	Instructions::Set set;
@@ -54,7 +52,7 @@ int main() {
 
     // Create an importer for the best graph and imports it
     std::cout << "Import graph"<< std::endl;
-    File::TPGGraphDotImporter dotImporter((slashToAdd + trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
+    File::TPGGraphDotImporter dotImporter((trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
     dotImporter.importGraph();
 
     // takes the first root of the graph, anyway out_best has only 1 root (the best)

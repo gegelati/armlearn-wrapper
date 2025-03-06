@@ -22,11 +22,9 @@ int main(){
 
 
 
-    // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
 
 
-    std::string repoConfig = (slashToAdd + "params/repoConfig/").c_str();
+    std::string repoConfig = "params/repoConfig/";
 
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
@@ -52,7 +50,7 @@ int main(){
         for(int seed = 0; seed < nbSeed; seed++){
 
             // Create file with config and tout le tralala
-            std::string path = (slashToAdd + "outLogs/config_"+ std::to_string(indexConf) + "_" + std::to_string(seed) + "/").c_str();
+            std::string path = ("outLogs/config_"+ std::to_string(indexConf) + "_" + std::to_string(seed) + "/").c_str();
             if(!std::filesystem::exists(path)){
                 std::filesystem::create_directory(path);
                 std::filesystem::create_directory((path + "outLogs/").c_str());

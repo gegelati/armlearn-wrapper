@@ -46,6 +46,8 @@ if(WIN32)
     file(GLOB GEGELATI_ROOT_DIR "${LIBS_DIR}/gegelatilib-[\\.|0-9]*")
     set(ENV{GEGELATI_DIR} ${GEGELATI_ROOT_DIR})
 endif()
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/gegelati/bin/")
+set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/gegelati/bin" ${CMAKE_PREFIX_PATH})
 find_package(GEGELATI)
 
 
@@ -68,10 +70,7 @@ endif()
 
 # *******************************************
 # ************** Executables ****************
-# *******************************************
-
-set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/lib/libtorch")
-find_package(Torch)
+# *****************************************
 
 file(GLOB_RECURSE
         armgegelati_files
@@ -84,7 +83,6 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainMultipleTraining.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/graphPruner.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
@@ -92,20 +90,7 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenInf.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenSac.cpp)
-
-# Delete softActorCritic files for know
-file(GLOB 
-        sacFiles
-        ./src/softActorCritic/*.cpp
-        ./src/softActorCritic/*.h)
-
-foreach(sacFile ${sacFiles})
-    list(REMOVE_ITEM
-            armgegelati_files
-            ${sacFile})
-endforeach()
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h)
 
 
 # includes JsonCpp library to be able to parse parameters JSON files
@@ -189,76 +174,24 @@ add_executable(armGrabStandalone ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStand
 target_link_libraries(armGrabStandalone /usr/local/lib/libarmlearn.so)
 
 
-list(REMOVE_ITEM
-        armgegelati_files
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.h)
-
-list(APPEND
-        armgegelati_files
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp)
-
-foreach(sacFile ${sacFiles})
-    list(APPEND
-            armgegelati_files
-            ${sacFile})
-endforeach()
-
-# armSoftActorCritic: Training SoftActorCritic on the ArmLearnWrapper learning environment
-add_executable(armSoftActorCritic ${armgegelati_files})
-
-
-target_link_libraries(armSoftActorCritic ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
-target_compile_definitions(armSoftActorCritic PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
-
-
-
-list(APPEND
-        armgegelati_files
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenSac.cpp)
-
-        
-list(REMOVE_ITEM
-        armgegelati_files
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSoftActorCritic.cpp)
-
-# armSoftActorCritic: Training SoftActorCritic on the ArmLearnWrapper learning environment
-add_executable(armCodeGenSac ${armgegelati_files})
-
-
-target_link_libraries(armCodeGenSac ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so ${TORCH_LIBRARIES})
-target_compile_definitions(armCodeGenSac PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")        
-
 
 # *******************************************
 # *********** Directory creation ************
 # *******************************************
 
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/params)
-        add_custom_command(
-                TARGET ${PROJECT_NAME}
-                COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/params
-                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/params.json ${CMAKE_BINARY_DIR}/params/params.json
-                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/trainParams.json ${CMAKE_BINARY_DIR}/params/trainParams.json
-                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/sacParams.json ${CMAKE_BINARY_DIR}/params/sacParams.json
-                COMMENT "Creating params directory and copying parameters' files")
-endif()
 
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/outLogs)
+
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/../outLogs)
         add_custom_command(
                 TARGET ${PROJECT_NAME}
-                COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/outLogs
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/../outLogs
                 COMMENT "Creating outLogs directory")
 endif()
 
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/outLogs/models)
+
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/../outLogs/dotfiles)
         add_custom_command(
                 TARGET ${PROJECT_NAME}
-                COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/outLogs/models
-                COMMENT "Creating outLogs/models directory")
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/../outLogs/dotfiles
+                COMMENT "Creating outLogs/dotfiles directory")
 endif()

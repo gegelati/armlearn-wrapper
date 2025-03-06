@@ -44,18 +44,14 @@ void getKey(std::atomic<bool>& exit) {
 int main() {
     std::cout << "Start ArmLearner application." << std::endl;
 
-
-    // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
-
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson((slashToAdd + "params/trainParams.json").c_str());
+    trainingParams.loadParametersFromJson("params/trainParams.json");
 
 
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
     Learn::LearningParameters params;
-    File::ParametersParser::loadParametersFromJson((slashToAdd + "params/params.json").c_str(), params);
+    File::ParametersParser::loadParametersFromJson("params/params.json", params);
 
     // Create the instruction set for programs
 	Instructions::Set set;
@@ -106,8 +102,8 @@ int main() {
     bool doValidationTarget = (trainingParams.doTrainingValidation && doUpdateLimits);
 
     //Creation of the Output stream on cout and on the file
-    auto nameLogs = (!trainingParams.testing) ? "logsGegelati" : "garbage";
-    std::ofstream fichier((slashToAdd + "outLogs/" + nameLogs + ".ods").c_str(), std::ios::out);
+    std::string nameLogs = (!!trainingParams.testing) ? "logsGegelati" : "garbage";
+    std::ofstream fichier(("outLogs/" + nameLogs + ".ods"), std::ios::out);
     auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion,fichier);
     auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion);
 
@@ -117,7 +113,7 @@ int main() {
     if(trainingParams.startPreviousTPG){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, armLearnEnv.getDataSources(), 8);
-        File::TPGGraphDotImporter dotImporter((slashToAdd + "outLogs/dotfiles/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
+        File::TPGGraphDotImporter dotImporter(("outLogs/dotfiles/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
     }
 
     // Save the validation trajectories
@@ -133,18 +129,18 @@ int main() {
     if(trainingParams.testing){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
-        File::TPGGraphDotImporter dotImporter((slashToAdd + trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
+        File::TPGGraphDotImporter dotImporter((trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
     } else {
 
 
         // File for printing best policy stat.
         std::ofstream stats;
-        stats.open((slashToAdd + "outLogs/bestPolicyStats.md").c_str());
+        stats.open("outLogs/bestPolicyStats.md");
         Log::LAPolicyStatsLogger logStats(la, stats);
 
         // Create an exporter for all graphs
-        File::TPGGraphDotExporter dotExporter((slashToAdd + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
+        File::TPGGraphDotExporter dotExporter("outLogs/dotfiles/out_0000.dot", *la.getTPGGraph());
 
         std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
         std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
@@ -161,7 +157,7 @@ int main() {
 
             //print the previous graphs
             char buff[16];
-            sprintf(buff, (slashToAdd + "outLogs/dotfiles/out_%04d.dot").c_str(), static_cast<uint16_t>(i));
+            sprintf(buff,"outLogs/dotfiles/out_%04d.dot", static_cast<uint16_t>(i));
             dotExporter.setNewFilePath(buff);
             dotExporter.print();
 
@@ -178,7 +174,7 @@ int main() {
 
         // Keep best policy
         la.keepBestPolicy();
-        dotExporter.setNewFilePath((slashToAdd + "outLogs/out_best.dot").c_str());
+        dotExporter.setNewFilePath("outLogs/out_best.dot");
         dotExporter.print();
 
         
@@ -187,7 +183,7 @@ int main() {
         ps.setEnvironment(la.getTPGGraph()->getEnvironment());
         ps.analyzePolicy(la.getBestRoot().first);
         std::ofstream bestStats;
-        bestStats.open((slashToAdd + "outLogs/out_best_stats.md").c_str());
+        bestStats.open("outLogs/out_best_stats.md");
         bestStats << ps;
         bestStats.close();
 

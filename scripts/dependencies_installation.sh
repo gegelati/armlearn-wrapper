@@ -6,7 +6,8 @@ set -e
 
 echo "Beginning of dependencies installation..."
 # get basic elements
-sudo apt install git make cmake g++ python3 python3-pip python3-catkin-pkg python3-empy python3-nose libgtest-dev libboost-all-dev doxygen libsdl2-image-dev libsdl2-ttf-dev
+
+sudo apt install git make cmake g++ python3 python3-pip python3-catkin-pkg python3-empy python3-nose libgtest-dev libboost-all-dev doxygen libsdl2-image-dev libsdl2-ttf-dev 
 
 # dependencies will be put in lib and installed
 mkdir -p lib && cd lib
@@ -87,8 +88,10 @@ cd ../..
 
 # get Gegelati (latest version installed, tested with 0.5.1)
 echo "# Install Gegelati"
-git clone --branch v1.2.0 https://github.com/gegelati/gegelati.git
-cd gegelati/bin
+git clone https://github.com/gegelati/gegelati.git
+cd gegelati 
+git checkout 9b4092f
+cd bin
 cmake ..
 sudo cmake --build . --target install # On Linux
 cd ../..

@@ -19,11 +19,9 @@ extern "C" {
 int main() {
 
 
-    // This is important for the singularity image
-    std::string slashToAdd = (std::filesystem::exists("/params/trainParams.json")) ? "/": "";
-
     TrainingParameters trainingParams;
-    trainingParams.loadParametersFromJson((slashToAdd + "params/trainParams.json").c_str());
+    trainingParams.loadParametersFromJson("params/trainParams.json");
+    trainingParams.testing = true;
 
 
     // Instantiate the LearningEnvironment
