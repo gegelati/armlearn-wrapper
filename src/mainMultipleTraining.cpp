@@ -24,7 +24,7 @@ int main(){
 
 
 
-    std::string repoConfig = "params/repoConfig/";
+    std::string repoConfig = "params/";
 
     // Set the parameters for the learning process.
     // Loads them from "params.json" file
@@ -33,151 +33,134 @@ int main(){
 
 
     std::ifstream file((repoConfig + "launchMultiTraining.txt").c_str());
-    int nbSeed;
-    int nbTrainingConfig;
-    if (file.is_open()) {
-        // Lecture des deux nombres à partir du fichier
-        file >> nbSeed >> nbTrainingConfig;
-
-        // Fermeture du fichier
-        file.close();
-    }
-
-    for(int indexConf = 0; indexConf < nbTrainingConfig; indexConf++){
+    int nbSeed = 5;
 
         
 
-        for(int seed = 0; seed < nbSeed; seed++){
+    for(int seed = 0; seed < 5; seed++){
 
-            // Create file with config and tout le tralala
-            std::string path = ("outLogs/config_"+ std::to_string(indexConf) + "_" + std::to_string(seed) + "/").c_str();
-            if(!std::filesystem::exists(path)){
-                std::filesystem::create_directory(path);
-                std::filesystem::create_directory((path + "outLogs/").c_str());
-                std::filesystem::create_directory((path + "outLogs/dotfiles/").c_str());
-                std::filesystem::create_directory((path + "params/").c_str());
+        // Create file with config and tout le tralala
+        std::string path = ("outLogs/config_" + std::to_string(seed) + "/").c_str();
+        if(!std::filesystem::exists(path)){
+            std::filesystem::create_directory(path);
+            std::filesystem::create_directory((path + "outLogs/").c_str());
+            std::filesystem::create_directory((path + "outLogs/dotfiles/").c_str());
+            std::filesystem::create_directory((path + "params/").c_str());
 
-                std::filesystem::copy(repoConfig + "trainParams_" + std::to_string(indexConf) + ".json", (path + "params/").c_str());
-                std::filesystem::copy(repoConfig + "params_" + std::to_string(indexConf) + ".json", (path + "params/").c_str());
-            }
+            std::filesystem::copy(repoConfig + "trainParams.json", (path + "params/").c_str());
+            std::filesystem::copy(repoConfig + "params.json", (path + "params/").c_str());
+        }
 
-            std::cout<<"\nActually working with config " << indexConf << " and seed "<< seed<<"\n"<<std::endl;
+        std::cout<<"\nActually working with seed "<< seed<<"\n"<<std::endl;
 
-            TrainingParameters trainingParams;
-            trainingParams.loadParametersFromJson((path + "params/trainParams_" + std::to_string(indexConf) + ".json").c_str());
+        TrainingParameters trainingParams;
+        trainingParams.loadParametersFromJson((path + "params/trainParams.json").c_str());
 
-            // Params of this config
-            Learn::LearningParameters params;
-            File::ParametersParser::loadParametersFromJson((repoConfig + "params_" + std::to_string(indexConf) + ".json").c_str(), params);
+        // Params of this config
+        Learn::LearningParameters params;
+        File::ParametersParser::loadParametersFromJson((repoConfig + "params.json").c_str(), params);
 
-            // Create the instruction set for programs
-            Instructions::Set set;
-            fillInstructionSet(set, trainingParams);
+        // Create the instruction set for programs
+        Instructions::Set set;
+        fillInstructionSet(set, trainingParams);
 
-            // Instantiate the LearningEnvironment
-            ArmLearnWrapper armLearnEnv(globalParams.maxNbActionsPerEval, trainingParams, true);
+        // Instantiate the LearningEnvironment
+        ArmLearnWrapper armLearnEnv(globalParams.maxNbActionsPerEval, trainingParams, true);
 
-            // Generate validation targets.
-            if(globalParams.doValidation){
-                armLearnEnv.updateValidationTrajectories(globalParams.nbIterationsPerPolicyEvaluation);
-                if(seed == 0 && indexConf == 0){
-                    armLearnEnv.saveValidationTrajectories();
-                }
-                armLearnEnv.loadValidationTrajectories();
-            }
+        // Generate validation targets.
+        if(globalParams.doValidation){
+            armLearnEnv.updateValidationTrajectories(globalParams.nbIterationsPerPolicyEvaluation);
+            armLearnEnv.loadValidationTrajectories();
+        }
 
-            if(trainingParams.progressiveModeTargets){
-                // Update/Generate the first training validation trajectories
-                armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
-            }
+        if(trainingParams.progressiveModeTargets){
+            // Update/Generate the first training validation trajectories
+            armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
+        }
 
 
-            // Instantiate and init the learning agent
-            Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
+        // Instantiate and init the learning agent
+        Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
 
-            la.init(seed);
+        la.init(seed);
 
-            // If a validation target is done
-            bool doUpdateLimits = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
-            bool doValidationTarget = (trainingParams.doTrainingValidation && doUpdateLimits);
+        // If a validation target is done
+        bool doUpdateLimits = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
+        bool doValidationTarget = (trainingParams.doTrainingValidation && doUpdateLimits);
 
-            //Creation of the Output stream on cout and on the file
-            auto nameLogs = "logsGegelati";
-            std::ofstream fichier((path + "outLogs/" + nameLogs + ".ods").c_str(), std::ios::out);
-            auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion,fichier);
-            auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion);
+        //Creation of the Output stream on cout and on the file
+        auto nameLogs = "logsGegelati";
+        std::ofstream fichier((path + "outLogs/" + nameLogs + ".ods").c_str(), std::ios::out);
+        auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion,fichier);
+        auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion);
 
-            // File for printing best policy stat.
-            std::ofstream stats;
-            stats.open((path + "outLogs/bestPolicyStats.md").c_str());
-            Log::LAPolicyStatsLogger logStats(la, stats);
+        // File for printing best policy stat.
+        std::ofstream stats;
+        stats.open((path + "outLogs/bestPolicyStats.md").c_str());
+        Log::LAPolicyStatsLogger logStats(la, stats);
 
-            // Create an exporter for all graphs
-            File::TPGGraphDotExporter dotExporter((path + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
+        // Create an exporter for all graphs
+        File::TPGGraphDotExporter dotExporter((path + "outLogs/dotfiles/out_0000.dot").c_str(), *la.getTPGGraph());
 
-            std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
-            std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
-            bool timeLimitReached = false;
-
-
-            // Train for params.nbGenerations generations
-            for (uint64_t i = 0; i < globalParams.nbGenerations && !timeLimitReached; i++) {
-                armLearnEnv.setgeneration(i);
+        std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpoint = std::make_shared<std::chrono::time_point<
+        std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
+        bool timeLimitReached = false;
 
 
-                // Update/Generate the training trajectories
-                armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
-
-                //print the previous graphs
-                char buff[16];
-                sprintf(buff, (path + "outLogs/dotfiles/out_%04d.dot").c_str(), static_cast<uint16_t>(i));
-                dotExporter.setNewFilePath(buff);
-                dotExporter.print();
-
-                la.trainOneGeneration(i);
-
-                // Check time limit only if the parameter is above 0
-                if(trainingParams.timeMaxTraining > 0){
-                    // Set true if the time is above the limit
-                    timeLimitReached = (((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() > trainingParams.timeMaxTraining);
-                }
-
-                if(seed == 0){
-                    break;
-                }
-            }
+        // Train for params.nbGenerations generations
+        for (uint64_t i = 0; i < globalParams.nbGenerations && !timeLimitReached; i++) {
+            armLearnEnv.setgeneration(i);
 
 
-            // Keep best policy
-            la.keepBestPolicy();
-            dotExporter.setNewFilePath((path + "outLogs/out_best.dot").c_str());
+            // Update/Generate the training trajectories
+            armLearnEnv.updateTrainingTrajectories(trainingParams.nbIterationTraining);
+
+            //print the previous graphs
+            char buff[16];
+            sprintf(buff, (path + "outLogs/dotfiles/out_%04d.dot").c_str(), static_cast<uint16_t>(i));
+            dotExporter.setNewFilePath(buff);
             dotExporter.print();
 
-            
-            // Export best policy statistics.
-            TPG::PolicyStats ps;
-            ps.setEnvironment(la.getTPGGraph()->getEnvironment());
-            ps.analyzePolicy(la.getBestRoot().first);
-            std::ofstream bestStats;
-            bestStats.open((path + "outLogs/out_best_stats.md").c_str());
-            bestStats << ps;
-            bestStats.close();
+            la.trainOneGeneration(i);
 
-
-            // close log file also
-            stats.close();
-
-            auto &tpg = *la.getTPGGraph();
-            Environment env(set, armLearnEnv.getDataSources(), 8);
-            File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
-            trainingParams.testPath = (path + "outLogs").c_str();
-            trainingParams.testing = true;
-            la.testingBestRoot(globalParams.nbIterationsPerPolicyEvaluation);
-
-            // cleanup
-            for (unsigned int i = 0; i < set.getNbInstructions(); i++) {
-                delete (&set.getInstruction(i));
+            // Check time limit only if the parameter is above 0
+            if(trainingParams.timeMaxTraining > 0){
+                // Set true if the time is above the limit
+                timeLimitReached = (((std::chrono::duration<double>)(std::chrono::system_clock::now() - *checkpoint)).count() > trainingParams.timeMaxTraining);
             }
+
+        }
+
+
+        // Keep best policy
+        la.keepBestPolicy();
+        dotExporter.setNewFilePath((path + "outLogs/out_best.dot").c_str());
+        dotExporter.print();
+
+        
+        // Export best policy statistics.
+        TPG::PolicyStats ps;
+        ps.setEnvironment(la.getTPGGraph()->getEnvironment());
+        ps.analyzePolicy(la.getBestRoot().first);
+        std::ofstream bestStats;
+        bestStats.open((path + "outLogs/out_best_stats.md").c_str());
+        bestStats << ps;
+        bestStats.close();
+
+
+        // close log file also
+        stats.close();
+
+        auto &tpg = *la.getTPGGraph();
+        Environment env(set, armLearnEnv.getDataSources(), 8);
+        File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
+        trainingParams.testPath = (path + "outLogs").c_str();
+        trainingParams.testing = true;
+        la.testingBestRoot(globalParams.nbIterationsPerPolicyEvaluation);
+
+        // cleanup
+        for (unsigned int i = 0; i < set.getNbInstructions(); i++) {
+            delete (&set.getInstruction(i));
         }
     }
 

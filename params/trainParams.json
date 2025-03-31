@@ -61,7 +61,7 @@
 	"testPath": "outLogs",//"../data/"
 
 	// To use distance 2D instruction
-	"useInstrDist2d": true,
+	"useInstrDist2d": false,
 	// To use distance 3D instruction
 	"useInstrDist3d": false,
 	// To use spherical coordonates instructions for rad
@@ -73,7 +73,7 @@
 	// To use constants
 	"useInstrConst": false,
 	// To use Cos, Sin and Ln functions that seems useless after the ablation study
-	"useInstrSinLn": false,
+	"useInstrSinLn": true,
 	
 
 	// If false, action change the motor position, if true action change the motor speed
@@ -86,7 +86,7 @@
 	"nbIterationTraining": 100,
 
 	// Set a limit of time to train (in seconds), if 0: no limit
-	"timeMaxTraining": 7200, //289 200 seconds is 72h so 3 days
+	"timeMaxTraining": 7200, //2 hours
 
     // When testing a root, a test will be made on the root above this number of iteration, if the score of the root is to low, the root is canceled
     "nbIterationRootCanceled": 100,
