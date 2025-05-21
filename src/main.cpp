@@ -156,7 +156,7 @@ int main() {
 
 
             //print the previous graphs
-            char buff[16];
+            char buff[64];
             sprintf(buff,"outLogs/dotfiles/out_%04d.dot", static_cast<uint16_t>(i));
             dotExporter.setNewFilePath(buff);
             dotExporter.print();
