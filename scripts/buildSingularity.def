@@ -1,0 +1,24 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%post
+# basic setup with non interactive command to facilitate installation
+apt update && apt -y install git vim
+DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends tzdata
+
+# alias sudo to avoid issues in singularity
+alias sudo=eval
+
+# get arm learn, GRETSI 2025 version
+git clone --recurse-submodules https://github.com/gegelati/GRETSI2025-Artifacts.git
+cd GRETSI2025-Artifacts/armlearn-wrapper
+
+# install dependencies
+yes | . scripts/dependencies_installation.sh
+
+# build wrapper
+mkdir build && cd build && cmake .. && cmake --build .
+
+%runscript
+cd /GRETSI2025-Artifacts/armlearn-wrapper
+./build/armGegelati
