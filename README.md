@@ -8,6 +8,8 @@ $ git clone https://github.com/gegelati/armlearn-wrapper.git
 $ cd armlearn-wrapper
 ```
 
+### Classic installation
+
 You now need to get the dependencies of this project.
 On linux all you need to do is to go in the main folder and run the following:
 ```
@@ -21,6 +23,22 @@ Once it is done, you can build and execute the application:
 $ mkdir build && cd build && cmake .. && cmake --build .
 $ Release/armlearn-wrapper
 ```
+
+### Singularity image
+
+If you want to build the project with singularity, you can directly use the **buildSingularity.def** file in the script folder
+
+```
+$ singularity build image.sif buildSingularity.def
+```
+
+You may need folders to save the logs, then you can launch the image, with the logs folder binded
+
+```
+$ mkdir outLogs && mkdir outLogs/dotfiles
+$ singularity run --bind outLogs/:GRETSI2025-Artifacts/armlearn-wrapper/outLogs image.sif
+```
+
 
 ## How does this work ?
 The armlearn-wrapper is an application using a Gegelati learner on an armlearn task. Gegelati provides a way to generate and train TPG (agents), and armlearn handles the arm simulation during the evaluation.  
