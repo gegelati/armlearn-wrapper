@@ -86,7 +86,7 @@
 	"nbIterationTraining": 100,
 
 	// Set a limit of time to train (in seconds), if 0: no limit
-	"timeMaxTraining": 7200, //2 hours
+	"timeMaxTraining": 14400, //2 hours
 
     // When testing a root, a test will be made on the root above this number of iteration, if the score of the root is to low, the root is canceled
     "nbIterationRootCanceled": 100,
