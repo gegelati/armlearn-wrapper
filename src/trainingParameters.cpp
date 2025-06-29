@@ -185,40 +185,28 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
-    if (param == "useInstrDist2d"){
-        useInstrDist2d = (bool)value.asBool();
-        return;
-    }
-    
-    if (param == "useInstrDist3d"){
-        useInstrDist3d = (bool)value.asBool();
-        return;
-    }
-    
-    if (param == "useInstrSphericalCoordRad"){
-        useInstrSphericalCoordRad = (bool)value.asBool();
+    if (param == "useInstrTrig") {
+        useInstrTrig = (bool)value.asBool();
         return;
     }
 
-
-    if (param == "useInstrSphericalCoordAngle"){
-        useInstrSphericalCoordAngle = (bool)value.asBool();
+    if (param == "useInstrLogExp") {
+        useInstrLogExp = (bool)value.asBool();
         return;
     }
 
-    
-    if (param == "useInstrConst"){
-        useInstrConst = (bool)value.asBool();
+    if (param == "instrType") {
+        std::string type = value.asString();
+        if (type == "int" || type == "float" || type == "double") {
+            instrType = type;
+        } else {
+            std::cerr << "Unknown instruction type: " << type << std::endl;
+        }
         return;
     }
 
-    if (param == "useInstrPi"){
-        useInstrPi = (bool)value.asBool();
-        return;
-    }
-
-    if (param == "useInstrSinLn"){
-        useInstrSinLn = (bool)value.asBool();
+    if (param == "scaleFactor") {
+        scaleFactor = (double)value.asDouble();
         return;
     }
 

@@ -150,27 +150,19 @@ public:
     /// path to store the testing output
     std::string testPath = "outLogs/";
 
-	/// To use distance 2D instruction
-	bool useInstrDist2d = false;
 
-	/// To use distance 3D instruction
-	bool useInstrDist3d = false;
+    // if true, use trigonometric functions in the instructions
+	bool useInstrTrig = true;
+	
+	// if true, use logarithm and exponential functions in the instructions
+	bool useInstrLogExp = true;
 
-	/// To use spherical coordonates instructions
-	bool useInstrSphericalCoordRad = false;
+    // type of instruction used in the algorithm
+    std::string instrType = "double";
 
-	/// To use spherical coordonates instructions
-	bool useInstrSphericalCoordAngle = false;
-
-	/// To use spherical coordonates instructions
-	bool useInstrConst = false;
-
-    /// To use getPi instruction
-	bool useInstrPi = false;
-
-
-	// To use Sin and Ln functions that seems useless after the ablation study
-    bool useInstrSinLn = false;
+    // Scale factor to apply to the motor position and speed
+    // This is used to adapt the motor position and speed to the type used in the algorithm
+    double scaleFactor = 1.0;
 
 
     /// If false, action change the motor position, if true action change the motor speed

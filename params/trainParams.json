@@ -38,7 +38,7 @@
 	// Coefficient to multiply the reward with
 	"coefRewardMultiplication" : 0.01,
 	// true to load the validation trajectories
-	"loadValidationTrajectories": true,
+	"loadValidationTrajectories": false,
 	// true to save the validation trajectories
 	"saveValidationTrajectories": false,
 	// Seed to init the algorithm (gegelati or SAC) 
@@ -60,21 +60,18 @@
 	// path to store the testing output
 	"testPath": "outLogs",//"../data/"
 
-	// To use distance 2D instruction
-	"useInstrDist2d": false,
-	// To use distance 3D instruction
-	"useInstrDist3d": false,
-	// To use spherical coordonates instructions for rad
-	"useInstrSphericalCoordRad": false,
-	// To use spherical coordonates instructions for angle
-	"useInstrSphericalCoordAngle": false,
-	// To use getPi instruction
-	"useInstrPi": false,
-	// To use constants
-	"useInstrConst": false,
-	// To use Cos, Sin and Ln functions that seems useless after the ablation study
-	"useInstrSinLn": true,
+	// type of instruction used in the algorithm
+	"instrType": "int", // "double" or "float" or "int
+
+	// if true, use trigonometric functions in the instructions
+	"useInstrTrig": true,
 	
+	// if true, use logarithm and exponential functions in the instructions
+	"useInstrLogExp": true,
+
+	// Scale factor to apply to the motor position and speed
+    // This is used to adapt the motor position and speed to the type used in the algorithm
+    "scaleFactor": 1.0,
 
 	// If false, action change the motor position, if true action change the motor speed
 	"actionSpeed": false,
@@ -86,7 +83,7 @@
 	"nbIterationTraining": 100,
 
 	// Set a limit of time to train (in seconds), if 0: no limit
-	"timeMaxTraining": 14400, //2 hours
+	"timeMaxTraining": 7200, //2 hours
 
     // When testing a root, a test will be made on the root above this number of iteration, if the score of the root is to low, the root is canceled
     "nbIterationRootCanceled": 100,

@@ -91,7 +91,7 @@
 	},
 	// Number of generations of the training.
 	// "nbGenerations" : 500, // Default value
-	"nbGenerations" : 10000,
+	"nbGenerations" : 100,
 	// [Only used in AdversarialLearningAgent.]
 	// Number of times each job is evaluated in the learning process.
 	// Each root may belong to several jobs, hence this parameter should be lower
@@ -113,7 +113,7 @@
 	// Number of threads used for the training process.
 	// When undefined in the json file, this parameter is automatically set to the
 	// number of cores of the CPU.
-	"nbThreads" : 64,
+	"nbThreads" : 128,
 	// Percentage of deleted (and regenerated) root TPGVertex at each generation.
 	// "ratioDeletedRoots" : 0.5, // Default value
 	"ratioDeletedRoots" : 0.99
