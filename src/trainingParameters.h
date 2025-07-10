@@ -157,12 +157,14 @@ public:
 	// if true, use logarithm and exponential functions in the instructions
 	bool useInstrLogExp = true;
 
+    // if true, use comparison in the instructions
+    bool useInstrComparison = true;
+
+    // if true, use expensive arithmetic instructions
+    bool useInstrExpensiveArithmetic = true;
+
     // type of instruction used in the algorithm
     std::string instrType = "double";
-
-    // Scale factor to apply to the motor position and speed
-    // This is used to adapt the motor position and speed to the type used in the algorithm
-    double scaleFactor = 1.0;
 
 
     /// If false, action change the motor position, if true action change the motor speed

@@ -61,7 +61,7 @@
 	"testPath": "outLogs",//"../data/"
 
 	// type of instruction used in the algorithm
-	"instrType": "int", // "double" or "float" or "int
+	"instrType": "double", // "double" or "float" or "int
 
 	// if true, use trigonometric functions in the instructions
 	"useInstrTrig": true,
@@ -69,9 +69,11 @@
 	// if true, use logarithm and exponential functions in the instructions
 	"useInstrLogExp": true,
 
-	// Scale factor to apply to the motor position and speed
-    // This is used to adapt the motor position and speed to the type used in the algorithm
-    "scaleFactor": 1.0,
+	// if true, use comparison in the instructions
+	"useInstrComparison": true,
+
+    // if true, use expensive arithmetic instructions
+    "useInstrExpensiveArithmetic": true,
 
 	// If false, action change the motor position, if true action change the motor speed
 	"actionSpeed": false,

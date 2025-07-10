@@ -195,6 +195,16 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         return;
     }
 
+    if (param == "useInstrComparison") {
+        useInstrComparison = (bool)value.asBool();
+        return;
+    }
+
+    if (param == "useInstrExpensiveArithmetic") {
+        useInstrExpensiveArithmetic = (bool)value.asBool();
+        return;
+    }
+
     if (param == "instrType") {
         std::string type = value.asString();
         if (type == "int" || type == "float" || type == "double") {
@@ -202,11 +212,6 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         } else {
             std::cerr << "Unknown instruction type: " << type << std::endl;
         }
-        return;
-    }
-
-    if (param == "scaleFactor") {
-        scaleFactor = (double)value.asDouble();
         return;
     }
 
