@@ -25,7 +25,7 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
             set.add(*(new Instructions::LambdaInstruction<double, double>(divide, "$0 = $1 / $2;")));
         }
         if(params.useInstrComparison) {
-            set.add(*(new Instructions::LambdaInstruction<double, double>(max, "$0 = max($1, $2);")));
+            set.add(*(new Instructions::LambdaInstruction<double, double>(max, "$0 = fmax($1, $2);")));
         }
         
         if(params.useInstrTrig) {
@@ -57,7 +57,7 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
             set.add(*(new Instructions::LambdaInstruction<double, double>(divide, "$0 = $1 / $2;")));
         }
         if(params.useInstrComparison) {
-            set.add(*(new Instructions::LambdaInstruction<double, double>(max, "$0 = max($1, $2);")));
+            set.add(*(new Instructions::LambdaInstruction<double, double>(max, "$0 = fmaxf($1, $2);")));
         }
         
         if(params.useInstrTrig) {
