@@ -90,7 +90,7 @@ cd ../..
 echo "# Install Gegelati"
 git clone https://github.com/gegelati/gegelati.git
 cd gegelati 
-git checkout 9b4092f
+git checkout 1756ea4
 cd bin
 cmake ..
 sudo cmake --build . --target install -j # On Linux
