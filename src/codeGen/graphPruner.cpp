@@ -45,10 +45,15 @@ int main(int argc, char** argv ){
 
     auto file = path + trainingParams.testPath;
 
+    // Instantiate and init the learning agent
+    Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
+    la.init(trainingParams.seed);
+
     // Load graph
     std::cout << "Loading dot file from " << file << "." << std::endl;
 
-    Environment dotEnv(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
+    auto &tpg = *la.getTPGGraph();
+    Environment dotEnv = tpg.getEnvironment();
     TPG::TPGGraph dotGraph(dotEnv, std::make_unique<TPG::TPGInstrumentedFactory>());
     File::TPGGraphDotImporter dot((file).c_str(), dotEnv, dotGraph);
     dot.importGraph();
@@ -75,7 +80,7 @@ int main(int argc, char** argv ){
             nbEpisodes++;
             nbActionsEp = 0;
         }
-    	auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(* root).back()))->getActionID();
+    	auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(* root).first.back()))->getActionID();
         armLearnEnv.doAction(actionID);
         ofs << nbActions << " " << actionID << std::endl;
         nbActions++;
@@ -108,7 +113,7 @@ int main(int argc, char** argv ){
             nbEpisodes++;
             nbActionsEp = 0;
         }
-    	auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(* root).back()))->getActionID();
+    	auto actionID = ((TPG::TPGAction*)(tee.executeFromRoot(* root).first.back()))->getActionID();
 
         armLearnEnv.doAction(actionID);
         ofs2 << nbActions << " " << actionID << std::endl;
@@ -146,15 +151,7 @@ int main(int argc, char** argv ){
     dotExporter.print();
 
 
-
-
-
-
-    Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
-    la.init(trainingParams.seed);
-    auto &tpg = *la.getTPGGraph();
-    Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
-    File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best_cleaned.dot").c_str(), env, tpg);
+    File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best_cleaned.dot").c_str(), dotEnv, tpg);
     trainingParams.testPath = (path + "outLogs").c_str();
     trainingParams.testing = true;
     la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);

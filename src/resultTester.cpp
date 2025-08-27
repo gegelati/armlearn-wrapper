@@ -40,7 +40,7 @@ int main() {
     ArmLearnWrapper le(params.maxNbActionsPerEval, trainingParams, true);
 
     // Instantiate the environment that will embed the LearningEnvironment
-    Environment env(set, le.getDataSources(), params.nbRegisters);
+    Environment env(set, params, le.getDataSources(), params.nbRegisters);
 
     // Instantiate the TPGGraph that we will load
     auto tpg = TPG::TPGGraph(env);
@@ -96,7 +96,7 @@ void runByHand(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLear
     // let's play, the only way to leave this loop is to enter -1
     while(x!=-1){
         // gets the action the TPG would decide in this situation (the result can only be between 0 and 8 included)
-        uint64_t action=((const TPG::TPGAction *) tee.executeFromRoot(* root).back())->getActionID();
+        uint64_t action=((const TPG::TPGAction *) tee.executeFromRoot(* root).first.back())->getActionID();
         std::cout<<"TPG : "<<action<<std::endl;
         le.doAction(action);
 
@@ -118,7 +118,7 @@ void runEvals(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearn
         le.reset();
         for(int i=0; i<2000; i++) {
             // gets the action the TPG would decide in this situation (the result can only be between 0 and 8 included)
-            uint64_t action = ((const TPG::TPGAction *) tee.executeFromRoot(*root).back())->getActionID();
+            uint64_t action = ((const TPG::TPGAction *) tee.executeFromRoot(*root).first.back())->getActionID();
             le.doAction(action);
 
             // prints the game board
@@ -311,7 +311,7 @@ void goToPos(const TPG::TPGVertex* root, TPG::TPGExecutionEngine& tee, ArmLearnW
     // Impossible action to start with
     uint64_t savedAction = 100;
     for(int i=0; i<=1500; i++) {
-        uint64_t action = ((const TPG::TPGAction *) tee.executeFromRoot(*root).back())->getActionID();
+        uint64_t action = ((const TPG::TPGAction *) tee.executeFromRoot(*root).first.back())->getActionID();
         le.doAction(action);
         if (counterTraj >= 10 && action != savedAction) {
             counterTraj = 0;

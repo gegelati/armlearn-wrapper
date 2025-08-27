@@ -186,7 +186,7 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
                nbActions < this->params.maxNbActionsPerEval) {
             // Get the action
             uint64_t actionID =
-                ((const TPG::TPGAction*)tee.executeFromRoot(*root).back())
+                ((const TPG::TPGAction*)tee.executeFromRoot(*root).first.back())
                     ->getActionID();
             // Do it
             le.doAction(actionID);

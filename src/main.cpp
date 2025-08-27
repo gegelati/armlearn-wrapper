@@ -112,7 +112,7 @@ int main() {
     // Use previous Graphs
     if(trainingParams.startPreviousTPG){
         auto &tpg = *la.getTPGGraph();
-        Environment env(set, armLearnEnv.getDataSources(), 8);
+        Environment env = tpg.getEnvironment();
         File::TPGGraphDotImporter dotImporter(("outLogs/dotfiles/" + trainingParams.namePreviousTPG).c_str(), env, tpg);
     }
 
@@ -128,7 +128,7 @@ int main() {
 
     if(trainingParams.testing){
         auto &tpg = *la.getTPGGraph();
-        Environment env(set, armLearnEnv.getDataSources(), params.nbRegisters, params.nbProgramConstant);
+        Environment env = tpg.getEnvironment();
         File::TPGGraphDotImporter dotImporter((trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
     } else {

@@ -239,7 +239,7 @@ public:
 
 
     /// @brief Inherited via LearningEnvironment
-    void doAction(uint64_t actionID) override;
+    void doAction(uint64_t actionID);
 
     /// Do a multi continuous action.
     void doActionContinuous(std::vector<float> actions);
