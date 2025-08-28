@@ -239,7 +239,7 @@ public:
 
 
     /// @brief Inherited via LearningEnvironment
-    void doAction(double actionID);
+    virtual void doAction(double actionID) override;
 
     /// Do a multi continuous action.
     void doActionContinuous(std::vector<float> actions);
