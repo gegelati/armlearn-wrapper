@@ -113,7 +113,7 @@
 	// Number of threads used for the training process.
 	// When undefined in the json file, this parameter is automatically set to the
 	// number of cores of the CPU.
-	"nbThreads" : 128,
+	"nbThreads" : 48,
 	// Percentage of deleted (and regenerated) root TPGVertex at each generation.
 	// "ratioDeletedRoots" : 0.5, // Default value
 	"ratioDeletedRoots" : 0.99
