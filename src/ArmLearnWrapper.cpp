@@ -48,7 +48,7 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::ge
     return result;
 }
 
-void ArmLearnWrapper::doAction(uint64_t actionID) {
+void ArmLearnWrapper::doAction(double actionID) {
 
     checkpointEnv = std::make_shared<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>>(std::chrono::system_clock::now());
 
@@ -56,7 +56,7 @@ void ArmLearnWrapper::doAction(uint64_t actionID) {
     double step  = params.sizeAction;
 
     // Get the action
-    switch (actionID) {
+    switch ((uint64_t)actionID) {
         case 0:
             motorAction = {step, 0, 0, 0, 0, 0};
             break;

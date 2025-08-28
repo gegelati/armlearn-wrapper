@@ -152,7 +152,7 @@ int main(){
         stats.close();
 
         auto &tpg = *la.getTPGGraph();
-        Environment env = tpg.getEnvironment();
+        Environment env(set, params, armLearnEnv.getDataSources());
         File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
         trainingParams.testPath = (path + "outLogs").c_str();
         trainingParams.testing = true;

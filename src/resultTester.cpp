@@ -40,7 +40,7 @@ int main() {
     ArmLearnWrapper le(params.maxNbActionsPerEval, trainingParams, true);
 
     // Instantiate the environment that will embed the LearningEnvironment
-    Environment env(set, params, le.getDataSources(), params.nbRegisters);
+    Environment env(set, params, le.getDataSources());
 
     // Instantiate the TPGGraph that we will load
     auto tpg = TPG::TPGGraph(env);
