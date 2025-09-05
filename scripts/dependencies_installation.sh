@@ -88,15 +88,18 @@ cd ../..
 
 # get Gegelati (latest version installed, tested with 0.5.1)
 echo "# Install Gegelati"
-git clone https://github.com/gegelati/gegelati.git
-cd gegelati 
-git checkout 1756ea4
+git clone https://github.com/allpaul0/gegelati.git
+cd gegelati
+git checkout c6dc5c5
+
+mkdir bin
 cd bin
-cmake ..
-sudo cmake --build . --target install -j # On Linux
+cmake -DCMAKE_BUILD_TYPE=Release .. 
+make -j
+sudo make install
 cd ../..
+
 
 # update libs
 sudo /sbin/ldconfig -v
 echo "Installation finished"
-
