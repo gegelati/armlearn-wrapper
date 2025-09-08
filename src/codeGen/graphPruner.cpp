@@ -54,7 +54,7 @@ int main(int argc, char** argv ){
 
     auto &tpg = *la.getTPGGraph();
     Environment dotEnv = tpg.getEnvironment();
-    TPG::TPGGraph dotGraph(dotEnv, std::make_unique<TPG::TPGInstrumentedFactory>());
+    TPG::TPGGraph dotGraph(dotEnv, std::make_unique<TPG::TPGFactoryInstrumented>());
     File::TPGGraphDotImporter dot((file).c_str(), dotEnv, dotGraph);
     dot.importGraph();
     const TPG::TPGVertex* root = dotGraph.getRootVertices().front();
@@ -92,7 +92,7 @@ int main(int argc, char** argv ){
     ofs.close();
 
     // Clean the unused vertices & teams
-    ((const TPG::TPGInstrumentedFactory&)dotGraph.getFactory()).clearUnusedTPGGraphElements(dotGraph);
+    ((const TPG::TPGFactoryInstrumented&)dotGraph.getFactory()).clearUnusedTPGGraphElements(dotGraph);
     dotGraph.clearProgramIntrons();
 
 
