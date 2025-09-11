@@ -52,10 +52,10 @@ int main() {
 
     // Create an importer for the best graph and imports it
     std::cout << "Import graph"<< std::endl;
-    File::TPGGraphDotImporter dotImporter((trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
+    File::TPGGraphDotImporter dotImporter((trainingParams.testPath + "/best_root.dot").c_str(), env, tpg);
     dotImporter.importGraph();
 
-    // takes the first root of the graph, anyway out_best has only 1 root (the best)
+    // takes the first root of the graph, anyway best_root has only 1 root (the best)
     auto root = tpg.getRootVertices().front();
 
     // make a try on a random position
@@ -84,7 +84,7 @@ void printPolicyStats(const TPG::TPGVertex* root, Environment& env){
     ps.setEnvironment(env);
     ps.analyzePolicy(root);
     std::ofstream bestStats;
-    bestStats.open("out_best_stats.md");
+    bestStats.open("best_root_stats.md");
     bestStats << ps;
     bestStats.close();
 }

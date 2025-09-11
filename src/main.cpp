@@ -6,6 +6,7 @@
 #include <fstream>
 #include <filesystem>
 #include <iostream>
+#include <unistd.h>
 
 #include <gegelati.h>
 #include "instructions.h"
@@ -58,15 +59,20 @@ int main() {
 	fillInstructionSet(set, trainingParams);
 
 
+
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
+
 
     // Prompt the number of threads
     std::cout << "Number of threads: " << params.nbThreads << std::endl;
 
+
+
     // Generate validation targets.
     if(params.doValidation && !trainingParams.loadValidationTrajectories){
         armLearnEnv.updateValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
+        std::cout << "Validation trajectories generated." << std::endl;
     }
 
 
@@ -74,7 +80,6 @@ int main() {
         // Update/Generate the first training validation trajectories
         armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
     }
-
 
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
@@ -107,8 +112,6 @@ int main() {
     auto logFile = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion,fichier);
     auto logCout = *new Log::ArmLearnLogger(la,doValidationTarget,doUpdateLimits,trainingParams.controlTrajectoriesDeletion);
 
-
-
     // Use previous Graphs
     if(trainingParams.startPreviousTPG){
         auto &tpg = *la.getTPGGraph();
@@ -129,10 +132,11 @@ int main() {
     if(trainingParams.testing){
         auto &tpg = *la.getTPGGraph();
         Environment env(set, params, armLearnEnv.getDataSources());
-        File::TPGGraphDotImporter dotImporter((trainingParams.testPath + "/out_best.dot").c_str(), env, tpg);
+        File::TPGGraphDotImporter dotImporter((trainingParams.testPath + "/best_root.dot").c_str(), env, tpg);
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
     } else {
 
+        std::cout << "Training for " << params.nbGenerations << " generations." << std::endl;
 
         // File for printing best policy stat.
         std::ofstream stats;
@@ -174,7 +178,7 @@ int main() {
 
         // Keep best policy
         la.keepBestPolicy();
-        dotExporter.setNewFilePath("outLogs/out_best.dot");
+        dotExporter.setNewFilePath("outLogs/best_root.dot");
         dotExporter.print();
 
         
@@ -183,7 +187,7 @@ int main() {
         ps.setEnvironment(la.getTPGGraph()->getEnvironment());
         ps.analyzePolicy(la.getBestRoot().first);
         std::ofstream bestStats;
-        bestStats.open("outLogs/out_best_stats.md");
+        bestStats.open("outLogs/best_root_stats.md");
         bestStats << ps;
         bestStats.close();
 

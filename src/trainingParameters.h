@@ -148,8 +148,7 @@ public:
 	bool testing = false;
 
     /// path to store the testing output
-    std::string testPath = "outLogs/";
-
+    std::string testPath = "outLogs/best_root.dot";
 
     // if true, use trigonometric functions in the instructions
 	bool useInstrTrig = true;

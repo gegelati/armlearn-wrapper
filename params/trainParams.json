@@ -11,7 +11,7 @@
 	"progressiveModeTargets": false,
 	// Initial maximum distance between the target and the starting position
 	"maxLengthTargets": 100,
-	// Allow to choose if the starting position are random of the BACKHOE one
+	// Allow to choose if the starting position are random or if it will always be the BACKHOE
 	"doRandomStartingPosition": false,
 	// Use the progressive mode for choosing randomly the starting position (no effect if doRandomStartingPosition is false)
 	"progressiveModeStartingPos": false,
@@ -58,7 +58,7 @@
 	// if true, deactivate the training and only logs results
 	"testing": false,
 	// path to store the testing output
-	"testPath": "outLogs",//"../data/"
+	"testPath": "outLogs/best_root.dot",//"../data/"
 
 	// type of instruction used in the algorithm
 	"instrType": "double", // "double" or "float" or "int

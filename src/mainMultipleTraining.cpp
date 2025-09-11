@@ -134,7 +134,7 @@ int main(){
 
         // Keep best policy
         la.keepBestPolicy();
-        dotExporter.setNewFilePath((path + "outLogs/out_best.dot").c_str());
+        dotExporter.setNewFilePath((path + "outLogs/best_root.dot").c_str());
         dotExporter.print();
 
         
@@ -143,7 +143,7 @@ int main(){
         ps.setEnvironment(la.getTPGGraph()->getEnvironment());
         ps.analyzePolicy(la.getBestRoot().first);
         std::ofstream bestStats;
-        bestStats.open((path + "outLogs/out_best_stats.md").c_str());
+        bestStats.open((path + "outLogs/best_root_stats.md").c_str());
         bestStats << ps;
         bestStats.close();
 
@@ -153,7 +153,7 @@ int main(){
 
         auto &tpg = *la.getTPGGraph();
         Environment env(set, params, armLearnEnv.getDataSources());
-        File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best.dot").c_str(), env, tpg);
+        File::TPGGraphDotImporter dotImporter((path + "outLogs/best_root.dot").c_str(), env, tpg);
         trainingParams.testPath = (path + "outLogs").c_str();
         trainingParams.testing = true;
         la.testingBestRoot(globalParams.nbIterationsPerPolicyEvaluation);

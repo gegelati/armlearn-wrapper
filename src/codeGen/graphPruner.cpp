@@ -71,9 +71,7 @@ int main(int argc, char** argv ){
     int nbActionsEp = 0;
     int nbEpisodes = 0;
     double scoreOrig = 0;
-    std::cout << "Play with TPG code" << std::endl;
     while(nbEpisodes < params.nbIterationsPerPolicyEvaluation){
-        std::cout<<"ALLO"<<std::endl;
         if (armLearnEnv.isTerminal() || nbActionsEp == params.maxNbActionsPerEval || nbActions == 0){
             scoreOrig += armLearnEnv.getScore();
             armLearnEnv.reset(0, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
@@ -91,7 +89,7 @@ int main(int argc, char** argv ){
     std::cout << "Total score: " << scoreOrig << " in "  << nbActionsOrig << " actions." << std::endl;
     ofs.close();
 
-    // Clean the unused vertices & teams
+    // Prune the unused vertices & teams
     ((const TPG::TPGFactoryInstrumented&)dotGraph.getFactory()).clearUnusedTPGGraphElements(dotGraph);
     dotGraph.clearProgramIntrons();
 
@@ -99,15 +97,15 @@ int main(int argc, char** argv ){
     root = dotGraph.getRootVertices().front();
 
     // Play the game again to check the result remains the same.
-    std::ofstream ofs2 ((path + "outLogs/tpg_clean.txt").c_str(), std::ofstream::out);
+    std::ofstream ofs2 ((path + "outLogs/tpg_pruned.txt").c_str(), std::ofstream::out);
     nbActions = 0;
     nbEpisodes = 0;
-    double scoreClean = 0;
+    double scorePruned = 0;
     armLearnEnv.reset(0, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
-    std::cout << "Play with cleaned TPG code" << std::endl;
+    std::cout << "Play with pruned TPG code" << std::endl;
     while(nbEpisodes < params.nbIterationsPerPolicyEvaluation){
         if (armLearnEnv.isTerminal() || nbActionsEp == params.maxNbActionsPerEval || nbActions == 0){
-            scoreClean += armLearnEnv.getScore();
+            scorePruned += armLearnEnv.getScore();
             armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
             
             nbEpisodes++;
@@ -121,11 +119,11 @@ int main(int argc, char** argv ){
         nbActionsEp++;
 
     }
-    std::cout << "Total score: " << scoreClean / params.nbIterationsPerPolicyEvaluation << " in "  << nbActions << " actions." << std::endl;
+    std::cout << "Total score: " << scorePruned / params.nbIterationsPerPolicyEvaluation << " in "  << nbActions << " actions." << std::endl;
     ofs.close();
 
-    if(scoreClean / params.nbIterationsPerPolicyEvaluation != scoreOrig || nbActions != nbActionsOrig){
-        std::cout << "Determinism was lost during graph cleaning." << std::endl;
+    if(scorePruned / params.nbIterationsPerPolicyEvaluation != scoreOrig || nbActions != nbActionsOrig){
+        std::cout << "Determinism was lost during graph pruning." << std::endl;
         exit(1);
     }
 
@@ -138,20 +136,20 @@ int main(int argc, char** argv ){
     // Print in file
     char bestPolicyStatsPath[150];
     std::ofstream bestStats;
-    sprintf(bestPolicyStatsPath, (path + "outLogs/out_best_stats_cleaned.md").c_str());
+    sprintf(bestPolicyStatsPath, (path + "outLogs/CodeGen/best_root_pruned_stats.md").c_str());
     bestStats.open(bestPolicyStatsPath);
     bestStats << ps;
     bestStats.close();
 
-    // Export cleaned dot file
-    std::cout << "Printing cleaned dot file." << std::endl;
+    // Export pruned dot file
+    std::cout << "Printing pruned dot file." << std::endl;
     char bestDot[150];
-    sprintf(bestDot, (path + "outLogs/out_best_cleaned.dot").c_str());
+    sprintf(bestDot, (path + "outLogs/best_root_pruned.dot").c_str());
     File::TPGGraphDotExporter dotExporter(bestDot, dotGraph);
     dotExporter.print();
 
 
-    File::TPGGraphDotImporter dotImporter((path + "outLogs/out_best_cleaned.dot").c_str(), dotEnv, tpg);
+    File::TPGGraphDotImporter dotImporter((path + "outLogs/CodeGen/best_root_pruned.dot").c_str(), dotEnv, tpg);
     trainingParams.testPath = (path + "outLogs").c_str();
     trainingParams.testing = true;
     la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
@@ -159,7 +157,7 @@ int main(int argc, char** argv ){
     
 
     // Print graph
-    std::string codeGenPath = (path + "outLogs/codeGen/").c_str();
+    std::string codeGenPath = (path + "outLogs/CodeGen/").c_str();
     std::cout<<codeGenPath<<std::endl;
     if(!std::filesystem::exists(codeGenPath)){
         std::filesystem::create_directory(codeGenPath);
