@@ -174,6 +174,7 @@ int main(int argc, char *argv[])
 
     int continue_search = 0;
     int total_nb_seeds = 0;
+    int max_nb_seeds_to_search = 2E1; // to avoid infinite loop
 
     do
     {
@@ -309,7 +310,15 @@ int main(int argc, char *argv[])
         }
 
         // if not balanced -> continue_serach 
-        continue_search = !balanced;
+        // but we need to limit the time spent in this loop at some point
+        // so we stop if we reach max_nb_seeds_to_search
+        // When the Learning Environment is more complex, the size of the TPG is larger
+        // and the number of graph traversals can be very large. Additionnaly, the time to 
+        // compute one inference and to reset the LE is also larger.
+        // So we need to to bound this loop to avoid spending days in it.
+        // The value of max_nb_seeds_to_search can be increased if the user wants to spend more
+        // time in this loop to try to get a more balanced map.
+        continue_search = !balanced && (total_nb_seeds < max_nb_seeds_to_search);
         total_nb_seeds += nbSeedsToSearch;
 
         // clear vecInferenceTraceInfos
