@@ -56,7 +56,7 @@ bool randomizeSeeds = true;
 void storeToHeaderFile(
     const std::string &filename,
     const std::map<std::list<int>, std::vector<TPG::InferenceTraceInfos>> mapITI,
-    size_t nbDataSources,
+    const std::vector<DataSourceInfo>& dataSourcesInfo,
     bool randomize);
 
 /// @brief Function to extract all doubles from a DataHandler
@@ -121,20 +121,13 @@ int main(int argc, char *argv[])
     /// True if gegelati (TPG) is running in the LE, false if its an other algorithm, which would be SAC for instance
     bool gegelatiRunning = true;
     ArmLearnWrapper armLE(params.maxNbActionsPerEval, trainingParams, gegelatiRunning);
-     // Calculer le nombre total de dataSources (somme des dimensions de chaque DataHandler)
-    size_t nbDataSources = 0;
-    auto dataHandlers = armLE.getDataSources();
-    for (const auto& handlerRef : dataHandlers) {
-        nbDataSources += handlerRef.get().getDimensionsSize().at(0);
-    }
-    std::cout << "Number of data sources in the Learning Environment: " << nbDataSources << std::endl;
+    
 
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLE, set, params, trainingParams);
     la.init(trainingParams.seed);
 
     // Load Envrionment (needed to execute a program)
-
 
     // Initialisation par le constructeur
     Environment env(set, params, armLE.getDataSources());
@@ -343,7 +336,7 @@ int main(int argc, char *argv[])
     }
 
     // Write data to CSV file
-    storeToHeaderFile("outLogs/PreCalcul/seeds_nbActionsToTerminal.h", mapITI, nbDataSources, randomizeSeeds);
+    storeToHeaderFile("outLogs/PreCalcul/seeds_nbActionsToTerminal.h", mapITI, armLE.getDataSourcesInfo(), randomizeSeeds);
 
     // Empty the vec of InferenceTraceInfos from executionInfos which has current TPG execution context in it
     executionInfos.clear();
@@ -385,7 +378,7 @@ std::vector<double> extractAllDoubles(const Data::DataHandler& handler)
 void storeToHeaderFile(
     const std::string &filename,
     const std::map<std::list<int>, std::vector<TPG::InferenceTraceInfos>> mapITI,
-    size_t nbDataSources,
+    const std::vector<DataSourceInfo>& dataSourcesInfo,
     bool randomize)
 {
 
@@ -447,21 +440,19 @@ void storeToHeaderFile(
 
 
     // Write dataSourcesLE arrays (split into per-feature arrays)
-    for (size_t featureIdx = 0; featureIdx < nbDataSources; ++featureIdx) 
-    {
-        file << "static const double dataSourcesLE_" << featureIdx << "[NB_SEED] = {";
-        
-        for (size_t i = 0; i < indices.size(); i++)
-        {
-            if (i > 0){
-                file << ", ";
+    size_t featureIdx = 0;
+    for (const auto& info : dataSourcesInfo) {
+        file << "// " << info.name << "\n";
+        for (size_t i = 0; i < info.size; ++i, ++featureIdx) {
+            file << "static const double dataSourcesLE_" << featureIdx << "[NB_SEED] = {";
+            for (size_t j = 0; j < indices.size(); j++) {
+                if (j > 0) file << ", ";
+                file << dataSources[indices[j]][featureIdx];
             }
-            
-            file << dataSources[indices[i]][featureIdx];
+            file << "};\n";
         }
-            
-        file << "};\n";
     }
+    file << "\n";
 
 
     // Write seeds

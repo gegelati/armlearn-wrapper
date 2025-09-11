@@ -1203,3 +1203,17 @@ void ArmLearnWrapper::setTerminal(bool newTerminal){
 void ArmLearnWrapper::incrValKillCollision(){
     valKillCollision++;
 }
+
+size_t ArmLearnWrapper::getNbPossibleTargets(){ return dataTarget.size(); }
+
+std::vector<DataSourceInfo> ArmLearnWrapper::getDataSourcesInfo() const {
+    std::vector<DataSourceInfo> infos;
+    infos.push_back({"cartesianTarget", cartesianTarget.getDimensionsSize().at(0)});
+    infos.push_back({"cartesianHand", cartesianHand.getDimensionsSize().at(0)});
+    infos.push_back({"cartesianDiff", cartesianDiff.getDimensionsSize().at(0)});
+    infos.push_back({"motorPos", motorPos.getDimensionsSize().at(0)});
+    if (params.actionSpeed) {
+        infos.push_back({"dataMotorSpeed", dataMotorSpeed.getDimensionsSize().at(0)});
+    }
+    return infos;
+}

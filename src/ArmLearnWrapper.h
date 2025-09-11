@@ -37,6 +37,18 @@
 * The simulation is stopped after something like 1000 frames, and we
 * take the negative distance arm-target as score.
 */
+
+// this structure is used to store information about each data source
+// in the Learning Environment
+// it is used to write the header file with the data sources information
+// in the storeToHeaderFile function
+// so that the data can be correctly interpreted when reading the file
+// in another program
+struct DataSourceInfo {
+    std::string name;
+    size_t size;
+};
+
 class ArmLearnWrapper : public Learn::LearningEnvironment, armlearn::learning::DeviceLearner {
 protected:
 
@@ -443,5 +455,10 @@ public:
     void setTerminal(bool newTerminal);
 
     void incrValKillCollision();
+
+    /// Return the size of dataTarget which is the number of possible targets
+    size_t getNbPossibleTargets();
+
+    std::vector<DataSourceInfo> getDataSourcesInfo() const;
 };
 #endif
