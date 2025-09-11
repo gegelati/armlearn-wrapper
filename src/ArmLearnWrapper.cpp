@@ -1,16 +1,10 @@
 #include "ArmLearnWrapper.h"
-#include <iostream>
-#include <fstream>
-#include <filesystem>
-#include <vector>
-#include <utility>
-#include <random>
-#include <algorithm>
-#include <cstdlib> 
 
 void ArmLearnWrapper::computeInput() {
 
-    // Get the device state
+    // 1. Récupère l'état actuel du bras 
+    // Va chercher les positions brutes des moteurs via DeviceLearner::getDeviceState().
+    // Ces valeurs représentent les angles/positions servo.
     auto deviceState = DeviceLearner::getDeviceState();
 
     std::vector<uint16_t> newMotorPos;
@@ -392,8 +386,6 @@ void ArmLearnWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t iter
             break;
     }
 
-
-
     // Change the starting position
     this->currentStartingPos = trajectories->at(iterationNumber).first;
 
@@ -528,7 +520,7 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
     while (trainingTrajectories.size() < nbTrajectories){
 
         // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
-        auto newStartingPos = (params.doRandomStartingPosition) ? randomStartingPos(false) : &initStartingPos;
+        auto newStartingPos = (params.doRandomStartingPosition) ? generateRandomStartingPos(false) : &initStartingPos;
 
         // Get a new random Goal
         auto newTarget = randomGoal(*newStartingPos, false);
@@ -538,7 +530,7 @@ void ArmLearnWrapper::updateTrainingTrajectories(int nbTrajectories){
     }
 }
 
-void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories){
+void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories) {
 
 
     // Clear a define prortion of the training targets by giving the proportion of targets reused
@@ -548,12 +540,11 @@ void ArmLearnWrapper::updateTrainingValidationTrajectories(int nbTrajectories){
     });
     trainingValidationTrajectories.clear();
 
-    for (int i=0; i<nbTrajectories; i++){
 
+    for (int i=0; i<nbTrajectories; i++) {
         // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
-        auto newStartingPos = (params.doRandomStartingPosition) ? randomStartingPos(false) : &initStartingPos;
+        auto newStartingPos = (params.doRandomStartingPosition) ? generateRandomStartingPos(false) : &initStartingPos;
 
-        // Get a new random Goal
         auto newTarget = randomGoal(*newStartingPos, false);
 
         // add the pair startingPos and target to the vector
@@ -572,7 +563,7 @@ void ArmLearnWrapper::updateValidationTrajectories(int nbTrajectories){
     for (int i=0; i<nbTrajectories; i++){
 
         // Get a new starting pos, either random, either the init one depending on doRandomStartingPos
-        auto newStartingPos = (params.doRandomStartingPosition) ? randomStartingPos(true) : &initStartingPos;
+        auto newStartingPos = (params.doRandomStartingPosition) ? generateRandomStartingPos(true) : &initStartingPos;
 
         // Get a new random Goal
         auto newTarget = randomGoal(*newStartingPos, true);
@@ -645,55 +636,50 @@ std::vector<uint16_t> ArmLearnWrapper::randomMotorPos(std::vector<double> cartes
     return keepMotorPos;
 }
 
-std::vector<uint16_t> *ArmLearnWrapper::randomStartingPos(bool validation){
+std::vector<uint16_t>* ArmLearnWrapper::generateRandomStartingPos(bool validation){
+    // Final chosen motor positions to return
+    std::vector<uint16_t> motorPositions;
 
-    std::vector<uint16_t> motorPos;
-    std::vector<double> newStartingPos, cartesianGoal;
 
-    bool distanceIsNotGood = false;
-    bool handNotGood = false;
+    bool invalidConfiguration = false;
+    size_t chosenIndex;
 
-    // Init the distance at -1 to be sure that the while condition never return true during validation
-    double distance = -1;
 
-    size_t index;
-
-    // Do one time then only while the distance is above the distance between the new starting position and the initial one
     do {
-        // Get random cartesian goal
-        size_t index = rng.getUnsignedInt64(0, dataTarget.size());
-        auto cartesianGoal = dataTarget[index];
+        // Pick a random Cartesian target goal
+        chosenIndex = rng.getUnsignedInt64(0, dataTarget.size());
+        auto startingPosCartesian = dataTarget[chosenIndex];
 
-        // If above current limit (and not progressiveModeMotor), repeat until a goal in the wanted zone is choosen
-        while(!validation && !params.progressiveModeMotor && computeSquaredError(converter->computeServoToCoord(initStartingPos)->getCoord(), cartesianGoal) > currentMaxLimitStartingPos){
-            index = rng.getUnsignedInt64(0, dataTarget.size());
-            cartesianGoal = dataTarget[index];
+
+        // If not validation and not in progressive mode, ensure target is within distance limit
+        while (!validation && !params.progressiveModeMotor &&
+            computeSquaredError(converter->computeServoToCoord(initStartingPos)->getCoord(), 
+                                startingPosCartesian) > currentMaxLimitStartingPos) 
+        {
+            chosenIndex = rng.getUnsignedInt64(0, dataTarget.size());
+            startingPosCartesian = dataTarget[chosenIndex];
         }
 
-        // Get a random motor positions
-        motorPos = randomMotorPos(cartesianGoal, validation, false);
+        // Generate random motor positions for the target
+        motorPositions = randomMotorPos(startingPosCartesian, validation, false);
 
-        // Compute the cartesian coordonates of those motor positions
-        newStartingPos = converter->computeServoToCoord(motorPos)->getCoord();
 
-        // Compute the distance the new starting position and the initial one
-        distance = computeSquaredError(converter->computeServoToCoord(initStartingPos)->getCoord(), newStartingPos);
+        // Check for collisions or invalid hand configurations (z < 0 means under the ground)
+        invalidConfiguration = (params.realSimulation && motorCollision(motorPositions));
 
-        // Hand is not good if the target is bellow 0 on z axis
-        handNotGood = (params.realSimulation && motorCollision(motorPos));
 
-        if(handNotGood){
-            // Delete index because it will never be correct
-            auto it = dataTarget.begin();   
-            std::advance(it, index);
+        // If invalid, remove this target from consideration in the future
+        if (invalidConfiguration) {
+            auto it = dataTarget.begin();
+            std::advance(it, chosenIndex);
             dataTarget.erase(it);
         }
 
 
-    } while (handNotGood);
+    } while (invalidConfiguration); // Keep retrying until valid motor positions are found
 
-    return new std::vector<uint16_t>(motorPos);
 
+    return new std::vector<uint16_t>(motorPositions);
 }
 
 armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> startingPos, bool validation){
@@ -747,11 +733,11 @@ armlearn::Input<double> *ArmLearnWrapper::randomGoal(std::vector<uint16_t> start
     } while ((!validation && distanceIsNotGood && !params.progressiveModeMotor) || handNotGood);
 
     // Create the input to return
-    return new armlearn::Input<double>(
-    {
+    return new armlearn::Input<double>({
         (double) (newCartesianCoords[0]), //X
         (double) (newCartesianCoords[1]), //Y
-        (double) (newCartesianCoords[2])}); //Z
+        (double) (newCartesianCoords[2])  //Z
+    }); 
 }
 
 void ArmLearnWrapper::loadTargetCSV() {
@@ -759,7 +745,7 @@ void ArmLearnWrapper::loadTargetCSV() {
 
     std::ifstream file("params/AllTarget.csv");
     if (!file.is_open()) {
-        std::cerr << "Error: unable to open file" << std::endl;
+        std::cerr << "Error: unable to open file AllTarget.csv" << std::endl;
     }
 
     std::string line;
@@ -1198,15 +1184,11 @@ bool ArmLearnWrapper::hasCollision(std::vector<double> armSegment, std::vector<d
         }
     }
 
-
-
     return true;
-
-
 }
 
 void ArmLearnWrapper::setIsMoving(bool newIsMoving){
-    isMoving = isMoving;
+    isMoving = newIsMoving;
     isCycling = false;
 }
 

@@ -43,8 +43,6 @@ include_directories("${CMAKE_SOURCE_DIR}/lib/JsonCpp")
 find_package(GEGELATI)
 
 
-
-
 # includes eigen
 include_directories (/usr/local/include/eigen3)
 
@@ -70,7 +68,8 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenInf.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSeedsGraphTraversal.cpp)
 
 
 
@@ -106,12 +105,10 @@ list(APPEND
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h)
 
 
-# armMultipleTraining: Create Graph Pruner
+# Execute a TPG from C code, after code generation by graphPruner
 add_executable(armCodeGen ${armgegelati_files})
 target_link_libraries(armCodeGen ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
 target_compile_definitions(armCodeGen PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
-
-
 
 
 # armGrabGegelati: Control the robotic arm with gegelati.
@@ -128,7 +125,8 @@ list(APPEND
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/graphPruner.cpp)
 
 
-# armMultipleTraining: Create Graph Pruner
+# armGraphPruner: Reduce the size of the trained TPG graph by generating C code, making 
+# it free from the gegelati library. Removes unnecessary parts of the graph called hitchickers. 
 add_executable(armGraphPruner ${armgegelati_files})
 target_link_libraries(armGraphPruner ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
 target_compile_definitions(armGraphPruner PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
@@ -151,6 +149,21 @@ target_compile_definitions(armGrabGegelati PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}
 add_executable(armGrabStandalone ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainGrabStandalone.cpp)
 target_link_libraries(armGrabStandalone /usr/local/lib/libarmlearn.so)
 
+
+list(REMOVE_ITEM
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/resultTester.h)
+list(APPEND
+        armgegelati_files
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/mainSeedsGraphTraversal.cpp)
+
+
+# mainSeedsGraphTraversal: generate seeds in PreCalcul/seeds_nbActionsToTerminal.h for inference 
+# using graph traversal
+add_executable(mainSeedsGraphTraversal ${armgegelati_files})
+target_link_libraries(mainSeedsGraphTraversal ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)
+target_compile_definitions(mainSeedsGraphTraversal PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
 
 
 # *******************************************

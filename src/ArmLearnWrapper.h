@@ -2,6 +2,14 @@
 #define ARM_LEARN_WRAPPER_H
 
 #include <random>
+#include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <vector>
+#include <utility>
+#include <random>
+#include <algorithm>
+#include <cstdlib> 
 
 #include <gegelati.h>
 #include <armlearn/nowaitarmsimulator.h>
@@ -50,22 +58,22 @@ protected:
     /// Randomness control
     Mutator::RNG rng;
 
-    /// Current motor position 
+    /// Current motor position
     Data::PrimitiveTypeArray<double> motorPos;
 
-    /// Current hand of the arm position
+    /// Current position of the hand in cartesian coordonates
     Data::PrimitiveTypeArray<double> cartesianHand;
 
-    /// Current goal position
+    /// Current position of the target in cartesian coordonates
     Data::PrimitiveTypeArray<double> cartesianTarget;
 
-    /// Current goal position
+    /// Difference between the hand and the target in cartesian coordonates
     Data::PrimitiveTypeArray<double> cartesianDiff;
     
-    /// Current motor speed
+    /// Current motor speed 
     Data::PrimitiveTypeArray<double> dataMotorSpeed;
 
-    /// converter used to covnert motorPos to cartesionPos
+    /// converter used to convert motorPos to cartesionPos
     armlearn::kinematics::Converter *converter;
 
     /// Score of the training
@@ -96,7 +104,8 @@ protected:
     /// Counter used to know if the currents limits have to be upgraded
     uint16_t counterIterationUpgrade = 0;
 
-    /// Initial starting position of the arm
+    /// Initial fixed starting position of the arm
+    /// The arm will always start from this position if the initStartingPos is choosen.
     std::vector<uint16_t> initStartingPos = BACKHOE_POSITION;
 
     /// Current Starting position of the arm
@@ -116,7 +125,6 @@ protected:
 
     /// Target currently used to move the arm.
     armlearn::Input<double> *currentTarget;
-
 
     /// Vector that store all the motors positions of an episode
     std::vector<std::vector<uint16_t>> allMotorPos;
@@ -163,7 +171,6 @@ protected:
 
     double timeEnv = 0;
     std::shared_ptr<std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>> checkpointEnv;
-    
 
 public:
 
@@ -267,7 +274,6 @@ public:
     // Add the indices and scoresgiven to the scoreTrajectories vector
     void addToScoreTrajectories(int index, double score);
 
-
     ///@brief Inherited from LearningEnvironment.
     double getScore() const override;
 
@@ -318,10 +324,13 @@ public:
     /**
      * @brief Create and return a random starting position for the arm
 
-     * @param[in] coefSize coefficient between 0 and 1 suse to be check that the random starting position generated as a distance bigger than coefSize * limit
-     * @param[in] validation true if the target is for the validation, else false
+     * The function generates a random valid starting motor position for a robotic arm, 
+     * based on Cartesian goals and constraints (like distance, collisions, and validation mode).
+     * 
+     * @param[in] validation true if the starting position is for validation, else false
+     * @return a dynamically allocated std::vector<uint16_t> representing the chosen motor positions.
      */
-    std::vector<uint16_t>* randomStartingPos(bool validation);
+    std::vector<uint16_t>* generateRandomStartingPos(bool validation);
 
     /**
      * @brief Create and return a random targets in cartesian coordonates
@@ -389,7 +398,6 @@ public:
      */ 
     std::vector<uint16_t> getMotorsPos();
 
-
     /**
      * @brief Set generation
      */ 
@@ -431,11 +439,9 @@ public:
     bool motorCollision(std::vector<uint16_t> newMotorPos);
 
     bool hasCollision(std::vector<double> armSegment, std::vector<double> baseSegment);
-
     
     void setTerminal(bool newTerminal);
 
     void incrValKillCollision();
 };
-
 #endif
