@@ -13,7 +13,8 @@
 #include "ArmLearnWrapper.h"
 #include "armLearningAgent.h"
 
-#define DEFAULT_NB_SEEDS_TO_SEARCH 2E1 // number of seeds used to find graph traversals
+#define DEFAULT_NB_SEEDS_TO_SEARCH 2E2 // number of seeds used to find graph traversals
+#define MAX_NB_SEEDS_TO_SEARCH 2E2 // to avoid infinite loop in complex LE and TPG
 #define NB_VALUES_PER_CLASS 25 // number of occurences of each graph traversal we want to have
 // #define VERBOSE
 
@@ -63,6 +64,10 @@ void storeToHeaderFile(
 /// @param handler the DataHandler to extract doubles from
 /// @return a vector of doubles extracted from the DataHandler
 std::vector<double> extractAllDoubles(const Data::DataHandler& handler);
+
+/// @brief  Function to print the content of mapITI
+/// @param mapITI 
+void print_mapITI(std::map<std::list<int>, std::vector<TPG::InferenceTraceInfos>> mapITI);
 
 
 int main(int argc, char *argv[])
@@ -166,8 +171,7 @@ int main(int argc, char *argv[])
     /* TPG Inference */
 
     int continue_search = 0;
-    int total_nb_seeds = 0;
-    int max_nb_seeds_to_search = 2E1; // to avoid infinite loop
+    int nbSeedsTried = 0;
 
     do
     {
@@ -181,8 +185,6 @@ int main(int argc, char *argv[])
             // Update/Generate the first training validation trajectories
             armLE.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
         }
-
-        std::cout << "completed updateTrainingValidationTrajectories()"<< std::endl;
 
         for (int j = 0; j < nbSeedsToSearch; j++)
         {
@@ -206,12 +208,6 @@ int main(int argc, char *argv[])
                 std::vector<double> extracted = extractAllDoubles(handler);
                 dataSourcesLE.insert(dataSourcesLE.end(), extracted.begin(), extracted.end());
             }
-            if (j==0){  //afficher les dataSourcesLE
-            std::cout << "dataSourcesLE: ";
-            for (double d : dataSourcesLE) {
-                std::cout << d << " ";
-            }
-            std::cout << std::endl;}
           
 
             // execute one action, trace it, and move to the next seed.
@@ -276,18 +272,7 @@ int main(int argc, char *argv[])
 
         // Display status of the map of inferenceTraceInfos
         std::cout << "\nStatus of mapITI after this round:\n";
-        for (const auto& [traceTeams, vecITI] : mapITI) {
-            std::cout << "[";
-            bool first = true;
-            for (int t : traceTeams) {
-                if (!first) std::cout << " -> ";
-                std::cout << "T" << t;
-                first = false;
-            }
-            std::cout << "] : " << vecITI.size() << " / " << NB_VALUES_PER_CLASS << std::endl;
-        }
-        std::cout << "Total traversals: " << mapITI.size() << std::endl;
-
+        print_mapITI(mapITI);
 
         // Do we have a balanced map ? i.e the same number of values for each graph traversal (NB_VALUES_PER_CLASS)
         // if yes, stop searching
@@ -304,36 +289,54 @@ int main(int argc, char *argv[])
 
         // if not balanced -> continue_serach 
         // but we need to limit the time spent in this loop at some point
-        // so we stop if we reach max_nb_seeds_to_search
+        // so we stop if we reach MAX_NB_SEEDS_TO_SEARCH
         // When the Learning Environment is more complex, the size of the TPG is larger
         // and the number of graph traversals can be very large. Additionnaly, the time to 
         // compute one inference and to reset the LE is also larger.
         // So we need to to bound this loop to avoid spending days in it.
-        // The value of max_nb_seeds_to_search can be increased if the user wants to spend more
+        // The value of MAX_NB_SEEDS_TO_SEARCH can be increased if the user wants to spend more
         // time in this loop to try to get a more balanced map.
-        continue_search = !balanced && (total_nb_seeds < max_nb_seeds_to_search);
-        total_nb_seeds += nbSeedsToSearch;
+        continue_search = !balanced && (nbSeedsTried < MAX_NB_SEEDS_TO_SEARCH);
+        nbSeedsTried += nbSeedsToSearch;
 
         // clear vecInferenceTraceInfos
         executionInfos.clear();
 
     } while (continue_search);
 
-    std::cout << "total seeds searched: " << total_nb_seeds << std::endl;
+    std::cout << "total seeds searched: " << nbSeedsTried << std::endl;
     std::cout << "graph traversal: " << mapITI.size() << std::endl;
-    for (std::map<std::list<int>, std::vector<TPG::InferenceTraceInfos>>::iterator it = mapITI.begin(); it != mapITI.end(); it++)
-    {
-        const std::list<int> &teams = it->first;
-        const std::vector<TPG::InferenceTraceInfos> &iti = it->second;
-
-        std::cout << "[";
-        for (int t : teams)
-        {
-            std::cout << "T" << t << ", ";
+    
+    // If we exit the loop because we reached MAX_NB_SEEDS_TO_SEARCH, we may have some graph traversals
+    // which have less than NB_VALUES_PER_CLASS values.
+    // To avoid having less than NB_VALUES_PER_CLASS values for some graph traversals,
+    // we duplicate some values until we reach NB_VALUES_PER_CLASS for each graph traversal.
+    // This is not ideal, but it allows to have a balanced dataset for the evaluation.
+    // The duplication is done by duplicating the last value of the vector for each graph traversal.
+    // The other option would be to discard the graph traversals which have less than NB_VALUES_PER_CLASS values,
+    // but this would lead to having less graph traversals and would not be ideal either.
+    // Or at last, we could have a more complex logic to duplicate values, by copying and slighlty modifying
+    // some values to create new ones (for instance, changing the target position slightly)
+    //  but this would be more complex to implement.
+    if (nbSeedsTried >= MAX_NB_SEEDS_TO_SEARCH) { 
+        for (auto& [traceTeamIds, infosVec] : mapITI) {
+            while (infosVec.size() < NB_VALUES_PER_CLASS) {
+                if (!infosVec.empty()) {
+                    infosVec.push_back(infosVec.back()); // Duplicate last InferenceTraceInfos
+                }
+                else {
+                    // Optionally handle empty vector (should not happen if logic is correct)
+                    std::cerr << "Warning: Unable to duplicate InferenceTraceInfos for empty vector." << std::endl;
+                    std::cerr << "There should be at least one InferenceTraceInfos per graph traversal." << std::endl;
+                    break;
+                }
+            }
         }
-        std::cout << "]" << std::endl;
-        std::cout << iti.size() << "\n";
     }
+
+    // print the final mapITI content in blue to differentiate from previous prints
+    std::cout << "\n\033[1;34m----- Final status of mapITI -----\033[0m\n";
+    print_mapITI(mapITI);
 
     // Write data to CSV file
     storeToHeaderFile("outLogs/PreCalcul/seeds_nbActionsToTerminal.h", mapITI, armLE.getDataSourcesInfo(), randomizeSeeds);
@@ -356,6 +359,21 @@ int main(int argc, char *argv[])
     std::cout << "End program" << std::endl;
 
     return 0;
+}
+
+ void print_mapITI(std::map<std::list<int>, std::vector<TPG::InferenceTraceInfos>> mapITI){
+
+    for (const auto& [traceTeams, vecITI] : mapITI) {
+        std::cout << "[";
+        bool first = true;
+        for (int t : traceTeams) {
+            if (!first) std::cout << " -> ";
+            std::cout << "T" << t;
+            first = false;
+        }
+        std::cout << "] : " << vecITI.size() << " / " << NB_VALUES_PER_CLASS << std::endl;
+    }
+    std::cout << "Total traversals: " << mapITI.size() << std::endl;
 }
 
 std::vector<double> extractAllDoubles(const Data::DataHandler& handler)
