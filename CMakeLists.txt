@@ -73,7 +73,7 @@ list(REMOVE_ITEM
 
 
 
-# armGegelati: Training Gegelati on the ArmLearnWrapper learning environment
+# armGegelati: Training Gegelati on the ArmLearnWrapper learning environment -> main.cpp
 add_executable(armGegelati ${armgegelati_files})
 
 target_link_libraries(armGegelati ${GEGELATI_LIBRARIES} /usr/local/lib/libarmlearn.so)

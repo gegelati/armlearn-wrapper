@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     /*
      * This program needs 2 arguments :
      * - argv[1] : path to the .dot file of the TPG to be used, if relative path, starts from call pwd
-     * - argv[2] : seed
+     * - argv[2] : seed to intialize the PRNG
      */
 
     /* Checking arguments */
@@ -191,12 +191,8 @@ int main(int argc, char *argv[])
             // generate the seed, it is used to find an initial value for each dataSource 
             // of the LearningEnvironment
         
-            // std::cout << "searching seed: " << j << std::endl;
-
             // set the inital arm Learn Wrapper conditions using the seed
             armLE.reset(j, Learn::LearningMode::TESTING, j, 0);
-
-            // std::cout << "reseted seed: " << j << std::endl;
 
             // get the data sources from the LE after reset to store them in the inferenceTraceInfos   
             std::vector<std::reference_wrapper<const Data::DataHandler>> dataHandlers = armLE.getDataSources();
@@ -208,12 +204,9 @@ int main(int argc, char *argv[])
                 std::vector<double> extracted = extractAllDoubles(handler);
                 dataSourcesLE.insert(dataSourcesLE.end(), extracted.begin(), extracted.end());
             }
-          
 
             // execute one action, trace it, and move to the next seed.
             tee.executeFromRoot(*root);
-
-            // std::cout << "executed seed: " << j << std::endl;
 
             // retrieve graph traversal informations from TPG and tee
             executionInfos.analyzeExecution(tee, tpgGraph, j, dataSourcesLE);
