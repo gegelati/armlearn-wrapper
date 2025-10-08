@@ -1,4 +1,3 @@
-
 #include <fstream>
 #include <iostream>
 #include <json.h>
@@ -11,8 +10,8 @@ void TrainingParameters::readConfigFile(const char* path, Json::Value& root)
     ifs.open(path);
 
     if (!ifs.is_open()) {
-        std::cerr << "Error : specified param file doesn't exist : " << path
-                  << std::endl;
+        std::cerr << "Error : specified param file doesn't exist : " << path << std::endl;
+        std::cerr << "\033[1;31mmake sure you are not executing from a different directory than the one containing the params folder.\033[0m" << std::endl;
         throw Json::Exception("aborting");
     }
 
@@ -257,6 +256,5 @@ void TrainingParameters::loadParametersFromJson(const char* path)
 {
     Json::Value root;
     readConfigFile(path, root);
-
     setAllParamsFrom(root);
 }
