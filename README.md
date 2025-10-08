@@ -43,5 +43,18 @@ $ singularity run --bind outLogs/:GRETSI2025-Artifacts/armlearn-wrapper/outLogs 
 ## How does this work ?
 The armlearn-wrapper is an application using a Gegelati learner on an armlearn task. Gegelati provides a way to generate and train TPG (agents), and armlearn handles the arm simulation during the evaluation.  
 
+## About the learning strategies
+
+A complementary Readme has been written to help the reader understand the learning strategies for training the AI agents. 
+Informations include: 
+- Objective of the learning process
+- Possible initial positions
+- Possible target positions 
+- Input values fed to the AI agent by the learning environment (states)
+- Output values transmitted from the AI agent to the learning environment (action)
+- fitness function (reward shapping)
+- Methods for evaluation
+README-LEARNING-STRATEGY.md
+
 ## License
 This project is distributed under the CeCILL-C license (see LICENSE file).

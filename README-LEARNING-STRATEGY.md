@@ -42,3 +42,6 @@ Pour être sûr que des coordonnées données soient atteignables par le bras, i
 - Génération de x (souvent 1000) cibles et affichage de la dernière position du bras à chaque simulation, utilisé pour obtenir des statistiques de résultats (runEvals)
 - Execution d'une trajectoire prédéfinie avec le bras "physique". Pour ce faire, on prend chaque point de la trajectoire dans l'ordre et on effectue une simulation dessus. On prend les positions de moteurs d'une frame sur n, (une sur 50 par exemple), et on les ajoute dans une liste de positions. Ensuite, armlearn s'occupe d'effectuer la trajectoire. (runRealArmAuto)
 - Deplacement vers des coordonnées spécifiées par l'utilisateur avec le bras "physique". (runRealArmByHand)
+
+
+notes from Quentin Vacher.
