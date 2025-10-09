@@ -248,6 +248,12 @@ void TrainingParameters::setParameterFromString(const std::string& param, Json::
         killIfCollision = (bool)value.asBool();
         return;
     }
+
+    if (param == "instrSetName"){
+        // its a higher level parameter, we don't need to handle it here
+        //instrSetName = (std::string)value.asString();
+        return;
+    }
     // we didn't recognize the symbol
     std::cerr << "Ignoring unknown parameter " << param << std::endl;
 }
