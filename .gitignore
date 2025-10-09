@@ -63,3 +63,5 @@ Thumbs.db
 # VsCode generated files
 **/.vscode/
 
+# Apptainer/ Singularity container
+container/gegelati-armlearn.sif
