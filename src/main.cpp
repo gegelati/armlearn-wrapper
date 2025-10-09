@@ -6,7 +6,6 @@
 #include <fstream>
 #include <filesystem>
 #include <iostream>
-#include <unistd.h>
 
 #include <gegelati.h>
 #include "instructions.h"
@@ -59,20 +58,15 @@ int main() {
 	fillInstructionSet(set, trainingParams);
 
 
-
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
-
 
     // Prompt the number of threads
     std::cout << "Number of threads: " << params.nbThreads << std::endl;
 
-
-
     // Generate validation targets.
     if(params.doValidation && !trainingParams.loadValidationTrajectories){
         armLearnEnv.updateValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
-        std::cout << "Validation trajectories generated." << std::endl;
     }
 
 
@@ -80,6 +74,7 @@ int main() {
         // Update/Generate the first training validation trajectories
         armLearnEnv.updateTrainingValidationTrajectories(params.nbIterationsPerPolicyEvaluation);
     }
+
 
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
@@ -99,8 +94,6 @@ int main() {
     std::atomic<bool> exitProgram = false; // (set to false by other thread)
 #endif
     }
-
-
 
     // If a validation target is done
     bool doUpdateLimits = (trainingParams.progressiveModeTargets || trainingParams.progressiveModeStartingPos);
@@ -136,7 +129,6 @@ int main() {
         la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
     } else {
 
-        std::cout << "Training for " << params.nbGenerations << " generations." << std::endl;
 
         // File for printing best policy stat.
         std::ofstream stats;
