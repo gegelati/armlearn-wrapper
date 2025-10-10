@@ -97,7 +97,7 @@ int main(int argc, char** argv ){
     root = dotGraph.getRootVertices().front();
 
     // Play the game again to check the result remains the same.
-    std::ofstream ofs2 ((path + "outLogs/tpg_pruned.txt").c_str(), std::ofstream::out);
+    std::ofstream ofs2 ((path + "outLogs/CodeGen/tpg_pruned.txt").c_str(), std::ofstream::out);
     nbActions = 0;
     nbEpisodes = 0;
     double scorePruned = 0;
@@ -144,7 +144,7 @@ int main(int argc, char** argv ){
     // Export pruned dot file
     std::cout << "Printing pruned dot file." << std::endl;
     char bestDot[150];
-    sprintf(bestDot, (path + "outLogs/best_root_pruned.dot").c_str());
+    sprintf(bestDot, (path + "outLogs/CodeGen/best_root_pruned.dot").c_str());
     File::TPGGraphDotExporter dotExporter(bestDot, dotGraph);
     dotExporter.print();
 
