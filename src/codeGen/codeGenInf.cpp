@@ -18,11 +18,9 @@ extern "C" {
 
 int main() {
 
-
     TrainingParameters trainingParams;
     trainingParams.loadParametersFromJson("params/trainParams.json");
     trainingParams.testing = true;
-
 
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(1500, trainingParams, true);
@@ -43,7 +41,6 @@ int main() {
 
     armLearnEnv.loadValidationTrajectories();
 
-
     int nbEpisodes = 0;
     double scoreOrig = 0;
     int nbActionsEp = 0;
@@ -56,7 +53,8 @@ int main() {
             armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
             nbEpisodes++;
         }
-    	auto actionID = inferenceTPG();
+    	double actionID = -1;
+        inferenceTPG(&actionID);
         armLearnEnv.doAction(actionID);
         nbActionsEp++;
         nbActions++;
