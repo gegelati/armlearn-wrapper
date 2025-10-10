@@ -23,6 +23,12 @@ int main(int argc, char** argv ){
 
     std::string path = "";
 
+    // Check if outLogs/CodeGen exists, if not, create it
+    std::string codeGenPath = (path + "outLogs/CodeGen/").c_str();
+    if(!std::filesystem::exists(codeGenPath)){
+        std::filesystem::create_directories(codeGenPath);
+    }
+
     TrainingParameters trainingParams;
     trainingParams.loadParametersFromJson((path + "params/trainParams.json").c_str());
 
@@ -39,7 +45,6 @@ int main(int argc, char** argv ){
 	Instructions::Set set;
 	fillInstructionSet(set, trainingParams);
 
-
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
 
@@ -50,7 +55,7 @@ int main(int argc, char** argv ){
     la.init(trainingParams.seed);
 
     // Load graph
-    std::cout << "Loading dot file from " << file << "." << std::endl;
+    std::cout << "Loading dot file from " << file << std::endl;
 
     auto &tpg = *la.getTPGGraph();
     Environment dotEnv = tpg.getEnvironment();
@@ -59,10 +64,7 @@ int main(int argc, char** argv ){
     dot.importGraph();
     const TPG::TPGVertex* root = dotGraph.getRootVertices().front();
 
-
-
     armLearnEnv.loadValidationTrajectories();
-
 
     // Play the game once to identify useful edges & vertices
     std::ofstream ofs ((path + "outLogs/tpg_orig.txt").c_str(), std::ofstream::out);
@@ -93,11 +95,10 @@ int main(int argc, char** argv ){
     ((const TPG::TPGFactoryInstrumented&)dotGraph.getFactory()).clearUnusedTPGGraphElements(dotGraph);
     dotGraph.clearProgramIntrons();
 
-
     root = dotGraph.getRootVertices().front();
 
     // Play the game again to check the result remains the same.
-    std::ofstream ofs2 ((path + "outLogs/CodeGen/tpg_pruned.txt").c_str(), std::ofstream::out);
+    std::ofstream ofs2 ((codeGenPath + "tpg_pruned.txt").c_str(), std::ofstream::out);
     nbActions = 0;
     nbEpisodes = 0;
     double scorePruned = 0;
@@ -136,7 +137,7 @@ int main(int argc, char** argv ){
     // Print in file
     char bestPolicyStatsPath[150];
     std::ofstream bestStats;
-    sprintf(bestPolicyStatsPath, (path + "outLogs/CodeGen/best_root_pruned_stats.md").c_str());
+    sprintf(bestPolicyStatsPath, (codeGenPath + "best_root_pruned_stats.md").c_str());
     bestStats.open(bestPolicyStatsPath);
     bestStats << ps;
     bestStats.close();
@@ -144,24 +145,14 @@ int main(int argc, char** argv ){
     // Export pruned dot file
     std::cout << "Printing pruned dot file." << std::endl;
     char bestDot[150];
-    sprintf(bestDot, (path + "outLogs/CodeGen/best_root_pruned.dot").c_str());
+    sprintf(bestDot, (codeGenPath + "best_root_pruned.dot").c_str());
     File::TPGGraphDotExporter dotExporter(bestDot, dotGraph);
     dotExporter.print();
 
-
-    File::TPGGraphDotImporter dotImporter((path + "outLogs/CodeGen/best_root_pruned.dot").c_str(), dotEnv, tpg);
+    File::TPGGraphDotImporter dotImporter((codeGenPath + "best_root_pruned.dot").c_str(), dotEnv, tpg);
     trainingParams.testPath = (path + "outLogs").c_str();
     trainingParams.testing = true;
     la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
-    
-    
-
-    // Print graph
-    std::string codeGenPath = (path + "outLogs/CodeGen/").c_str();
-    std::cout<<codeGenPath<<std::endl;
-    if(!std::filesystem::exists(codeGenPath)){
-        std::filesystem::create_directory(codeGenPath);
-    }
 
     std::cout << "Printing C code." << std::endl;
 	CodeGen::TPGGenerationEngineFactory factory(CodeGen::TPGGenerationEngineFactory::switchMode);
