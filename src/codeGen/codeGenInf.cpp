@@ -60,7 +60,7 @@ int main() {
         nbActions++;
     }
     scoreOrig /= 100;
-    armLearnEnv.logTestingTrajectories(true);
+    constexpr bool USING_GEGELATI = true; 
+    armLearnEnv.logTestingTrajectories(USING_GEGELATI, "outLogs/CodeGen");
     std::cout << "Total score: " << scoreOrig << std::endl;
-
 }

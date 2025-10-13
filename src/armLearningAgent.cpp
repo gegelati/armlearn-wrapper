@@ -214,7 +214,6 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
             }
         }
 
-
         // Push back the id with the score
         trajectoriesScore.push_back(std::make_pair(iterationNumber, le.getScore()));
     }
@@ -231,7 +230,8 @@ std::shared_ptr<Learn::EvaluationResult> Learn::ArmLearningAgent::evaluateJob(
     }
 
     if(trainingParams.testing){
-        ((ArmLearnWrapper&)le).logTestingTrajectories(true);
+        // the testPath is outLogs by default
+        ((ArmLearnWrapper&)le).logTestingTrajectories(true, "outLogs");
     }
 
     // Create the EvaluationResult

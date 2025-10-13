@@ -955,10 +955,10 @@ void ArmLearnWrapper::loadValidationTrajectories() {
     }
 }
 
-void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati){
+void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati, std::string exportDirPath){
 
     // Nom du fichier CSV
-    std::string fileName = (params.testPath + ((usingGegelati) ? "/outputGegelati.csv": "/outputSAC.csv")).c_str();
+    std::string fileName = (exportDirPath + ((usingGegelati) ? "/outputGegelati.csv": "/outputSAC.csv")).c_str();
 
     // Ouverture du fichier en mode écriture
     std::ofstream outputFile(fileName);
@@ -986,7 +986,7 @@ void ArmLearnWrapper::logTestingTrajectories(bool usingGegelati){
         outputFile.close();
 
     } else {
-        std::cout<<"File dont exist : "<<fileName<<std::endl;
+        std::cout << "File don't exist : " << fileName << std::endl;
     }
     allValidationInfos.clear();}
 

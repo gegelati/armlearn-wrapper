@@ -397,7 +397,7 @@ public:
     void loadValidationTrajectories();
 
     // Log the trajectories store in allValidationInfos vector
-    void logTestingTrajectories(bool usingGegelati);
+    void logTestingTrajectories(bool usingGegelati, std::string exportDirPath);
 
     /**
      * @brief Inherited via DeviceLearner

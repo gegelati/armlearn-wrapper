@@ -1,6 +1,6 @@
 /**
- * File generated with GEGELATI v1.3.1
- * On the 2024-04-17 17:25:05
+ * File generated with GEGELATI v2.0.0
+ * On the 2025-10-10 15:12:45
  * With the CodeGen::TPGGenerationEngine.
  */
 
@@ -29,7 +29,7 @@ int bestProgram(double *results, int nb) {
 
 enum vertices {T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, A16, A17, A18, A19, A20, A21, A22, };
 
-int inferenceTPG() {
+void inferenceTPG(double *actions) {
 	enum vertices currentVertex = T15;
 	while(1) {
 		switch (currentVertex) {
@@ -256,31 +256,31 @@ int inferenceTPG() {
 			break;
 		}
 		case A16: {
-			return 0;
+			actions[0]=0;
 			break;
 		}
 		case A17: {
-			return 1;
+			actions[0]=1;
 			break;
 		}
 		case A18: {
-			return 2;
+			actions[0]=2;
 			break;
 		}
 		case A19: {
-			return 4;
+			actions[0]=4;
 			break;
 		}
 		case A20: {
-			return 5;
+			actions[0]=5;
 			break;
 		}
 		case A21: {
-			return 6;
+			actions[0]=6;
 			break;
 		}
 		case A22: {
-			return 7;
+			actions[0]=7;
 			break;
 		}
 		}
