@@ -14,6 +14,7 @@
 #include <limits.h>
 #include <stddef.h>
 #include <inttypes.h>
+#include "fixedptc/fixedptc.h"
 
 /* The definition of the inline functions in their header file is intentional
  * to avoid “unresolved external” errors from the linker. That error will occur if 
