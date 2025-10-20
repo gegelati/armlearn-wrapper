@@ -154,8 +154,9 @@ protected:
     /// Vector that contain the indices of the trajectories and their best score. Used if trajectory deletion is activated
     std::vector<std::pair<int, double>> scoreTrajectories;
 
-    /// True if gegelati is running else an other algorithm : SAC for now
-    bool gegelatiRunning = true;
+    // if the algorithm running (TPG here but can be anything) is deterministic, this var is true. We are in the context of discrete and single action algo (some version of the TPG)
+    // for SAC (non-deterministic because of entropy), it should be false
+    bool algoIsDeterministic = true;
 
     /// Motor speed : Use only if trainingParams.actionSpeed is true. speed is in motorPoint/iteration
     std::vector<double> motorSpeed = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -170,6 +171,7 @@ protected:
     std::vector<std::vector<double>> dataTarget;
 
     /// Vector containing base segments to avoid collision with
+    // Vector contains xA, xB, yA, yB
     std::vector<std::vector<double>> baseSegments = {
         {68, 90, 9, 9}, {68, 68, 9, 95}, {15, 68, 95, 95}, {15, 15, 95, 151},
         {-68, -90, 9, 9}, {-68, -68, 9, 95}, {-15, -68, 95, 95}, {-15, -15, 95, 151},
@@ -214,8 +216,8 @@ public:
      * \param[in] handServosTrained boolean controlling whether the 2 servos
      * controlling the hand of the robotic arm are trained.
      */
-    ArmLearnWrapper(int nbMaxActions, TrainingParameters& params, bool gegelatiRunning, bool handServosTrained = false)
-            : LearningEnvironment((handServosTrained) ? 13 : 9), gegelatiRunning(gegelatiRunning), handServosTrained(handServosTrained),
+    ArmLearnWrapper(int nbMaxActions, TrainingParameters& params, bool algoIsDeterministic, bool handServosTrained = false)
+            : LearningEnvironment((handServosTrained) ? 13 : 9), algoIsDeterministic(algoIsDeterministic), handServosTrained(handServosTrained),
               nbMaxActions(nbMaxActions), motorPos(6), cartesianHand(3), cartesianTarget(3), cartesianDiff(3), dataMotorSpeed((params.actionSpeed) ? 4:0),
               trainingTrajectories(), validationTrajectories(), trainingValidationTrajectories(),
               DeviceLearner(iniController()), params(params) {
@@ -236,7 +238,7 @@ public:
     * \brief Copy constructor for the armLearnWrapper.
     */ 
     ArmLearnWrapper(const ArmLearnWrapper &other) : Learn::LearningEnvironment(other.nbActions), 
-                                                    nbMaxActions(other.nbMaxActions), motorPos(other.motorPos), gegelatiRunning(other.gegelatiRunning),
+                                                    nbMaxActions(other.nbMaxActions), motorPos(other.motorPos), algoIsDeterministic(other.algoIsDeterministic),
                                                     cartesianHand(other.cartesianHand), cartesianTarget(other.cartesianTarget), cartesianDiff(other.cartesianDiff),
                                                     dataMotorSpeed(other.dataMotorSpeed),
                                                     trainingTrajectories(other.trainingTrajectories),
@@ -437,7 +439,7 @@ public:
     /// Get distance from the arm to the target
     double getDistance();
 
-    void setGegelatiRunning(bool isRunning);
+    void setAlgoIsDeterministic(bool isRunning);
 
     void setIsMoving(bool isMoving);
 

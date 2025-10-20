@@ -77,7 +77,7 @@ void ArmLearnWrapper::doAction(double actionID) {
             break;
         case 8:
             motorAction = {0, 0, 0, 0, 0, 0};
-            if(gegelatiRunning && !params.actionSpeed){
+            if(algoIsDeterministic && !params.actionSpeed){
                 isMoving=false;
             }
             break;
@@ -157,8 +157,9 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
         // The arm is not moving
         scaledOutput[0] = inputI;
 
-        // only active for gegelati because SAC is not deterministic
-        if(gegelatiRunning){
+        // if the algorithm running (TPG here but can be anything) is deterministic, this var is true. We are in the context of discrete and single action algo (some version of the TPG)
+        // for SAC (non-deterministic because of entropy), it should be false
+        if(algoIsDeterministic){
             isMoving=false;
         }
 
@@ -185,7 +186,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
 
             // only active for gegelati because SAC is not deterministic
-            if(gegelatiRunning){
+            if(algoIsDeterministic){
                 isMoving=false;
             }
 
@@ -204,7 +205,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
             }
         }
 
-        if(gegelatiRunning){
+        if(algoIsDeterministic){
             isMoving=false;
         }
 
@@ -246,7 +247,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
     reward = computeReward(givePenaltyMoveUnavailable, nbMotorMoving); // Computation of reward
     score += reward;
 
-    if(gegelatiRunning){
+    if(algoIsDeterministic){
         score = -1 * getDistance();
 
         if(params.bonusNbIteration){
@@ -258,7 +259,7 @@ void ArmLearnWrapper::executeAction(std::vector<double> motorAction){
 
     }
 
-    if(gegelatiRunning){
+    if(algoIsDeterministic){
         updateAndCheckCycles();
     }
 
@@ -343,13 +344,13 @@ double ArmLearnWrapper::computeReward(bool givePenaltyMoveUnavailable, int nbMot
 
     // If the arm is not moving anymore or is cycling, the reward is multiplied by the number of action normally to come
     double penaltyStopTooSoon = 1;
-    if((!isMoving || isCycling) && gegelatiRunning){
+    if((!isMoving || isCycling) && algoIsDeterministic){
         penaltyStopTooSoon = nbMaxActions - nbActionsDone;
     }
 
     // If the arm has done an unavailable move, the algorithm get a penalty
     double penaltyMoveUnavailable = 0;
-    if (givePenaltyMoveUnavailable && !gegelatiRunning){
+    if (givePenaltyMoveUnavailable && !algoIsDeterministic){
         penaltyMoveUnavailable = params.penaltyMoveUnavailable;
     }
 
@@ -1004,8 +1005,8 @@ std::vector<uint16_t> ArmLearnWrapper::getMotorsPos() {
     return motorPos;
 }
 
-void ArmLearnWrapper::setGegelatiRunning(bool isRunning){
-    gegelatiRunning = isRunning;
+void ArmLearnWrapper::setAlgoIsDeterministic(bool isRunning){
+    algoIsDeterministic = isRunning;
 }
 
 void ArmLearnWrapper::setgeneration(int newGeneration){
@@ -1115,7 +1116,7 @@ bool ArmLearnWrapper::motorCollision(std::vector<uint16_t> newMotorPos){
 
 bool ArmLearnWrapper::hasCollision(std::vector<double> armSegment, std::vector<double> baseSegment){
 
-    // Vector contain xA, xB, yA, yB
+    // Vector contains xA, xB, yA, yB
     if(baseSegment[2] == baseSegment[3]){
 
         if (std::min(armSegment[0], armSegment[1]) > std::max(baseSegment[0], baseSegment[1])){

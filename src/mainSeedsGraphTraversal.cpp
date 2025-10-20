@@ -123,9 +123,10 @@ int main(int argc, char *argv[])
     /* Setup armLearn (simulator of robot arm control) Learning Environment environment and import graph */
 
     // Setup Learning Environment 
-    /// True if gegelati (TPG) is running in the LE, false if its an other algorithm, which would be SAC for instance
-    bool gegelatiRunning = true;
-    ArmLearnWrapper armLE(params.maxNbActionsPerEval, trainingParams, gegelatiRunning);
+    // if the algorithm running (TPG here but can be anything) is deterministic, this var is true. We are in the context of discrete and single action algo (some version of the TPG)
+    // for SAC (non-deterministic because of entropy), it should be false
+    bool algoIsDeterministic = true;
+    ArmLearnWrapper armLE(params.maxNbActionsPerEval, trainingParams, algoIsDeterministic);
     
 
     // Instantiate and init the learning agent
