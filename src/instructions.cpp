@@ -104,26 +104,16 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
         }
     }
     else if(params.instrType == "fixed_point") {
-        auto add = [](double a, double b) -> double { 
-            return fixedpt_to_double(double_to_fixedpt(a) + double_to_fixedpt(b)); };
-        auto minus = [](double a, double b) -> double { 
-            return fixedpt_to_double(double_to_fixedpt(a) - double_to_fixedpt(b)); };
-        auto times = [](double a, double b) -> double { 
-            return fixedpt_to_double(fixedpt_mul(double_to_fixedpt(a), double_to_fixedpt(b))); };
-        auto divide = [](double a, double b) -> double { 
-            return fixedpt_to_double(protected_fixedpt_div(double_to_fixedpt(a), double_to_fixedpt(b))); };
-        auto max = [](double a, double b) -> double { 
-            return fixedpt_to_double(std::max(double_to_fixedpt(a), double_to_fixedpt(b))); };
-        auto cos = [](double a) -> double { 
-            return fixedpt_to_double(fixedpt_cos(double_to_fixedpt(a))); };
-        auto sin = [](double a) -> double { 
-            return fixedpt_to_double(fixedpt_sin(double_to_fixedpt(a))); };
-        auto tan = [](double a) -> double { 
-            return fixedpt_to_double(fixedpt_tan(double_to_fixedpt(a))); };
-        auto exp = [](double a) -> double { 
-            return fixedpt_to_double(fixedpt_exp(double_to_fixedpt(a))); };
-        auto log = [](double a) -> double { 
-            return fixedpt_to_double(fixedpt_ln(double_to_fixedpt(a))); };
+        auto add = [](double a, double b) -> double { return fixedpt_to_double(double_to_fixedpt(a) + double_to_fixedpt(b)); };
+        auto minus = [](double a, double b) -> double { return fixedpt_to_double(double_to_fixedpt(a) - double_to_fixedpt(b)); };
+        auto times = [](double a, double b) -> double { return fixedpt_to_double(fixedpt_mul(double_to_fixedpt(a), double_to_fixedpt(b))); };
+        auto divide = [](double a, double b) -> double { return fixedpt_to_double(protected_fixedpt_div(double_to_fixedpt(a), double_to_fixedpt(b))); };
+        auto max = [](double a, double b) -> double { return fixedpt_to_double(std::max(double_to_fixedpt(a), double_to_fixedpt(b))); };
+        auto cos = [](double a) -> double { return fixedpt_to_double(fixedpt_cos(double_to_fixedpt(a))); };
+        auto sin = [](double a) -> double {  return fixedpt_to_double(fixedpt_sin(double_to_fixedpt(a))); };
+        auto tan = [](double a) -> double { return fixedpt_to_double(fixedpt_tan(double_to_fixedpt(a))); };
+        auto exp = [](double a) -> double { return fixedpt_to_double(fixedpt_exp(double_to_fixedpt(a))); };
+        auto log = [](double a) -> double { return fixedpt_to_double(fixedpt_ln(double_to_fixedpt(a))); };
 
         set.add(*(new Instructions::LambdaInstruction<double, double>(add, "$0 = $1 + $2;")));
         set.add(*(new Instructions::LambdaInstruction<double, double>(minus, "$0 = $1 - $2;")));
