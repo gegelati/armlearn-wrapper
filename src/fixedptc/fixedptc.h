@@ -132,6 +132,10 @@ typedef	__uint128_t fixedptud;
 #define fixedpt_to_double(T) ((double) ((T)*((double)(1)/(double)(1L << FIXEDPT_FBITS))))
 #define double_to_fixedpt(T) ((fixedpt) (T * (1 << FIXEDPT_FBITS)))
 
+// 32-bit integer versions
+#define fixedpt_to_int32(T) ((int32_t) ((T) >> FIXEDPT_FBITS))
+#define int32_to_fixedpt(T) ((fixedpt) ((fixedptd)(T) << FIXEDPT_FBITS))
+
 /* Multiplies two fixedpt numbers, returns the result. */
 static inline fixedpt
 fixedpt_mul(fixedpt A, fixedpt B)

@@ -56,5 +56,19 @@ Informations include:
 - Methods for evaluation
 README-LEARNING-STRATEGY.md
 
+## Learning Environment supports multiple types  
+
+The Learning Environment can be interfaced with the following types when performing inference **{double, float, int, fixedpt}**. 
+Its up to you to **provide a TPG that uses those types** to do its internal computation. TPG code should be inserted in src/codeGen. 
+
+To **compile the Learning Environment for a specific type**, a preprocessor directive must be used. CMake can therefore be configured to pass this directive at compile time. 
+```
+$cp -r my/tpg/codeGen/codeGenArmlearn* src/codeGen/.
+$mkdir build & &cd build
+$CXXFLAGS="-DUSE_DFIXEDPT" CFLAGS="-DUSE_FIXEDPT" cmake ..
+$make armCodeGen
+```
+
+
 ## License
 This project is distributed under the CeCILL-C license (see LICENSE file).

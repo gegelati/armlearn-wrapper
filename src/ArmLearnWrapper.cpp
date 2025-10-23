@@ -8,16 +8,16 @@ void ArmLearnWrapper::computeInput() {
     auto deviceState = DeviceLearner::getDeviceState();
 
     std::vector<uint16_t> newMotorPos;
-    int indInput = 0;
+    int idInput = 0;
 
     // For each motor and each value of motor (here value is only position)
     for (auto &motorState : deviceState) {
         for (unsigned short &value : motorState) {
             // Get the value
-            motorPos.setDataAt(typeid(double), indInput, value);
+            motorPos.setDataAt(typeid(double), idInput, value);
+            motorPos_typeInf.setDataAt(typeid(typeInf), idInput, convEnvToInf((double) value));
             newMotorPos.emplace_back(value);
-            indInput++;
-
+            idInput++;
         }
     }
 
@@ -27,17 +27,22 @@ void ArmLearnWrapper::computeInput() {
     // For each motor, save the position and the relative position with the target
     for (int i = 0; i < newCartesianCoords.size(); i++) {
         cartesianHand.setDataAt(typeid(double), i, newCartesianCoords[i]);
+        cartesianHand_typeInf.setDataAt(typeid(typeInf), i, convEnvToInf(newCartesianCoords[i]));
         cartesianTarget.setDataAt(typeid(double), i, this->currentTarget->getInput()[i]);
+        cartesianTarget_typeInf.setDataAt(typeid(typeInf), i, convEnvToInf(this->currentTarget->getInput()[i]));
         cartesianDiff.setDataAt(typeid(double), i, this->currentTarget->getInput()[i] - newCartesianCoords[i]);
+        cartesianDiff_typeInf.setDataAt(typeid(typeInf), i, convEnvToInf(this->currentTarget->getInput()[i] - newCartesianCoords[i]));
     }
 }
 
 std::vector<std::reference_wrapper<const Data::DataHandler>> ArmLearnWrapper::getDataSources() {
     auto result = std::vector<std::reference_wrapper<const Data::DataHandler>>();
-    result.emplace_back(cartesianTarget);
-    result.emplace_back(cartesianHand);
-    result.emplace_back(cartesianDiff);
-    result.emplace_back(motorPos);
+    result.emplace_back(cartesianTarget_typeInf);
+    result.emplace_back(cartesianHand_typeInf);
+    result.emplace_back(cartesianDiff_typeInf);
+    result.emplace_back(motorPos_typeInf);
+    // not used for the moment, should be adapted to typeInf too if used
+    // as well as dataMotorSpeed_typeInf.setDataAt(...)
     if (params.actionSpeed) result.emplace_back(dataMotorSpeed);
     return result;
 }
@@ -50,7 +55,7 @@ void ArmLearnWrapper::doAction(double actionID) {
     double step  = params.sizeAction;
 
     // Get the action
-    switch ((uint64_t)actionID) {
+    switch ((uint8_t)actionID) {
         case 0:
             motorAction = {step, 0, 0, 0, 0, 0};
             break;

@@ -27,6 +27,12 @@ else()
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
+# Allow additional flags to be passed at make time
+# E.g. CXXFLAGS="-DUSE_FIXEDPT" CFLAGS="-DUSE_FIXEDPT" cmake
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CXXFLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} $ENV{CFLAGS}")
+
+
 # Add definitions for testing purposes
 if(${TESTING})
     MESSAGE("Testing mode")
@@ -69,7 +75,9 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenInf.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSeedsGraphTraversal.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSeedsGraphTraversal.cpp
+        )
 
 
 
@@ -102,7 +110,8 @@ list(APPEND
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenInf.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.cpp)
 
 
 # Execute a TPG from C code, after code generation by graphPruner

@@ -1,20 +1,11 @@
 #include <iostream>
+#include <filesystem>
 
-extern "C" {
 #include "externHeader.h"
 #include "codeGenArmlearn.h"
-	/// instantiate global variable used to communicate between the TPG and the environment
-	double* in1;
-    double* in2;
-    double* in3;
-    double* in4;
-}
-
 #include "../ArmLearnWrapper.h"
 #include "../instructions.h"
 #include "../trainingParameters.h"
-#include <filesystem>
-
 
 int main() {
 
@@ -28,16 +19,16 @@ int main() {
 	/// fetch data in the environment
 	auto dataSources = armLearnEnv.getDataSources();
 	auto& st1 = dataSources.at(0).get();
-	in1 = st1.getDataAt(typeid(double), 0).getSharedPointer<double>().get();
+	in1 = st1.getDataAt(typeid(typeInf), 0).getSharedPointer<typeInf>().get();
 
     auto& st2 = dataSources.at(1).get();
-	in2 = st2.getDataAt(typeid(double), 0).getSharedPointer<double>().get();
+	in2 = st2.getDataAt(typeid(typeInf), 0).getSharedPointer<typeInf>().get();
 
     auto& st3 = dataSources.at(2).get();
-	in3 = st3.getDataAt(typeid(double), 0).getSharedPointer<double>().get();
+	in3 = st3.getDataAt(typeid(typeInf), 0).getSharedPointer<typeInf>().get();
 
     auto& st4 = dataSources.at(3).get();
-	in4 = st4.getDataAt(typeid(double), 0).getSharedPointer<double>().get();
+	in4 = st4.getDataAt(typeid(typeInf), 0).getSharedPointer<typeInf>().get();
 
     armLearnEnv.loadValidationTrajectories();
 
@@ -53,9 +44,9 @@ int main() {
             armLearnEnv.reset(nbActions, Learn::LearningMode::VALIDATION, nbEpisodes, 0);
             nbEpisodes++;
         }
-    	double actionID = -1;
+    	typeInf actionID = -1;
         inferenceTPG(&actionID);
-        armLearnEnv.doAction(actionID);
+        armLearnEnv.doAction((double) actionID);
         nbActionsEp++;
         nbActions++;
     }
