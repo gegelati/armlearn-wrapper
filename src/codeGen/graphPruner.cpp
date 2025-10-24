@@ -37,7 +37,7 @@ int main(int argc, char** argv ){
     }*/
 
     // Set the parameters for the learning process.
-    // Loads them from "params.json" file
+    // Loads them from params.json
     Learn::LearningParameters params;
     File::ParametersParser::loadParametersFromJson((path + "params/params.json").c_str(), params);
 
@@ -48,19 +48,19 @@ int main(int argc, char** argv ){
     // Instantiate the LearningEnvironment
     ArmLearnWrapper armLearnEnv(params.maxNbActionsPerEval, trainingParams, true);
 
-    auto file = path + trainingParams.testPath;
+    auto dotfile = path + trainingParams.testPath;
 
     // Instantiate and init the learning agent
     Learn::ArmLearningAgent la(armLearnEnv, set, params, trainingParams);
     la.init(trainingParams.seed);
 
     // Load graph
-    std::cout << "Loading dot file from " << file << std::endl;
+    std::cout << "Loading dot file from " << dotfile << std::endl;
 
     auto &tpg = *la.getTPGGraph();
     Environment dotEnv = tpg.getEnvironment();
     TPG::TPGGraph dotGraph(dotEnv, std::make_unique<TPG::TPGFactoryInstrumented>());
-    File::TPGGraphDotImporter dot((file).c_str(), dotEnv, dotGraph);
+    File::TPGGraphDotImporter dot((dotfile).c_str(), dotEnv, dotGraph);
     dot.importGraph();
     const TPG::TPGVertex* root = dotGraph.getRootVertices().front();
 
