@@ -86,7 +86,7 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
         set.add(*(new Instructions::LambdaInstruction<double, double>(minus, "$0 = $1 - $2;")));
         if(params.useInstrExpensiveArithmetic) {
             set.add(*(new Instructions::LambdaInstruction<double, double>(times, "$0 = $1 * $2;")));
-            set.add(*(new Instructions::LambdaInstruction<double, double>(divide, "$0 = $1 / $2;")));
+            set.add(*(new Instructions::LambdaInstruction<double, double>(divide, "$0 = f_div($1, $2);")));
         }
         if(params.useInstrComparison) {
             set.add(*(new Instructions::LambdaInstruction<double, double>(max, "$0 = ($1 > $2) ? $1 : $2;")));
@@ -99,8 +99,8 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
         }
 
         if(params.useInstrLogExp) {
-            set.add(*(new Instructions::LambdaInstruction<double>(log, "$0 = log($1);")));
-            set.add(*(new Instructions::LambdaInstruction<double>(exp, "$0 = exp($1);")));
+            set.add(*(new Instructions::LambdaInstruction<double>(log, "$0 = f_log2($1);")));
+            set.add(*(new Instructions::LambdaInstruction<double>(exp, "$0 = f_pow2($1);")));
         }
     }
     else if(params.instrType == "fixed_point") {
