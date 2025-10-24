@@ -103,7 +103,7 @@ void fillInstructionSet(Instructions::Set& set, TrainingParameters params) {
             set.add(*(new Instructions::LambdaInstruction<double>(exp, "$0 = f_pow2($1);")));
         }
     }
-    else if(params.instrType == "fixed_point") {
+    else if(params.instrType == "fixedpt") {
         auto add = [](double a, double b) -> double { return fixedpt_to_double(double_to_fixedpt(a) + double_to_fixedpt(b)); };
         auto minus = [](double a, double b) -> double { return fixedpt_to_double(double_to_fixedpt(a) - double_to_fixedpt(b)); };
         auto times = [](double a, double b) -> double { return fixedpt_to_double(fixedpt_mul(double_to_fixedpt(a), double_to_fixedpt(b))); };

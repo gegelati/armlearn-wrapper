@@ -87,7 +87,7 @@
 	"testPath": "outLogs/best_root.dot",//"../data/"
 
 	// type of instruction used in the algorithm (defined in instructions.cpp)
-	"instrType": "double", // anything in ["double", "float", "int", "fixed_point"]
+	"instrType": "fixedpt", // anything in ["double", "float", "int", "fixedpt"]
 
 	// if true, use trigonometric functions in the instructions
 	"useInstrTrig": true,
