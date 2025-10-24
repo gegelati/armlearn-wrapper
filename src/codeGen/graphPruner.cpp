@@ -58,9 +58,9 @@ int main(int argc, char** argv ){
     std::cout << "Loading dot file from " << dotfile << std::endl;
 
     auto &tpg = *la.getTPGGraph();
-    Environment dotEnv = tpg.getEnvironment();
-    TPG::TPGGraph dotGraph(dotEnv, std::make_unique<TPG::TPGFactoryInstrumented>());
-    File::TPGGraphDotImporter dot((dotfile).c_str(), dotEnv, dotGraph);
+    Environment env = tpg.getEnvironment();
+    TPG::TPGGraph dotGraph(env, std::make_unique<TPG::TPGFactoryInstrumented>());
+    File::TPGGraphDotImporter dot((dotfile).c_str(), env, dotGraph);
     dot.importGraph();
     const TPG::TPGVertex* root = dotGraph.getRootVertices().front();
 
@@ -68,7 +68,7 @@ int main(int argc, char** argv ){
 
     // Play the game once to identify useful edges & vertices
     std::ofstream ofs ((path + "outLogs/tpg_orig.txt").c_str(), std::ofstream::out);
-    TPG::TPGExecutionEngineInstrumented tee(dotEnv);
+    TPG::TPGExecutionEngineInstrumented tee(env);
     int nbActions = 0;
     int nbActionsEp = 0;
     int nbEpisodes = 0;
@@ -131,7 +131,7 @@ int main(int argc, char** argv ){
     // Get stats on graph to get the required stack size
     std::cout << "Analyze graph." << std::endl;
     TPG::PolicyStats ps;
-    ps.setEnvironment(dotEnv);
+    ps.setEnvironment(env);
     ps.analyzePolicy(dotGraph.getRootVertices().front());
 
     // Print in file
@@ -149,7 +149,7 @@ int main(int argc, char** argv ){
     File::TPGGraphDotExporter dotExporter(bestDot, dotGraph);
     dotExporter.print();
 
-    File::TPGGraphDotImporter dotImporter((codeGenPath + "best_root_pruned.dot").c_str(), dotEnv, tpg);
+    File::TPGGraphDotImporter dotImporter((codeGenPath + "best_root_pruned.dot").c_str(), env, tpg);
     trainingParams.testPath = (path + "outLogs").c_str();
     trainingParams.testing = true;
     la.testingBestRoot(params.nbIterationsPerPolicyEvaluation);
