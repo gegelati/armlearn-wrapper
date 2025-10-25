@@ -73,7 +73,7 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenInf.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/mainInferenceEnv.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/mainSeedsGraphTraversal.cpp
@@ -109,7 +109,7 @@ list(APPEND
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenInf.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/mainInferenceEnv.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.cpp)
 
@@ -127,7 +127,7 @@ list(REMOVE_ITEM
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn.h
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.c
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenArmlearn_program.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/codeGenInf.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/mainInferenceEnv.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/./src/codeGen/externHeader.h)
 list(APPEND
         armgegelati_files
