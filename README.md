@@ -65,7 +65,7 @@ To **compile the Learning Environment for a specific type**, a preprocessor dire
 ```
 $cp -r my/tpg/codeGen/codeGenArmlearn* src/codeGen/.
 $mkdir build & &cd build
-$CXXFLAGS="-DUSE_DFIXEDPT" CFLAGS="-DUSE_FIXEDPT" cmake ..
+$CXXFLAGS="-DUSE_FIXEDPT" CFLAGS="-DUSE_FIXEDPT" cmake ..
 $make armCodeGen
 ```
 
